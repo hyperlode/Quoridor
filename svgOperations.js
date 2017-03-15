@@ -86,6 +86,7 @@ function createLine(svgElement, x1, y1, x2, y2, color, width) {
     aLine.setAttribute('stroke', color);
     aLine.setAttribute('stroke-width', width);
     svgElement.appendChild(aLine);
+	return aLine;
 }
 
 
@@ -198,6 +199,8 @@ function add_circle(svgElement, x, y, r, id, color){
 	shape.setAttribute("id", id);
 	//console.log(id);
 	svgElement.appendChild(shape);
+	return shape;
+	
 	
 	
 	
