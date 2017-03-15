@@ -34,12 +34,15 @@ var SOUTH = 2;
 var WEST = 3;
 var PLAYER1 = 0;
 var PLAYER2 = 1;
-
+GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
 
 var walls_1 = [];
 var walls_2 = [];
 var pawns=[];
 var quoridorGame;
+// var recordedGame = [EAST,EAST,EAST,EAST];
+var recordedGame = [];
+var moveCounter = 0;
 
 document.addEventListener("DOMContentLoaded", function() {
   initQuoridorDOM();
@@ -55,20 +58,49 @@ function initQuoridorDOM(){
 	quoridorGame = new Board();
 	buildUpBoard(field);
 	//movePawnToPosition(PLAYER1,NORTH);
-	console.log( pawns[0]);
-	movePawn(PLAYER1);
+	//console.log( pawns[0]);
+	//movePawn(PLAYER1);
 	
+	outputPawns();
+	// movePawn(PLAYER1, EAST);
+	// movePawn(PLAYER2, EAST);
+	// movePawn(PLAYER1, EAST);
 	
+	//window.setTimeout(movePawn(PLAYER2, EAST),2000);
 	
-	outputPawns(PLAYER1);
+	recordedGame = [NORTH,EAST,EAST,EAST];
+	//recordedGame = [EAST];
+	moveCounter = 0;
+	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+	gameReplay(moveCounter);
 	
 	
 }
 
-function outputPawns(player){
-	var pawnCoords = (quoridorGame.getPawnCoordinates(PLAYER1));
-	
-	console.log(pawnCoords);
+function gameReplay(moveCounter){
+	if (moveCounter < recordedGame.length){
+		console.log("player moving: %d",moveCounter%2 );
+		window.setTimeout(callback(moveCounter%2, recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+	}
+}
+
+function callback(player, direction){
+    return function(){
+       movePawn(player, direction);
+	   moveCounter += 1;
+	   gameReplay(moveCounter);
+    }
+}
+
+function outputPawns(){
+	outputPawn(PLAYER1);
+	outputPawn(PLAYER2);
+}
+
+function outputPawn(player){
+	var pawnCoords = (quoridorGame.getPawnCoordinates(player));
+	//console.log("player: %d : ", player);
+	//console.log(pawnCoords);
 	//svg 
 	//var x,y;
 	//x = parseInt(pawns[player].getAttribute("cx"));
@@ -77,25 +109,23 @@ function outputPawns(player){
 	pawns[player].setAttribute("cy", (pawnCoords[0]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED);
 
 	//console.log("x:%d", x);
-	
-	
-	
-	console.log("efwefwewww");
+	//console.log("efwefwewww");
 }
 
 
 function movePawn(player, direction){
-	var x,y;
-	x = parseInt(pawns[player].getAttribute("cx"));
-	y = pawns[player].getAttribute("cy");
-	pawns[player].setAttribute("cx", x + BOARD_SQUARE_SPACING*BOARD_SCALE);
-	console.log("x:%d", x);
+	quoridorGame.movePawn(player, direction);
+	outputPawn(player);
+	//var x,y;
+	//x = parseInt(pawns[player].getAttribute("cx"));
+	//y = pawns[player].getAttribute("cy");
+	//pawns[player].setAttribute("cx", x + BOARD_SQUARE_SPACING*BOARD_SCALE);
+	//console.log("x:%d", x);
 //	pawns[player].setAttribute("cy", y + 100);
 	
 }
 
 function buildUpBoard(svgElement){
-	console.log("passed here");
 	
 	//horizontal lines
 	for (var i=0; i<10;i++){
@@ -108,11 +138,13 @@ function buildUpBoard(svgElement){
 		createLine(svgElement, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED ,0*BOARD_SCALE + BOARD_Y_OFFSET_SCALED,  i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED, BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_LINE_COLOR, 10*BOARD_SCALE);	
 	}
 	
-	//players init
+	//players init --> set position to just somewhere on the board....
 	//player 1
-	pawns.push(add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 50*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
+	//pawns.push(add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 50*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
+	pawns.push(add_circle(svgElement, 365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
 	//player 2
-	pawns.push( add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 850*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
+	//pawns.push( add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 850*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
+	pawns.push( add_circle(svgElement, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
 	
 	
 	//bottom walls unused placement.
@@ -170,26 +202,31 @@ Board.prototype.init = function (){
 	for (var row=0; row<9;row++){
 		for (var col=0; col<9;col++){
 			
-			this.cells.push(new Cell(row,col, row>0, col<8, row<8, col>0, (row==8 && col == 4),(row==0 && col == 4) ));
-			this.cells[this.cells.length - 1].printToConsole();
+			this.cells.push(new Cell(row,col, row>0, col<8, row<8, col>0 ));
+			//this.cells[this.cells.length - 1].printToConsole();
 			//console.log(row);
 		}
 	}
 	//define cells with pawns.
-	this.pawnCellsIds = [this.rowColToCellId(0,4), this.rowColToCellId(8,4)];
-	
+	this.pawnCellsIds = [this.rowColToCellId(8,4), this.rowColToCellId(0,4)];
+	this.cells[this.pawnCellsIds[PLAYER1]].acquirePawn(PLAYER1);
+	this.cells[this.pawnCellsIds[PLAYER2]].acquirePawn(PLAYER2);
 	
 	
 };
 Board.prototype.movePawn = function(player, direction){
 	//player 0 or player 1
+	//check for walls, sides and other pawn, notify event "win" 
 	
-	//check if neighbour cell exists and is free
-	if (this.pawnCellsIds[player].sideHasExistingNeighbourCell(direction)){
-		var neighbour = this.cells[this.pawnCellsIds[player]].getNeighbourId(direction); //get neighbour id
-		this.cells[this.pawnCellsIds[player]].releasePawn(player); //release pawn
+	//side check
+	//check if neighbour cell exists 
+	var cell = this.cells[this.pawnCellsIds[player]];
+	if (cell.isThereAnExistingNeighbourOnThisSide(direction)){
+		var neighbour = cell.getNeighbourId(direction); //get neighbour id
+		cell.releasePawn(player); //release pawn
 		this.pawnCellsIds[player] = neighbour;
-		this.cells[this.pawnCellsIds[player]].acquirePawn(player);//acquire pawn
+		cell = this.cells[this.pawnCellsIds[player]];
+		cell.acquirePawn(player);//acquire pawn
 	}else{
 		console.log("ASSERT ERROR: no neighbour cell existing");
 	}
@@ -201,12 +238,13 @@ Board.prototype.rowColToCellId = function(row,col){
 	return row*9+col;
 }
 Board.prototype.getPawnCoordinates = function(player){
+	//console.log("playercell: %d ", this.pawnCellsIds[player]);
 	return  this.cells[this.pawnCellsIds[player]].getRowColFromId();
 }
 
 
 // function Cell (bool wallNorth, bool wallEast, bool wallSouth, bool wallWest, bool pawnPlayerA, bool pawnPlayerB){
-function Cell (row, col, openToNorth, openToEast, openToSouth, openToWest, hasPawnA, hasPawnB){
+function Cell (row, col, openToNorth, openToEast, openToSouth, openToWest){
 	this.row = row;
 	this.col = col;
 	this.id = 9*row + col; //i.e. id 10  = cell 
@@ -214,11 +252,7 @@ function Cell (row, col, openToNorth, openToEast, openToSouth, openToWest, hasPa
 	this.openSides = [openToNorth, openToEast, openToSouth, openToWest]; //will change during the game
 	this.sideHasExistingNeighbourCell = [openToNorth, openToEast, openToSouth, openToWest]; //never change this
 	this.occupiedByPawn = 0;
-	if (hasPawnA){
-		this.occupiedByPawn = 1;
-	}else if (hasPawnB){
-		this.occupiedByPawn = 2;
-	}
+	
 	//console.log(this.row);
 	
 }
@@ -244,7 +278,7 @@ Cell.prototype.isSideOpen = function(direction){
 	return this.openSides[direction];
 }
 
-Cell.prototype.sideHasExistingNeighbourCell = function(direction){
+Cell.prototype.isThereAnExistingNeighbourOnThisSide = function(direction){
 	//direction: 0 is North, 1 E, 2S, 3 West
 	return this.sideHasExistingNeighbourCell[direction];
 }
@@ -267,7 +301,7 @@ Cell.prototype.releasePawn =function(player){
 
 Cell.prototype.getNeighbourId= function (direction){
 	//direction: 0 is North, 1 E, 2S, 3 West
-	if (!sideHasExistingNeighbourCell(direction)){
+	if (!this.isThereAnExistingNeighbourOnThisSide(direction)){
 		console.log("ASSERT ERROR neighbour not existing");
 		return false;
 	}
