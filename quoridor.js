@@ -36,17 +36,12 @@ var PLAYER1 = 0;
 var PLAYER2 = 1;
 GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
 
-var walls_1 = [];
-var walls_2 = [];
-var pawns=[];
-var quoridorGame;
-// var recordedGame = [EAST,EAST,EAST,EAST];
-var recordedGame = [];
-var moveCounter = 0;
+
+
 
 document.addEventListener("DOMContentLoaded", function() {
   initQuoridorDOM();
-	play_song();
+  
 });
 
 function initQuoridorDOM(){
@@ -55,35 +50,62 @@ function initQuoridorDOM(){
 	addSvg(quoridorField, "quoridorFieldSvg",BOARD_WIDTH*BOARD_SCALE, BOARD_HEIGHT*BOARD_SCALE,BOARD_BACKGROUND_COLOR,"black");
 	var field = document.getElementById("quoridorFieldSvg");		
 	
-	quoridorGame = new Board();
-	buildUpBoard(field);
 	//movePawnToPosition(PLAYER1,NORTH);
 	//console.log( pawns[0]);
 	//movePawn(PLAYER1);
 	
-	outputPawns();
+	
 	// movePawn(PLAYER1, EAST);
 	// movePawn(PLAYER2, EAST);
 	// movePawn(PLAYER1, EAST);
 	
 	//window.setTimeout(movePawn(PLAYER2, EAST),2000);
 	
-	recordedGame = [NORTH,EAST,EAST,EAST];
+	var movesHistory = [NORTH,EAST,EAST,EAST,SOUTH,EAST,WEST,EAST];
 	//recordedGame = [EAST];
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
-	gameReplay(moveCounter);
+	var aGame = new Game(field);
+	var replay = new GameReplay(aGame, movesHistory);
+	replay.replay(0);
+	//
 	
 	
 }
 
-function gameReplay(moveCounter){
-	if (moveCounter < recordedGame.length){
+
+
+function GameReplay (game, recordedMoves){
+	//this.replayGame = new Game(); //init board
+	this.qgame = game;
+	this.recordedGame = recordedMoves;
+	this.moveCounter = 0;
+	console.log(this.qgame);
+}
+
+GameReplay.prototype.replay = function (moveCounter){
+
+	if (moveCounter < this.recordedGame.length){
 		console.log("player moving: %d",moveCounter%2 );
-		window.setTimeout(callback(moveCounter%2, recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+		// window.setTimeout(this.callback(moveCounter%2, this.recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+		window.setTimeout(function (){this.callback(moveCounter%2, this.recordedGame[moveCounter])}.bind(this),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	}
 }
 
+GameReplay.prototype.callback = function(player, direction){
+	// return function(){
+			
+       // this.qgame.movePawn(player, direction);
+	   // this.moveCounter += 1;
+	   
+	   // this.replay(this.moveCounter);
+    // }
+	this.qgame.movePawn(player, direction);
+	this.moveCounter += 1;
+	this.replay(this.moveCounter);
+}
+
+/*
 function callback(player, direction){
     return function(){
        movePawn(player, direction);
@@ -91,31 +113,47 @@ function callback(player, direction){
 	   gameReplay(moveCounter);
     }
 }
+*/
 
-function outputPawns(){
-	outputPawn(PLAYER1);
-	outputPawn(PLAYER2);
+
+function Game(svgField){
+	
+	this.walls_1 = [];
+	this.walls_2 = [];
+	this.pawns=[];
+	//this.quoridorGame;
+	this.quoridorGame = new Board();
+	this.buildUpBoard(svgField);
+	this.outputPawns();
+	this.play_song();
 }
 
-function outputPawn(player){
-	var pawnCoords = (quoridorGame.getPawnCoordinates(player));
+
+
+Game.prototype.outputPawns = function(){
+	this.outputPawn(PLAYER1);
+	this.outputPawn(PLAYER2);
+}
+
+Game.prototype.outputPawn = function(player){
+	var pawnCoords = (this.quoridorGame.getPawnCoordinates(player));
 	//console.log("player: %d : ", player);
 	//console.log(pawnCoords);
 	//svg 
 	//var x,y;
 	//x = parseInt(pawns[player].getAttribute("cx"));
 	//y = parseInt(pawns[player].getAttribute("cy"));
-	pawns[player].setAttribute("cx", (pawnCoords[1]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED);
-	pawns[player].setAttribute("cy", (pawnCoords[0]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED);
+	this.pawns[player].setAttribute("cx", (pawnCoords[1]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED);
+	this.pawns[player].setAttribute("cy", (pawnCoords[0]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED);
 
 	//console.log("x:%d", x);
 	//console.log("efwefwewww");
 }
 
 
-function movePawn(player, direction){
-	quoridorGame.movePawn(player, direction);
-	outputPawn(player);
+Game.prototype.movePawn = function(player, direction){
+	this.quoridorGame.movePawn(player, direction);
+	this.outputPawn(player);
 	//var x,y;
 	//x = parseInt(pawns[player].getAttribute("cx"));
 	//y = pawns[player].getAttribute("cy");
@@ -125,7 +163,7 @@ function movePawn(player, direction){
 	
 }
 
-function buildUpBoard(svgElement){
+Game.prototype.buildUpBoard = function(svgElement){
 	
 	//horizontal lines
 	for (var i=0; i<10;i++){
@@ -141,15 +179,15 @@ function buildUpBoard(svgElement){
 	//players init --> set position to just somewhere on the board....
 	//player 1
 	//pawns.push(add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 50*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
-	pawns.push(add_circle(svgElement, 365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
+	this.pawns.push(add_circle(svgElement, 365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
 	//player 2
 	//pawns.push( add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 850*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
-	pawns.push( add_circle(svgElement, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
+	this.pawns.push( add_circle(svgElement, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
 	
 	
 	//bottom walls unused placement.
 	for (var i=0; i<10;i++){
-		walls_1.push(createLine(svgElement, 
+		this.walls_1.push(createLine(svgElement, 
 			(WALL_START_DISTANCE_FROM_BOARD_X + i * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE    ,
 			900*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + WALL_START_DISTANCE_FROM_BOARD_Y,  
 			(WALL_START_DISTANCE_FROM_BOARD_X + i * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE,
@@ -161,7 +199,7 @@ function buildUpBoard(svgElement){
 	
 	//top walls unused placement.
 	for (var i=0; i<10;i++){
-		walls_2.push(createLine(svgElement, 
+		this.walls_2.push(createLine(svgElement, 
 			(WALL_START_DISTANCE_FROM_BOARD_X + i * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE    ,
 			BOARD_Y_OFFSET_SCALED - WALL_START_DISTANCE_FROM_BOARD_Y,  
 			(WALL_START_DISTANCE_FROM_BOARD_X + i * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE,
@@ -170,12 +208,12 @@ function buildUpBoard(svgElement){
 			WALL_WIDTH * BOARD_SCALE));	
 	}
 }
-function beep() {
+Game.prototype.beep = function() {
     var snd = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");  
 	snd.play();
 }
 
-function play_song(){
+Game.prototype.play_song = function(){
 	//https://www.playonloop.com/2015-music-loops/cookie-island/
 	var song = new Audio("POL-cookie-island-short.wav");
 	song.play();
