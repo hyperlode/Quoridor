@@ -66,9 +66,35 @@ function initQuoridorDOM(){
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	var aGame = new Game(field);
-	var replay = new GameReplay(aGame, movesHistory);
-	replay.replay(0);
-	//
+	//aGame.testPlaceWall(PLAYER1, "q8");
+	//aGame.testPlaceWall(PLAYER1, "8a");
+	//aGame.testPlaceWall(PLAYER1, "a1");
+	//aGame.testPlaceWall(PLAYER1, "h8");
+	
+	//aGame.testPlaceWall(PLAYER1, "1d");
+	
+	
+	
+	aGame.movePawn(PLAYER1, NORTH);
+	aGame.movePawn(PLAYER1, NORTH);
+	aGame.movePawn(PLAYER1, NORTH);
+	aGame.movePawn(PLAYER1, NORTH);
+	aGame.movePawn(PLAYER1, NORTH);
+	aGame.movePawn(PLAYER1, NORTH);
+	aGame.movePawn(PLAYER2, SOUTH);
+	aGame.movePawn(PLAYER2, SOUTH);
+	aGame.movePawn(PLAYER2, SOUTH);
+	aGame.movePawn(PLAYER2, SOUTH);
+	aGame.movePawn(PLAYER2, SOUTH);
+	aGame.movePawn(PLAYER2, SOUTH);
+	
+	aGame.testPlaceWall(PLAYER1, "1h");
+//	aGame.testPlaceWall(PLAYER1, "h1");
+	
+	aGame.outputWalls();
+	//var replay = new GameReplay(aGame, movesHistory);
+	//replay.replay(0);
+	
 	
 	
 }
@@ -120,9 +146,11 @@ function Game(svgField){
 	
 	this.walls_1 = [];
 	this.walls_2 = [];
+	
+	
 	this.pawns=[];
-	//this.quoridorGame;
-	this.quoridorGame = new Board();
+	//this.board;
+	this.board = new Board();
 	this.buildUpBoard(svgField);
 	this.outputPawns();
 	this.play_song();
@@ -130,13 +158,70 @@ function Game(svgField){
 
 
 
+Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
+	
+	console.log(wallPosNotation);
+	
+	//check if notation is correct.
+	var wall = this.board.placeWallByVerboseCoordinate(player,wallPosNotation);
+	
+}
+// Game.prototype.placePawnByVerboseNotation = function(player, pawnNotation ){
+	
+// }
+
+
+Game.prototype.outputWalls = function(){
+	/*
+	var horiLineNumber = 4;
+	var vertLineNumber = 3;
+	//vertical wall
+	
+	this.walls_1[0].setAttribute("x1", BOARD_SQUARE_SPACING * vertLineNumber * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
+	this.walls_1[0].setAttribute("x2", BOARD_SQUARE_SPACING * vertLineNumber * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
+	this.walls_1[0].setAttribute("y1", BOARD_SQUARE_SPACING * (horiLineNumber - 1) * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+	this.walls_1[0].setAttribute("y2", BOARD_SQUARE_SPACING * (horiLineNumber + 1)* BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+	
+	horiLineNumber = 5;
+	vertLineNumber = 7;
+	//horizontal wall
+	*/
+	//console.log("fefeeeee");
+	var wallElements = [this.walls_1, this.walls_2];
+	var allWalls = this.board.getWalls();
+	//console.log(allWalls);
+	
+	
+	for (var player=0;player<2;player++){
+	//	console.log(allWalls[player].length);
+		
+			
+		for (var wallIndex = 0; wallIndex < allWalls[player].length ; wallIndex++){
+			console.log(wallIndex);
+			var wall = allWalls[player][wallIndex];
+			if (wall[2]){
+				wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][1] * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
+				wallElements[player][wallIndex].setAttribute("x2", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][1] * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
+				wallElements[player][wallIndex].setAttribute("y1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] - 1) * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+				wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] + 1)* BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+			}else{
+				wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1] - 1) * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
+				wallElements[player][wallIndex].setAttribute("x2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1] + 1) * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
+				wallElements[player][wallIndex].setAttribute("y1", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][0] * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+				wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][0] * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+			}
+		}
+		
+	}	
+}
+
 Game.prototype.outputPawns = function(){
 	this.outputPawn(PLAYER1);
 	this.outputPawn(PLAYER2);
 }
 
 Game.prototype.outputPawn = function(player){
-	var pawnCoords = (this.quoridorGame.getPawnCoordinates(player));
+	var pawnCoords = (this.board.getPawnCoordinates(player));
 	//console.log("player: %d : ", player);
 	//console.log(pawnCoords);
 	//svg 
@@ -152,7 +237,8 @@ Game.prototype.outputPawn = function(player){
 
 
 Game.prototype.movePawn = function(player, direction){
-	this.quoridorGame.movePawn(player, direction);
+	
+	this.board.movePawn(player, direction);
 	this.outputPawn(player);
 	//var x,y;
 	//x = parseInt(pawns[player].getAttribute("cx"));
@@ -220,11 +306,211 @@ Game.prototype.play_song = function(){
 	
 }
 
-
-
 function Board(){
 	this.cells =[];
+	this.walls_1 = []; //store walls;
+	this.walls_2 = []; //store walls;
+	
 	this.init();
+}
+
+
+Board.prototype.wallNotationToCellAndOrientation = function (verboseCoordinate){
+	//returns startcellId and isNorthSouthOriented orientation as [id, orientation]
+	//verboseCoordinate = string of two characters, one letters, one number. number from [1,8], letter [a,h]  i.e. b2 or 5C
+	//verboseCoordinate :  i.e.   starting with a letter = vertical, starting with a number is horizontal. , letters and numbers indicate the wall lines on the board (between the cells), the crossing of the wall lines indicates the center point of the wall.
+	//end result = four cells with each a direction.
+	
+	//get vertical wall line
+	if (verboseCoordinate.length != 2){
+		console.log("ASSERT ERROR  notation should be two characters");
+		return false;
+	}
+	//var wallLines = verboseCoordinate.split('');
+	var charVals = [verboseCoordinate.charCodeAt(0), verboseCoordinate.charCodeAt(1)];
+	var isLetter =[];
+	var values  = [];
+	//convert chars to wall lines 
+	//https://webserver2.tecgraf.puc-rio.br/cd/img/vectorfont_default.png
+	for(var i=0;i<2;i++){
+		if (charVals[i]>= 49 && charVals[i]<=56){
+			isLetter[i] =false;
+			values.push(charVals[i]-48);
+		}else if (charVals[i]>= 65 && charVals[i]<=72){
+			//capital
+			isLetter[i] =true;
+			values.push(charVals[i]-64);
+		}else if (charVals[i]>= 97 && charVals[i]<=104){
+			//small letter
+			isLetter[i] =true;
+			values.push(charVals[i]-96);
+		}else{
+			//assert error
+			console.log("ASSERT ERROR invalid character in notation.");
+			return false;
+		}
+	}
+	var isNorthSouthOriented = false;
+	//check validity
+	if (isLetter[0] == isLetter[1]){
+		//check if both are number or letter
+		console.log("ASSERT ERROR: should be a letternumber or numberletter")
+		return false;
+	}else if (isLetter[0]){
+		isNorthSouthOriented = true;
+		startCellCol = (values[0]-1);
+		startCellRow = (8-values[1]);
+	}else{
+		isNorthSouthOriented = false;
+		startCellRow = (8-values[0]);
+		startCellCol = (values[1]-1);
+	}
+	
+	return [this.rowColToCellId(startCellRow,startCellCol) , isNorthSouthOriented];
+	//get startcell row and col
+}
+
+
+
+
+
+
+
+Board.prototype.getWallCenterPointWithOrientationFromStartCellIdAndOrientation = function(startCellId, orientation){
+	//wall = [ horizontalLine, verticalLine, isOrientationNorthSouth]
+	var rowCol = this.cells[startCellId].getRowColFromId();
+	return [rowCol[0]+1 , rowCol[1]+1, orientation];
+}
+Board.prototype.getWallCenterPointWithOrientationFromVerboseCoordinate = function(verboseCoordinate){
+	return wallNotationToCellAndOrientation(verboseCoordinate);
+	
+}
+Board.prototype.getWalls = function (){
+	return [this.walls_1 , this.walls_2];
+}
+
+Board.prototype.getWallsCombined = function (){
+	return this.walls_1.concat(this.walls_2);
+}
+
+
+Board.prototype.isCenterPointAvailableForWallPlacement = function(startCellId, orientation){
+	//check if centerpoint is already occupied.
+	var wallCenterPointAndOrientation = this.getWallCenterPointWithOrientationFromStartCellIdAndOrientation(startCellId, orientation);
+	var walls = this.getWallsCombined();
+	var positionIsAvailable = true
+	for (var i=0;i<walls.length;i++){	
+		if (walls[i][0] == wallCenterPointAndOrientation[0] && walls[i][1] == wallCenterPointAndOrientation[1]){
+			
+			positionIsAvailable=false;
+			return positionIsAvailable;
+		}
+	}
+	return positionIsAvailable;
+}
+
+
+
+
+Board.prototype.isPositionAvailableForWallPlacement = function(startCellId, isNorthSouthOriented){
+	
+	return placeWall(PLAYER1,startCellId, isNorthSouthOriented, onlyCheckAvailabilityDontPlaceWall);
+}
+Board.prototype.isWallPositionAvailableByVerboseCoordinate= function (player,verboseCoordinate){
+	var wallCoords = this.wallNotationToCellAndOrientation(verboseCoordinate);
+	if(!wallCoords){
+		//notation unvalid
+		return false;
+	}
+	return this.placeWall(player, wallCoords[0],wallCoords[1],true );
+}
+Board.prototype.placeWallByVerboseCoordinate= function (player,verboseCoordinate){
+	var wallCoords = this.wallNotationToCellAndOrientation(verboseCoordinate);
+	if(!wallCoords){
+		//notation unvalid
+		return false;
+	}
+	return this.placeWall(player, wallCoords[0],wallCoords[1],false );
+}
+Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented, onlyCheckAvailabilityDontPlaceWall){
+	//wall covers always two cells, 
+	//if east west oriented: at South of startcell, and eastern neighbour cell
+	// if north east : at East o fstartcell, and southern neighbour cell
+	
+	var startCell = this.cells[startCellId];
+	
+	//check if within board limits:
+	if (!(startCell.row >=0 && startCell.row<=7 && startCell.col >=0 && startCell.col<=7)){
+		console.log("ASSER ERROR WRONG CELL as wall start identifier");
+	}
+	
+	//first check if centerpoint is available
+	if (!this.isCenterPointAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
+		console.log("centerpoint wall occupied. wall cannot be placed.");
+		return false;
+	}	
+	
+	//check borders in cells.
+	//assume neighbours existing.
+	//for (var i=0; i<4;i++){
+	
+	var neighEastId = startCell.getNeighbourId(1);
+	var neighSouthId = startCell.getNeighbourId(2);
+	var neighSouthEastId = startCell.getNeighbourId(5);
+	
+	
+	var allInvolvedCellsIds = [startCellId, neighEastId, neighSouthEastId, neighSouthId];
+	//--> pattern for 4 cells: startcell, then east, then southeast, then south
+	var sidesForNorthSouthOrientation = [1,3,3,1];
+	var sidesForEastWestOrientation = [2,2,0,0];
+	
+	//decide which sides are affected.
+	var sidesToChange = sidesForEastWestOrientation;
+	if (isNorthSouthOriented){
+		sidesToChange = sidesForNorthSouthOrientation;
+	}
+	
+	var isAllAffectedSideOpen = true;
+	
+	//console.log(allInvolvedCellsIds);
+	//console.log(sidesToChange);
+	//check if sides are already occupied.
+	for (var i=0;i<4;i++){
+		//console.log(this.cells[allInvolvedCellsIds[i]].isSideOpen(sidesToChange[i]));
+		if( !this.cells[allInvolvedCellsIds[i]].isSideOpen(sidesToChange[i])){
+			isAllAffectedSideOpen=false;
+		}
+	}
+	if (!isAllAffectedSideOpen){
+		//wall cannot be placed because another wall is blocking its path somewhere.
+		console.log("position not valid for wall placement");
+		return false;
+	}
+	
+	
+	//check completed, return results if only simulation.
+	if (onlyCheckAvailabilityDontPlaceWall){
+		return true;
+	
+	}
+	
+	//place wall
+	//check if sides are already occupied.
+	for (var i=0;i<4;i++){
+		this.cells[allInvolvedCellsIds[i]].closeSide(sidesToChange[i]) ;
+	}
+	
+	
+	//store wall as wall (cells is not enough, we have to know the exact wall, for the gaps...)
+	if (player == PLAYER1){
+		this.walls_1.push(this.getWallCenterPointWithOrientationFromStartCellIdAndOrientation(startCellId, isNorthSouthOriented));
+		
+	}else{
+		this.walls_2.push(this.getWallCenterPointWithOrientationFromStartCellIdAndOrientation(startCellId, isNorthSouthOriented));
+		
+	}
+
+	
 }
 
 Board.prototype.init = function (){
@@ -236,7 +522,13 @@ Board.prototype.init = function (){
 	//  |
 	//  V +row
 	
-	
+	//indication of sides and "wall" lines. Hx = horizontal, Vx= vertical, (x,x) =cell
+	//    H0        H0
+	//V0  (0,0)  V1  (0,1) V2  (0,2)  ....
+	//    H1        H1 
+	//V0  (1,0)  V1  (1,1) V2  (1,2)   ....
+	//    H1        H1   ....
+	//   ....      .... 
 	for (var row=0; row<9;row++){
 		for (var col=0; col<9;col++){
 			
@@ -252,6 +544,7 @@ Board.prototype.init = function (){
 	
 	
 };
+
 Board.prototype.movePawn = function(player, direction){
 	//player 0 or player 1
 	//check for walls, sides and other pawn, notify event "win" 
@@ -259,22 +552,39 @@ Board.prototype.movePawn = function(player, direction){
 	//side check
 	//check if neighbour cell exists 
 	var cell = this.cells[this.pawnCellsIds[player]];
-	if (cell.isThereAnExistingNeighbourOnThisSide(direction)){
-		var neighbour = cell.getNeighbourId(direction); //get neighbour id
-		cell.releasePawn(player); //release pawn
-		this.pawnCellsIds[player] = neighbour;
-		cell = this.cells[this.pawnCellsIds[player]];
-		cell.acquirePawn(player);//acquire pawn
-	}else{
+	if (!cell.isThereAnExistingNeighbourOnThisSide(direction)){
 		console.log("ASSERT ERROR: no neighbour cell existing");
+		return false;
 	}
 	
+	//check if direction not blocked by wall
+	if (!cell.isSideOpen(direction)){
+		console.log("wall in the way, can't move in direction %d (N=0, E=1, S=2, W=3)", direction);
+		return false;
+	}
+	
+	//check if direction not blocked by other pawn
+	var neighbour = cell.getNeighbourId(direction); //get neighbour id
+	
+	if (this.cells[neighbour].getIsOccupied()){
+		console.log("cant move, destination cell contains other pawn. Please perform a jump move.");
+		return false
+	}
+	
+	
+	//make the move
+	cell.releasePawn(player); //release pawn
+	this.pawnCellsIds[player] = neighbour;
+	cell = this.cells[this.pawnCellsIds[player]];
+	cell.acquirePawn(player);//acquire pawn
+	return true;
 	
 }
 Board.prototype.rowColToCellId = function(row,col){
 	//cell id is cell index in this.cells
 	return row*9+col;
 }
+
 Board.prototype.getPawnCoordinates = function(player){
 	//console.log("playercell: %d ", this.pawnCellsIds[player]);
 	return  this.cells[this.pawnCellsIds[player]].getRowColFromId();
@@ -294,6 +604,11 @@ function Cell (row, col, openToNorth, openToEast, openToSouth, openToWest){
 	//console.log(this.row);
 	
 }
+Cell.prototype.closeSide = function(direction){
+	//direction: 0 is North, 1 E, 2S, 3 West
+	this.openSides[direction] = false;
+}
+
 Cell.prototype.getId = function(){
 	return this.id;
 }
@@ -313,12 +628,26 @@ Cell.prototype.printToConsole = function(){
 }
 Cell.prototype.isSideOpen = function(direction){
 	//direction: 0 is North, 1 E, 2S, 3 West
+	
 	return this.openSides[direction];
 }
 
 Cell.prototype.isThereAnExistingNeighbourOnThisSide = function(direction){
 	//direction: 0 is North, 1 E, 2S, 3 West
-	return this.sideHasExistingNeighbourCell[direction];
+	////4NE, 5SE, 6, SW, 7 NW
+	
+	var directionsToCheckForDiagonals_lookUpTable = [ [0,1],[1,2],[2,3],[3,0]];
+	
+	if (direction<4){
+	
+		return this.sideHasExistingNeighbourCell[direction];
+	}else if (direction <8){
+		//both diag neighbours have to exist to return true.
+		return this.sideHasExistingNeighbourCell[directionsToCheckForDiagonals_lookUpTable [direction-4][0] ] &&
+			   this.sideHasExistingNeighbourCell[directionsToCheckForDiagonals_lookUpTable [direction-4][1] ];
+	}else{
+		console.log("ASSERT ERROR DIRECITON NOT EXISTING");
+	}
 }
 
 Cell.prototype.acquirePawn= function(player){
@@ -339,6 +668,7 @@ Cell.prototype.releasePawn =function(player){
 
 Cell.prototype.getNeighbourId= function (direction){
 	//direction: 0 is North, 1 E, 2S, 3 West
+	//4NE, 5SE, 6, SW, 7 NW
 	if (!this.isThereAnExistingNeighbourOnThisSide(direction)){
 		console.log("ASSERT ERROR neighbour not existing");
 		return false;
@@ -353,11 +683,19 @@ Cell.prototype.getNeighbourId= function (direction){
 			//east
 			return this.id+1;
 			break;
-		case 2:
+		case 2: //s
 			return this.id+9;
 			break;
-		case 3:
+		case 3://w
 			return this.id-1;
+		case 4: //ne
+			return this.id-8;
+		case 5: //se
+			return this.id+10;
+		case 6: //sw
+			return this.id+8;
+		case 7: //nw
+			return this.id-10;
 		
 	}
 }
