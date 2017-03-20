@@ -32,6 +32,15 @@ var NORTH = 0;
 var EAST = 1
 var SOUTH = 2;
 var WEST = 3;
+var NORTHEAST = 4;
+var SOUTHEAST= 5;
+var SOUTHWEST=6;
+var NORTHWEST=7;
+var NORTHNORTH = 8;
+var EASTEAST = 9;
+var SOUTHSOUTH = 10;
+var WESTWEST = 11;
+ 
 var PLAYER1 = 0;
 var PLAYER2 = 1;
 GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
@@ -66,15 +75,18 @@ function initQuoridorDOM(){
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	var aGame = new Game(field);
-	//aGame.testPlaceWall(PLAYER1, "q8");
-	//aGame.testPlaceWall(PLAYER1, "8a");
-	//aGame.testPlaceWall(PLAYER1, "a1");
-	//aGame.testPlaceWall(PLAYER1, "h8");
+	/*
+	//aGame.placeWallByVerboseNotation(PLAYER1, "q8");
+	aGame.placeWallByVerboseNotation(PLAYER1, "8a");
+	aGame.placeWallByVerboseNotation(PLAYER1, "a1");
+	aGame.placeWallByVerboseNotation(PLAYER1, "h8");
 	
-	//aGame.testPlaceWall(PLAYER1, "1d");
+	aGame.placeWallByVerboseNotation(PLAYER1, "1d");
+	aGame.placeWallByVerboseNotation(PLAYER1, "1d");
+	aGame.placeWallByVerboseNotation(PLAYER1, "d1");
+	aGame.placeWallByVerboseNotation(PLAYER1, "1f");
+		
 	
-	
-	
 	aGame.movePawn(PLAYER1, NORTH);
 	aGame.movePawn(PLAYER1, NORTH);
 	aGame.movePawn(PLAYER1, NORTH);
@@ -87,9 +99,21 @@ function initQuoridorDOM(){
 	aGame.movePawn(PLAYER2, SOUTH);
 	aGame.movePawn(PLAYER2, SOUTH);
 	aGame.movePawn(PLAYER2, SOUTH);
-	
-	aGame.testPlaceWall(PLAYER1, "1h");
+	*/
+	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
 //	aGame.testPlaceWall(PLAYER1, "h1");
+
+	aGame.movePawnByVerboseNotation(PLAYER1,"N");
+	aGame.movePawnByVerboseNotation(PLAYER2,"S");
+	aGame.movePawnByVerboseNotation(PLAYER1,"N");
+	aGame.movePawnByVerboseNotation(PLAYER2,"S");
+	aGame.movePawnByVerboseNotation(PLAYER1,"N");
+	aGame.movePawnByVerboseNotation(PLAYER2,"S");
+	aGame.movePawnByVerboseNotation(PLAYER1,"N");
+	aGame.placeWallByVerboseNotation(PLAYER1, "6d");
+	
+
+	//aGame.movePawnByVerboseNotation(PLAYER1,"nn");
 	
 	aGame.outputWalls();
 	//var replay = new GameReplay(aGame, movesHistory);
@@ -164,12 +188,148 @@ Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
 	
 	//check if notation is correct.
 	var wall = this.board.placeWallByVerboseCoordinate(player,wallPosNotation);
+	this.outputWalls();
 	
 }
-// Game.prototype.placePawnByVerboseNotation = function(player, pawnNotation ){
+Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 	
-// }
-
+	var direction = this.pawnVerboseNotationToDirection(verboseCoordinate);
+	
+	console.log ("direction: %d",direction);
+	if (direction< 4){
+		this.board.movePawnSingleCell(player, direction);
+	}else if (direction <8){
+		
+	}else if (direction <12){
+		this.board.movePawnStraightJump(player, direction);
+	}else{
+		console.log("ASSERT ERROR: non valid direction");
+	}
+	this.outputPawn(player);
+}
+	
+Game.prototype.pawnVerboseNotationToDirection = function ( verboseCoordinate ){	
+	//get direction from letter
+	//notation maximum two characters.
+	
+	if (verboseCoordinate.length > 2){
+		console.log("ASSERT ERROR  move notation should be one or sometimes (when jumping) two characters ");
+		return false;
+	}
+	var charVals = [verboseCoordinate.charCodeAt(0), verboseCoordinate.charCodeAt(1)];
+	//console.log(charVals);	
+	//console.log(charVals[1]);	
+	var isJumper =verboseCoordinate.length-1;
+	var values  = [];
+	//https://webserver2.tecgraf.puc-rio.br/cd/img/vectorfont_default.png
+	var illegalMove = 0;
+	//direction
+	//for(var i=0;i<charVals.length;i++){
+	var letter = charVals[0];
+	if (isJumper){
+		var extraLetter = charVals[1];
+	}
+	
+	if (letter == 78 || letter == 110){
+		//north
+		if (isJumper){
+			if (extraLetter == 78 || extraLetter == 110){
+				//north north jump
+				return NORTHNORTH;
+			}else if (extraLetter == 69 || extraLetter == 101){
+				//north east jump
+				return NORTHEAST;
+			}else if ( extraLetter == 87 || extraLetter == 119 ){
+				//north west jump
+				return NORTHWEST;
+			}else {
+				illegalMove =1;
+			}
+		}else{
+			//north
+			return NORTH;
+		}
+	}else if (letter == 69 || letter == 101){
+		//east
+		if (isJumper){
+			 if (extraLetter == 69 || extraLetter == 101){
+				//east east jump
+				return EASTEAST;
+			}else {
+				//illegal command
+				illegalMove = 2;
+			}
+		}else{
+			//east
+			return EAST;
+		}
+	
+	
+	}else if (letter == 83 || letter == 115){
+		//south
+		
+		if (isJumper){
+			if (extraLetter == 83 || extraLetter == 115){
+				//south south jump
+				return SOUTHSOUTH;
+			}else if (extraLetter == 69 || extraLetter == 101){
+				//south east jump
+				return SOUTHEAST;
+			}else if ( extraLetter == 87 || extraLetter == 119 ){
+				//south west jump
+				return SOUTHWEST;
+			}else {
+				illegalMove = 3;
+			}
+		}else{
+			//south single
+			return SOUTH;
+		}
+	}else if ( letter == 87 || letter == 119 ){	
+		//west
+		//console.log("isJumper");
+		//console.log(isJumper);
+		//console.log(extraLetter);
+		if (isJumper){
+			 if (extraLetter == 87 || extraLetter == 119){
+				//west west jump
+				return WESTWEST;
+			}else {
+				//illegal command
+				illegalMove = 4;
+			}
+		}else{
+			//west
+			return WEST;
+		}
+	}else{
+		//illegalmove
+		illegalMove = 5;
+		
+	}
+	
+	if (illegalMove !=0){
+		console.log("command was not valid: %s , code: %d", verboseCoordinate, illegalMove);
+		return false;
+		
+	}
+	
+}
+/*
+Game.prototype.movePawn = function(player, direction){
+	
+	this.board.movePawn(player, direction);
+	
+	//console.log("joijivjv	");
+	//var x,y;
+	//x = parseInt(pawns[player].getAttribute("cx"));
+	//y = pawns[player].getAttribute("cy");
+	//pawns[player].setAttribute("cx", x + BOARD_SQUARE_SPACING*BOARD_SCALE);
+	//console.log("x:%d", x);
+//	pawns[player].setAttribute("cy", y + 100);
+	
+}
+*/
 
 Game.prototype.outputWalls = function(){
 	/*
@@ -236,18 +396,6 @@ Game.prototype.outputPawn = function(player){
 }
 
 
-Game.prototype.movePawn = function(player, direction){
-	
-	this.board.movePawn(player, direction);
-	this.outputPawn(player);
-	//var x,y;
-	//x = parseInt(pawns[player].getAttribute("cx"));
-	//y = pawns[player].getAttribute("cy");
-	//pawns[player].setAttribute("cx", x + BOARD_SQUARE_SPACING*BOARD_SCALE);
-	//console.log("x:%d", x);
-//	pawns[player].setAttribute("cy", y + 100);
-	
-}
 
 Game.prototype.buildUpBoard = function(svgElement){
 	
@@ -409,13 +557,11 @@ Board.prototype.isCenterPointAvailableForWallPlacement = function(startCellId, o
 	return positionIsAvailable;
 }
 
-
-
-
 Board.prototype.isPositionAvailableForWallPlacement = function(startCellId, isNorthSouthOriented){
 	
 	return placeWall(PLAYER1,startCellId, isNorthSouthOriented, onlyCheckAvailabilityDontPlaceWall);
 }
+
 Board.prototype.isWallPositionAvailableByVerboseCoordinate= function (player,verboseCoordinate){
 	var wallCoords = this.wallNotationToCellAndOrientation(verboseCoordinate);
 	if(!wallCoords){
@@ -424,6 +570,7 @@ Board.prototype.isWallPositionAvailableByVerboseCoordinate= function (player,ver
 	}
 	return this.placeWall(player, wallCoords[0],wallCoords[1],true );
 }
+
 Board.prototype.placeWallByVerboseCoordinate= function (player,verboseCoordinate){
 	var wallCoords = this.wallNotationToCellAndOrientation(verboseCoordinate);
 	if(!wallCoords){
@@ -432,6 +579,7 @@ Board.prototype.placeWallByVerboseCoordinate= function (player,verboseCoordinate
 	}
 	return this.placeWall(player, wallCoords[0],wallCoords[1],false );
 }
+
 Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented, onlyCheckAvailabilityDontPlaceWall){
 	//wall covers always two cells, 
 	//if east west oriented: at South of startcell, and eastern neighbour cell
@@ -454,15 +602,15 @@ Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented,
 	//assume neighbours existing.
 	//for (var i=0; i<4;i++){
 	
-	var neighEastId = startCell.getNeighbourId(1);
-	var neighSouthId = startCell.getNeighbourId(2);
-	var neighSouthEastId = startCell.getNeighbourId(5);
+	var neighEastId = startCell.getNeighbourId(EAST);
+	var neighSouthId = startCell.getNeighbourId(SOUTH);
+	var neighSouthEastId = startCell.getNeighbourId(SOUTHEAST);
 	
 	
 	var allInvolvedCellsIds = [startCellId, neighEastId, neighSouthEastId, neighSouthId];
 	//--> pattern for 4 cells: startcell, then east, then southeast, then south
-	var sidesForNorthSouthOrientation = [1,3,3,1];
-	var sidesForEastWestOrientation = [2,2,0,0];
+	var sidesForNorthSouthOrientation = [EAST,WEST,WEST,EAST];
+	var sidesForEastWestOrientation = [SOUTH,SOUTH,NORTH,NORTH];
 	
 	//decide which sides are affected.
 	var sidesToChange = sidesForEastWestOrientation;
@@ -545,7 +693,68 @@ Board.prototype.init = function (){
 	
 };
 
-Board.prototype.movePawn = function(player, direction){
+
+Board.prototype.movePawnStraightJump = function(player, twoStepsDirection){
+	//check if neighbour cell exists
+	var cell = this.cells[this.pawnCellsIds[player]];
+	
+	singleStepDirection = twoStepsDirection-8
+	if (!cell.isThereAnExistingNeighbourOnThisSide(twoStepsDirection)){
+		console.log("ASSERT ERROR: no neighbour cell existing");
+		return false;
+	}
+	
+	//get the two neighbour ids.
+	var neighbourId = cell.getNeighbourId(singleStepDirection);
+	var twoNeighbourdIds = cell.getNeighbourId(twoStepsDirection);
+	// console.log(this.pawnCellsIds[player]);
+	// console.log(neighbourId);
+	// console.log(twoNeighbourdIds);
+	
+	//check if direction not blocked by wall
+	if (!cell.isSideOpen(singleStepDirection) && cells[neighbourId].isSideOpen(singleStepDirection)){
+		console.log("one or two walls in the way, can't move in direction %d (N=0, E=1, S=2, W=3)", direction);
+		return false;
+	}
+	
+	//check if neighbour has pawn
+	if (!this.cells[neighbourId].getIsOccupied()){
+		console.log("Can only jump if neighbour has a pawn");
+		return false
+	}
+	
+	
+	
+	// console.log(this.pawnCellsIds[player]);
+	// console.log(neighbourId);
+	console.log(twoNeighbourdIds);
+	
+		
+	//make the move
+	cell.releasePawn(player); //release pawn for current cell
+	
+	this.pawnCellsIds[player] = twoNeighbourdIds; 
+	
+	this.cells[this.pawnCellsIds[player]].acquirePawn(player);//acquire pawn
+	return true;
+	
+}
+
+Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection){
+	//check if neighbour cell exists
+	var cell = this.cells[this.pawnCellsIds[player]];
+	
+	if (!cell.isThereAnExistingNeighbourOnThisSide(diagonalDirection)){
+		console.log("ASSERT ERROR: no neighbour cell existing");
+		return false;
+	}
+	
+	singleStepDirection = diagonalDirection-4
+	
+	
+}
+
+Board.prototype.movePawnSingleCell = function(player, direction){
 	//player 0 or player 1
 	//check for walls, sides and other pawn, notify event "win" 
 	
@@ -571,7 +780,6 @@ Board.prototype.movePawn = function(player, direction){
 		return false
 	}
 	
-	
 	//make the move
 	cell.releasePawn(player); //release pawn
 	this.pawnCellsIds[player] = neighbour;
@@ -580,6 +788,9 @@ Board.prototype.movePawn = function(player, direction){
 	return true;
 	
 }
+
+
+
 Board.prototype.rowColToCellId = function(row,col){
 	//cell id is cell index in this.cells
 	return row*9+col;
@@ -645,6 +856,8 @@ Cell.prototype.isThereAnExistingNeighbourOnThisSide = function(direction){
 		//both diag neighbours have to exist to return true.
 		return this.sideHasExistingNeighbourCell[directionsToCheckForDiagonals_lookUpTable [direction-4][0] ] &&
 			   this.sideHasExistingNeighbourCell[directionsToCheckForDiagonals_lookUpTable [direction-4][1] ];
+	}else if (direction < 12){
+			return this.isThereAnExistingNeighbourOnThisSide(direction - 8);
 	}else{
 		console.log("ASSERT ERROR DIRECITON NOT EXISTING");
 	}
@@ -663,39 +876,56 @@ Cell.prototype.releasePawn =function(player){
 	}else{
 		this.occupiedByPawn = 0;
 	}
-
 }
 
 Cell.prototype.getNeighbourId= function (direction){
 	//direction: 0 is North, 1 E, 2S, 3 West
-	//4NE, 5SE, 6, SW, 7 NW
+	//4NE, 5SE, 6, SW, 7 NW , 8NN, 9 EE, 10 SS, 11, WW
 	if (!this.isThereAnExistingNeighbourOnThisSide(direction)){
 		console.log("ASSERT ERROR neighbour not existing");
 		return false;
 	}
 	//assert neighbour is existing. 
 	switch (direction){
-		case 0:
+		case NORTH:
 			//north
 			return this.id -9;
-			break;
-		case 1:
+			break;	
+		case EAST:
 			//east
 			return this.id+1;
 			break;
-		case 2: //s
+		case SOUTH: //s
 			return this.id+9;
 			break;
-		case 3://w
+		case WEST://w
 			return this.id-1;
-		case 4: //ne
+			break;
+		case NORTHEAST: //ne
 			return this.id-8;
-		case 5: //se
+			break;
+		case SOUTHEAST: //se
 			return this.id+10;
-		case 6: //sw
+			break;
+		case SOUTHWEST: //sw
 			return this.id+8;
-		case 7: //nw
+			break;
+		case NORTHWEST: //nw
 			return this.id-10;
+			break;
+		case NORTHNORTH:
+			return this.id - 18;
+			break;
+		case EASTEAST:
+			return this.id +2;
+			break;
+		case SOUTHSOUTH:
+			return this.id +18;
+			break;
+		case WESTWEST:
+			return this.id -2;
+			break;
+			
 		
 	}
 }
