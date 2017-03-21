@@ -111,6 +111,7 @@ function initQuoridorDOM(){
 	aGame.movePawnByVerboseNotation(PLAYER2,"S");
 	aGame.movePawnByVerboseNotation(PLAYER1,"N");
 	aGame.placeWallByVerboseNotation(PLAYER1, "6d");
+	aGame.placeWallByVerboseNotation(PLAYER1, "ne");
 	
 
 	//aGame.movePawnByVerboseNotation(PLAYER1,"nn");
@@ -745,11 +746,20 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection){
 	var cell = this.cells[this.pawnCellsIds[player]];
 	
 	if (!cell.isThereAnExistingNeighbourOnThisSide(diagonalDirection)){
+		//this works, if both orthogonals existing, diagonal is existing too
 		console.log("ASSERT ERROR: no neighbour cell existing");
 		return false;
 	}
 	
-	singleStepDirection = diagonalDirection-4
+	lookupTable = [[NORTH,EAST],[SOUTH,EAST],[SOUTH,WEST],[NORTH,WEST]] ; //ne, se,sw,nw
+	//singleStepDirection = diagonalDirection-4
+	//get the two neighbour ids.
+	var neighbourId = cell.getNeighbourId(lookupTable[diagonalDirection - 4][0]);
+	var twoNeighbourdIds = cells[neighbourId].getNeighbourId(lookupTable[diagonalDirection - 4][1]);
+	 console.log(this.pawnCellsIds[player]);
+	 console.log(neighbourId);
+	 console.log(twoNeighbourdIds);
+	
 	
 	
 }
