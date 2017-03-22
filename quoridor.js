@@ -44,6 +44,7 @@ var WESTWEST = 11;
 var PLAYER1 = 0;
 var PLAYER2 = 1;
 GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
+//GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 70;
 
 
 
@@ -70,7 +71,7 @@ function initQuoridorDOM(){
 	
 	//window.setTimeout(movePawn(PLAYER2, EAST),2000);
 	
-	var movesHistory = [NORTH,EAST,EAST,EAST,SOUTH,EAST,WEST,EAST];
+	
 	//recordedGame = [EAST];
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
@@ -102,23 +103,25 @@ function initQuoridorDOM(){
 	*/
 	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
 //	aGame.testPlaceWall(PLAYER1, "h1");
-
-	aGame.movePawnByVerboseNotation(PLAYER1,"N");
-	aGame.movePawnByVerboseNotation(PLAYER2,"S");
-	aGame.movePawnByVerboseNotation(PLAYER1,"N");
-	aGame.movePawnByVerboseNotation(PLAYER2,"S");
-	aGame.movePawnByVerboseNotation(PLAYER1,"N");
-	aGame.movePawnByVerboseNotation(PLAYER2,"S");
-	aGame.movePawnByVerboseNotation(PLAYER1,"N");
-	aGame.placeWallByVerboseNotation(PLAYER1, "6d");
-	aGame.movePawnByVerboseNotation(PLAYER1, "ne");
-	aGame.placeWallByVerboseNotation(PLAYER1, "e5");
-aGame.movePawnByVerboseNotation(PLAYER1, "sw");
-	//aGame.movePawnByVerboseNotation(PLAYER1,"nn");
-	
-	aGame.outputWalls();
-	//var replay = new GameReplay(aGame, movesHistory);
-	//replay.replay(0);
+/*
+	aGame.playTurnByVerboseNotation(PLAYER1,"N");
+	aGame.playTurnByVerboseNotation(PLAYER2,"S");
+	aGame.playTurnByVerboseNotation(PLAYER1,"N");
+	aGame.playTurnByVerboseNotation(PLAYER2,"S");
+	aGame.playTurnByVerboseNotation(PLAYER1,"N");
+	aGame.playTurnByVerboseNotation(PLAYER2,"S");
+	aGame.playTurnByVerboseNotation(PLAYER1,"N");
+	aGame.playTurnByVerboseNotation(PLAYER1, "6d");
+	aGame.playTurnByVerboseNotation(PLAYER1, "ne");
+	aGame.playTurnByVerboseNotation(PLAYER1, "d5");
+	aGame.playTurnByVerboseNotation(PLAYER1, "4d");
+	aGame.playTurnByVerboseNotation(PLAYER1, "sw");
+	aGame.playTurnByVerboseNotation(PLAYER2,"x");
+	*/
+	//aGame.outputWalls();
+	var movesHistory = ["n","s","n","s","n","s","3d","3g","e3","s","c4","sw","nw","nn","nn","w","n","s","n"];
+	var replay = new GameReplay(aGame, movesHistory);
+	replay.replay(0);
 }
 
 
@@ -140,7 +143,7 @@ GameReplay.prototype.replay = function (moveCounter){
 	}
 }
 
-GameReplay.prototype.callback = function(player, direction){
+GameReplay.prototype.callback = function(player, verboseMove){
 	// return function(){
 			
        // this.qgame.movePawn(player, direction);
@@ -148,7 +151,7 @@ GameReplay.prototype.callback = function(player, direction){
 	   
 	   // this.replay(this.moveCounter);
     // }
-	this.qgame.movePawn(player, direction);
+	this.qgame.playTurnByVerboseNotation(player, verboseMove);
 	this.moveCounter += 1;
 	this.replay(this.moveCounter);
 }
@@ -179,32 +182,69 @@ function Game(svgField){
 }
 
 
+Game.prototype.playTurnByVerboseNotation = function(player, verboseNotation){
+	//try if verbose notation is for moving the pawn, 
+	//console.log("Move of player %d, move: %s", player, verboseNotation);
+	console.log("-------------------------------------");
+	if (verboseNotation == "x" || verboseNotation == "X"){
+		console.log ("player %d gave up... (not implemented yet...) (%s)", player, verboseNotation);
+		return false;
+	}else if (this.placeWallByVerboseNotation(player,verboseNotation)){
+		console.log("player %d placed wall (%s)", player, verboseNotation);
+		return true;
+	}else if (this.movePawnByVerboseNotation(player,verboseNotation)){
+		console.log("player %d moved pawn (%s)", player, verboseNotation);
+		return true;
+	}else {
+		console.log("wrong notation? invalid move? --> please correct this move: %s", verboseNotation);
+		return false;
+	}
+	;
+	
+	//if not valid, try placing a wall
+	
+	//
+	
+}
 
 Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
 	
-	console.log(wallPosNotation);
+	//console.log(wallPosNotation);
 	
 	//check if notation is correct.
-	var wall = this.board.placeWallByVerboseCoordinate(player,wallPosNotation);
+	var isValidMove  = this.board.placeWallByVerboseCoordinate(player,wallPosNotation);
 	this.outputWalls();
+	return isValidMove;
 	
 }
 Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 	
 	var direction = this.pawnVerboseNotationToDirection(verboseCoordinate);
-	
-	console.log ("direction: %d",direction);
+	var isValidMove = false;
+	//console.log ("direction: %d",direction);
 	if (direction< 4){
-		this.board.movePawnSingleCell(player, direction);
+		isValidMove = this.board.movePawnSingleCell(player, direction);
+		
 	}else if (direction <8){
-		console.log("jfiejfef");
-		this.board.movePawnDiagonalJump(player, direction);
+		isValidMove =  this.board.movePawnDiagonalJump(player, direction);
+		
 	}else if (direction <12){
-		this.board.movePawnStraightJump(player, direction);
+		isValidMove = this.board.movePawnStraightJump(player, direction);
+		 
 	}else{
-		console.log("ASSERT ERROR: non valid direction");
+		console.log("ASSERT ERROR: non valid pawn move direction");
+		isValidMove = false;
 	}
-	this.outputPawn(player);
+	
+	
+	if (!isValidMove){
+		return false;
+	}else{
+		this.outputPawn(player);
+		return true;
+	}
+	
+	
 }
 	
 Game.prototype.pawnVerboseNotationToDirection = function ( verboseCoordinate ){	
@@ -356,7 +396,7 @@ Game.prototype.outputWalls = function(){
 		
 			
 		for (var wallIndex = 0; wallIndex < allWalls[player].length ; wallIndex++){
-			console.log(wallIndex);
+			//console.log(wallIndex);
 			var wall = allWalls[player][wallIndex];
 			if (wall[2]){
 				wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][1] * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
@@ -470,7 +510,7 @@ Board.prototype.wallNotationToCellAndOrientation = function (verboseCoordinate){
 	
 	//get vertical wall line
 	if (verboseCoordinate.length != 2){
-		console.log("ASSERT ERROR  notation should be two characters");
+		console.log("ASSERT ERROR  not a wall move, notation should be two characters");
 		return false;
 	}
 	//var wallLines = verboseCoordinate.split('');
@@ -493,7 +533,7 @@ Board.prototype.wallNotationToCellAndOrientation = function (verboseCoordinate){
 			values.push(charVals[i]-96);
 		}else{
 			//assert error
-			console.log("ASSERT ERROR invalid character in notation.");
+			console.log("ASSERT ERROR not a wall move, invalid character in notation to place a wall.");
 			return false;
 		}
 	}
@@ -589,6 +629,7 @@ Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented,
 	//check if within board limits:
 	if (!(startCell.row >=0 && startCell.row<=7 && startCell.col >=0 && startCell.col<=7)){
 		console.log("ASSER ERROR WRONG CELL as wall start identifier");
+		return false;
 	}
 	
 	//first check if centerpoint is available
@@ -642,7 +683,6 @@ Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented,
 	}
 	
 	//place wall
-	//check if sides are already occupied.
 	for (var i=0;i<4;i++){
 		this.cells[allInvolvedCellsIds[i]].closeSide(sidesToChange[i]) ;
 	}
@@ -656,7 +696,7 @@ Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented,
 		this.walls_2.push(this.getWallCenterPointWithOrientationFromStartCellIdAndOrientation(startCellId, isNorthSouthOriented));
 		
 	}
-
+	return true;
 	
 }
 
@@ -711,8 +751,8 @@ Board.prototype.movePawnStraightJump = function(player, twoStepsDirection){
 	// console.log(twoNeighbourdIds);
 	
 	//check if direction not blocked by wall
-	if (!cell.isSideOpen(singleStepDirection) && cells[neighbourId].isSideOpen(singleStepDirection)){
-		console.log("one or two walls in the way, can't move in direction %d (N=0, E=1, S=2, W=3)", direction);
+	if (!cell.isSideOpen(singleStepDirection) || !this.cells[neighbourId].isSideOpen(singleStepDirection)){
+		console.log("one or two walls in the way, can't jump in direction %d (N=0, E=1, S=2, W=3)", singleStepDirection);
 		return false;
 	}
 	
@@ -726,7 +766,7 @@ Board.prototype.movePawnStraightJump = function(player, twoStepsDirection){
 	
 	// console.log(this.pawnCellsIds[player]);
 	// console.log(neighbourId);
-	console.log(twoNeighbourdIds);
+	//console.log(twoNeighbourdIds);
 	
 		
 	//make the move
@@ -755,33 +795,54 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection){
 	var neighbourId = cell.getNeighbourId(lookupTable[diagonalDirection - 4][0]); //assume one direction for neighbour
 	var firstDirection = lookupTable[diagonalDirection - 4][0];
 	var secondDirection = lookupTable[diagonalDirection - 4][1];
+	
+	//console.log(neighbourId);
+	//console.log(neighbourId);
+	//console.log(this.cells[neighbourId].getIsOccupied());
 	if (!this.cells[neighbourId].getIsOccupied()){  //...if not containing neighbour, assume other direction for neighbour
-		console.log("other neighbour");
+		//console.log("other neighbour");
 		neighbourId = cell.getNeighbourId(lookupTable[diagonalDirection - 4][1]); //... assume the other neighbour. the real check for the correct pawn follows later...
 		firstDirection = lookupTable[diagonalDirection - 4][1];
 		secondDirection = lookupTable[diagonalDirection - 4][0];
 	}
 	
 	
-	//get the second  neighbour id
-	var twoNeighbourdIds = this.cells[neighbourId].getNeighbourId(secondDirection);
-	console.log("diagtest:");
-	console.log(diagonalDirection);
-	console.log(this.pawnCellsIds[player]);
-	console.log(neighbourId);
-	console.log(twoNeighbourdIds);
-	
-	//check wall blocking straight jump
-	if (this.cells[neighbourId].isSideOpen(firstDirection)){
-		console.log ("no diagonal jump allowed, a side has to be blocked");
-		return false;
-	}
-	
 	//check neighbour containing other pawn
-	if (!this.cells[neighbourId].getIsOccupied() || this.cells[neighbourId].getIsOccupied() == player ){
+	if (!this.cells[neighbourId].getIsOccupied() || this.cells[neighbourId].getIsOccupied() == player+1 ){
+		
+		console.log (this.cells[neighbourId].getIsOccupied() == player+1);
 		console.log ("no pawn detected at adjecent cell, no jump allowed.");
 		return false;
 	}
+	
+	//get the second  neighbour id
+	var twoNeighbourdIds = this.cells[neighbourId].getNeighbourId(secondDirection);
+//	console.log("diagtest:");
+//	console.log(diagonalDirection);
+//	console.log(this.pawnCellsIds[player]);
+//	console.log(neighbourId);
+//	console.log(twoNeighbourdIds);
+	
+	
+	//check wall blocking move from cell to neighbour
+	if (!cell.isSideOpen(firstDirection)){
+		console.log ("no diagonal jump allowed, not possible to move to reach neighbour cell");
+		return false;
+	}
+	
+	//check wall blocking straight jump from neighbour to second neighbour
+	if (this.cells[neighbourId].isSideOpen(firstDirection)){
+		console.log ("no diagonal jump allowed, the forward side has to be blocked, otherwise it would be a straight jump");
+		return false;
+	}
+		
+	//check wall blocking diag jump from neighbour to second neighbour
+	if (!this.cells[neighbourId].isSideOpen(secondDirection)){
+		console.log ("no diagonal jump allowed, a side ways side is preventing the jump.");
+		return false;
+	}
+	
+	
 	
 	//do actual move.
 	//make the move
