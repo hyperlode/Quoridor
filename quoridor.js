@@ -111,17 +111,14 @@ function initQuoridorDOM(){
 	aGame.movePawnByVerboseNotation(PLAYER2,"S");
 	aGame.movePawnByVerboseNotation(PLAYER1,"N");
 	aGame.placeWallByVerboseNotation(PLAYER1, "6d");
-	aGame.placeWallByVerboseNotation(PLAYER1, "ne");
-	
-
+	aGame.movePawnByVerboseNotation(PLAYER1, "ne");
+	aGame.placeWallByVerboseNotation(PLAYER1, "e5");
+aGame.movePawnByVerboseNotation(PLAYER1, "sw");
 	//aGame.movePawnByVerboseNotation(PLAYER1,"nn");
 	
 	aGame.outputWalls();
 	//var replay = new GameReplay(aGame, movesHistory);
 	//replay.replay(0);
-	
-	
-	
 }
 
 
@@ -200,7 +197,8 @@ Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 	if (direction< 4){
 		this.board.movePawnSingleCell(player, direction);
 	}else if (direction <8){
-		
+		console.log("jfiejfef");
+		this.board.movePawnDiagonalJump(player, direction);
 	}else if (direction <12){
 		this.board.movePawnStraightJump(player, direction);
 	}else{
@@ -752,15 +750,48 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection){
 	}
 	
 	lookupTable = [[NORTH,EAST],[SOUTH,EAST],[SOUTH,WEST],[NORTH,WEST]] ; //ne, se,sw,nw
-	//singleStepDirection = diagonalDirection-4
-	//get the two neighbour ids.
-	var neighbourId = cell.getNeighbourId(lookupTable[diagonalDirection - 4][0]);
-	var twoNeighbourdIds = cells[neighbourId].getNeighbourId(lookupTable[diagonalDirection - 4][1]);
-	 console.log(this.pawnCellsIds[player]);
-	 console.log(neighbourId);
-	 console.log(twoNeighbourdIds);
+	
+	//neighbour id can be one of both, i.e. to go NE --> we can go first east then north, or first north than east.... --> the neighbour having the opponent pawn is the neighbour 
+	var neighbourId = cell.getNeighbourId(lookupTable[diagonalDirection - 4][0]); //assume one direction for neighbour
+	var firstDirection = lookupTable[diagonalDirection - 4][0];
+	var secondDirection = lookupTable[diagonalDirection - 4][1];
+	if (!this.cells[neighbourId].getIsOccupied()){  //...if not containing neighbour, assume other direction for neighbour
+		console.log("other neighbour");
+		neighbourId = cell.getNeighbourId(lookupTable[diagonalDirection - 4][1]); //... assume the other neighbour. the real check for the correct pawn follows later...
+		firstDirection = lookupTable[diagonalDirection - 4][1];
+		secondDirection = lookupTable[diagonalDirection - 4][0];
+	}
 	
 	
+	//get the second  neighbour id
+	var twoNeighbourdIds = this.cells[neighbourId].getNeighbourId(secondDirection);
+	console.log("diagtest:");
+	console.log(diagonalDirection);
+	console.log(this.pawnCellsIds[player]);
+	console.log(neighbourId);
+	console.log(twoNeighbourdIds);
+	
+	//check wall blocking straight jump
+	if (this.cells[neighbourId].isSideOpen(firstDirection)){
+		console.log ("no diagonal jump allowed, a side has to be blocked");
+		return false;
+	}
+	
+	//check neighbour containing other pawn
+	if (!this.cells[neighbourId].getIsOccupied() || this.cells[neighbourId].getIsOccupied() == player ){
+		console.log ("no pawn detected at adjecent cell, no jump allowed.");
+		return false;
+	}
+	
+	//do actual move.
+	//make the move
+	cell.releasePawn(player); //release pawn for current cell
+	
+	this.pawnCellsIds[player] = twoNeighbourdIds; 
+	
+	this.cells[this.pawnCellsIds[player]].acquirePawn(player);//acquire pawn
+	
+	return true;
 	
 }
 
@@ -838,7 +869,7 @@ Cell.prototype.getRowColFromId = function(){
 }
 
 Cell.prototype.getIsOccupied = function(){
-	return this.occupiedByPawn > 0;
+	return this.occupiedByPawn ;
 };
 Cell.prototype.printToConsole = function(){
 	console.log('----- row: %d -- col: %d -------',this.row, this.col);
