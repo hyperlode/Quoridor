@@ -16,6 +16,10 @@ var BOARD_X_OFFSET_SCALED = BOARD_X_OFFSET * BOARD_SCALE;
 var BOARD_Y_OFFSET_SCALED = BOARD_Y_OFFSET * BOARD_SCALE;
 var BOARD_SQUARE_SPACING = 100;
 var BOARD_LINE_COLOR = "white";
+var BOARD_LINE_HOVER_WALL_POSSIBLE_COLOR = "grey";
+var BOARD_LINE_HOVER_WALL_NOT_POSSIBLE_COLOR = "red";
+
+var BOARD_LINE_SIDE_COLOR = "grey";
 var PAWN_RADIUS = 35;
 var BOARD_PAWN_1_COLOR = "lightskyblue";
 var BOARD_PAWN_2_COLOR = "lightsalmon";
@@ -175,7 +179,7 @@ function Game(svgField){
 	this.walls_1 = [];
 	this.walls_2 = [];
 	
-	
+	this.lines = [];
 	this.pawns=[];
 	//this.board;
 	this.board = new Board();
@@ -442,19 +446,142 @@ Game.prototype.outputPawn = function(player){
 	//console.log("efwefwewww");
 }
 
+Game.prototype.mouseHoversInWallElement = function (callerElement){
+	this.mouseHoverWallEvent(callerElement,true);
+}
 
+Game.prototype.mouseHoversOutWallElement = function (callerElement){
+	this.mouseHoverWallEvent(callerElement, false);
+}
+
+Game.prototype.mouseHoverWallEvent = function (callerElement,isHoveringIn){
+	var lineIndex= parseInt(callerElement.id);
+	//console.log("hover: %d",parseInt(lineIndex));
+	
+	
+	
+	var colors = [[BOARD_LINE_HOVER_WALL_POSSIBLE_COLOR, BOARD_LINE_HOVER_WALL_NOT_POSSIBLE_COLOR],[BOARD_LINE_COLOR, BOARD_LINE_COLOR]];
+	if (isHoveringIn){
+		isHoveringIn = 0;
+	}else{
+		isHoveringIn =1;
+	}
+	//assume horizontal
+	var isNorthSouthOriented = false; 
+	var startCellId = lineIndex;
+	var neighbourCellId = startCellId +1;
+	neighbourLineIndex = lineIndex +1;
+	if (lineIndex >= 72){
+		//is vertical
+		isNorthSouthOriented = true;
+		startCellId = lineIndex - 72;
+		neighbourCellId = startCellId + 1 ;
+		neighbourLineIndex = neighbourCellId + 72;
+	}
+	if (startCellId % 9 >=8){
+			neighbourCellId = 666;
+	}
+	console.log(neighbourCellId);
+	
+	if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
+		this.lines[lineIndex].setAttribute('stroke',colors[isHoveringIn][0]);
+	}else{
+		this.lines[lineIndex].setAttribute('stroke',colors[isHoveringIn][1]);
+	}
+	
+	if (neighbourCellId != 666){
+		if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
+			this.lines[neighbourLineIndex].setAttribute('stroke',colors[isHoveringIn][0]);
+		}else{
+			this.lines[neighbourLineIndex].setAttribute('stroke',colors[isHoveringIn][1]);
+		}		
+	}
+
+
+}
 
 Game.prototype.buildUpBoard = function(svgElement){
 	
+	//add_circle(svgElement, x, y, r, id, color
+	var circleTest = add_circle(svgElement, 0,50,50,"tmp", "blue");
+	
+	circleTest.addEventListener("mouseover", function() { this.setAttribute('fill', 'red') });
+	circleTest.addEventListener("mouseout", function() { this.setAttribute('fill', 'blue') });
+
+	
+	var index = 0;
 	//horizontal lines
-	for (var i=0; i<10;i++){
-		createLine(svgElement, 0*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED , BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_LINE_COLOR, 10*BOARD_SCALE);	
+	for (var i=0; i<8;i++){
+		
+		// x1, y1, x2, y2
+		for (var j=0; j<9;j++){
+			// createLine(svgElement, 0*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED , BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_LINE_COLOR, 10*BOARD_SCALE);	
+			this.lines.push(createLine(svgElement, 
+			j * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED,
+			(i+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED ,
+			(j+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
+			(i+1)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 
+			BOARD_LINE_COLOR, 10*BOARD_SCALE, index)	//BOARD_LINE_COLOR
+			);
+			//lines[lines.length-1].addEventListener("mouseover", function() { this.setAttribute('stroke', 'red') });
+			//lines[lines.length-1].addEventListener("mouseout", function() { this.setAttribute('stroke', 'blue') });
+			
+			this.lines[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.lines[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
+			index+= 1;
+		}
+		
+	
+	}
+	
+	
+	//add vertical lines (cell sized)
+	for (var i=0; i<8;i++){
+		
+		// x1, y1, x2, y2
+		for (var j=0; j<9;j++){
+			// createLine(svgElement, 0*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED , BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_LINE_COLOR, 10*BOARD_SCALE);	
+			this.lines.push(createLine(svgElement, 
+			(i+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED,
+			 j* BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED ,
+			(i+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
+			(j+1)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 
+			BOARD_LINE_COLOR, 10*BOARD_SCALE, index)	//BOARD_LINE_COLOR
+			);
+			//lines[lines.length-1].addEventListener("mouseover", function() { this.setAttribute('stroke', 'red') });
+			//lines[lines.length-1].addEventListener("mouseout", function() { this.setAttribute('stroke', 'blue') });
+			
+			this.lines[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.lines[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
+			index+= 1;
+		}
+		
+	
+	}
+	
+	
+	/**/
+	//add top and bottom horizontal lines
+	for (var i=0; i<2;i++){
+		createLine(svgElement, 
+		0*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
+		(i*9)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED , 
+		BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
+		(i*9)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 
+		BOARD_LINE_SIDE_COLOR, 10*BOARD_SCALE);	
 	}
 	//createLine(svgElement, x1, y1, x2, y2, color, width)
 	
-	//vertical lines
-	for (var i=0; i<10;i++){
-		createLine(svgElement, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED ,0*BOARD_SCALE + BOARD_Y_OFFSET_SCALED,  i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED, BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_LINE_COLOR, 10*BOARD_SCALE);	
+	
+	
+	//add left and right vertical lines
+	for (var i=0; i<2;i++){
+		createLine(svgElement, 
+		(i*9)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED ,
+		0*BOARD_SCALE + BOARD_Y_OFFSET_SCALED,  
+		(i*9)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
+		BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 
+		BOARD_LINE_SIDE_COLOR, 10*BOARD_SCALE);	
 	}
 	
 	//players init --> set position to just somewhere on the board....
@@ -606,7 +733,7 @@ Board.prototype.isCenterPointAvailableForWallPlacement = function(startCellId, o
 
 Board.prototype.isPositionAvailableForWallPlacement = function(startCellId, isNorthSouthOriented){
 	
-	return placeWall(PLAYER1,startCellId, isNorthSouthOriented, onlyCheckAvailabilityDontPlaceWall);
+	return this.placeWall(PLAYER1,startCellId, isNorthSouthOriented, true);
 }
 
 Board.prototype.isWallPositionAvailableByVerboseCoordinate= function (player,verboseCoordinate){

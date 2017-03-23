@@ -77,7 +77,8 @@ function add_polyline(svgElement){
 	svgElement.appendChild(shape);
 }
 
-function createLine(svgElement, x1, y1, x2, y2, color, width) {
+function createLine(svgElement, x1, y1, x2, y2, color, width,id) {
+	//id added
     var aLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     aLine.setAttribute('x1', x1);
     aLine.setAttribute('y1', y1);
@@ -85,7 +86,9 @@ function createLine(svgElement, x1, y1, x2, y2, color, width) {
     aLine.setAttribute('y2', y2);
     aLine.setAttribute('stroke', color);
     aLine.setAttribute('stroke-width', width);
-    svgElement.appendChild(aLine);
+    aLine.setAttribute('id', id);
+	svgElement.appendChild(aLine);
+	
 	return aLine;
 }
 
