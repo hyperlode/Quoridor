@@ -23,8 +23,9 @@ var BOARD_PAWN_2_COLOR = "lightsalmon";
 var WALL_START_DISTANCE_FROM_BOARD_X = 80;
 var WALL_START_DISTANCE_FROM_BOARD_Y = 20	;
 var WALL_START_DISTANCE_FROM_EACH_OTHER = 93;
-var WALL_LENGTH = 180;
+
 var WALL_WIDTH = 14;
+var WALL_LENGTH = 2*BOARD_SQUARE_SPACING - WALL_WIDTH-10;
 // var WALL_COLOR = "steelblue";
 var WALL_COLOR = "teal";
 
@@ -103,7 +104,7 @@ function initQuoridorDOM(){
 	*/
 	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
 //	aGame.testPlaceWall(PLAYER1, "h1");
-/*
+/**/
 	aGame.playTurnByVerboseNotation(PLAYER1,"N");
 	aGame.playTurnByVerboseNotation(PLAYER2,"S");
 	aGame.playTurnByVerboseNotation(PLAYER1,"N");
@@ -117,11 +118,13 @@ function initQuoridorDOM(){
 	aGame.playTurnByVerboseNotation(PLAYER1, "4d");
 	aGame.playTurnByVerboseNotation(PLAYER1, "sw");
 	aGame.playTurnByVerboseNotation(PLAYER2,"x");
-	*/
+	/**/
 	//aGame.outputWalls();
+	/*
 	var movesHistory = ["n","s","n","s","n","s","3d","3g","e3","s","c4","sw","nw","nn","nn","w","n","s","n"];
 	var replay = new GameReplay(aGame, movesHistory);
 	replay.replay(0);
+	*/
 }
 
 
@@ -398,14 +401,19 @@ Game.prototype.outputWalls = function(){
 		for (var wallIndex = 0; wallIndex < allWalls[player].length ; wallIndex++){
 			//console.log(wallIndex);
 			var wall = allWalls[player][wallIndex];
+			//orientation in wall[2]
 			if (wall[2]){
+				//vertical walls
+				// x = column [1]
+ 				// y = row. [0]
+				//orientation is [2]
 				wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][1] * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
 				wallElements[player][wallIndex].setAttribute("x2", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][1] * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
-				wallElements[player][wallIndex].setAttribute("y1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] - 1) * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
-				wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] + 1)* BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+				wallElements[player][wallIndex].setAttribute("y1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] ) * BOARD_SCALE + BOARD_Y_OFFSET_SCALED - WALL_LENGTH/2 * BOARD_SCALE) ;
+				wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] )* BOARD_SCALE + BOARD_Y_OFFSET_SCALED +  WALL_LENGTH/2 * BOARD_SCALE) ;
 			}else{
-				wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1] - 1) * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
-				wallElements[player][wallIndex].setAttribute("x2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1] + 1) * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
+				wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1] ) * BOARD_SCALE + BOARD_X_OFFSET_SCALED - WALL_LENGTH/2 * BOARD_SCALE) ;
+				wallElements[player][wallIndex].setAttribute("x2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1]) * BOARD_SCALE + BOARD_X_OFFSET_SCALED +  WALL_LENGTH/2 * BOARD_SCALE) ;
 				wallElements[player][wallIndex].setAttribute("y1", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][0] * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
 				wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][0] * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
 			}
