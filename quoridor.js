@@ -121,6 +121,9 @@ function initQuoridorDOM(){
 	aGame.playTurnByVerboseNotation(PLAYER1, "c5");
 	aGame.playTurnByVerboseNotation(PLAYER1, "d5");
 	aGame.playTurnByVerboseNotation(PLAYER1, "4d");
+	
+	console.log(aGame.board.getValidPawnMoveDirections(PLAYER1));
+	
 	//aGame.playTurnByVerboseNotation(PLAYER1, "sw");
 	//aGame.playTurnByVerboseNotation(PLAYER2,"x");
 	/**/
@@ -179,9 +182,9 @@ function Game(svgField){
 	
 	this.walls_1 = [];
 	this.walls_2 = [];
+	this.svgPawns = [];
+	this.svgLineSegments = [];
 	
-	this.lines = [];
-	this.pawns=[];
 	//this.board;
 	this.board = new Board();
 	this.buildUpBoard(svgField);
@@ -228,22 +231,7 @@ Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
 Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 	
 	var direction = this.pawnVerboseNotationToDirection(verboseCoordinate);
-	var isValidMove = false;
-	//console.log ("direction: %d",direction);
-	if (direction< 4){
-		isValidMove = this.board.movePawnSingleCell(player, direction);
-		
-	}else if (direction <8){
-		isValidMove =  this.board.movePawnDiagonalJump(player, direction);
-		
-	}else if (direction <12){
-		isValidMove = this.board.movePawnStraightJump(player, direction);
-		 
-	}else{
-		console.log("ASSERT ERROR: non valid pawn move direction");
-		isValidMove = false;
-	}
-	
+	var isValidMove = this.board.movePawn(player, direction);
 	
 	if (!isValidMove){
 		return false;
@@ -440,8 +428,8 @@ Game.prototype.outputPawn = function(player){
 	//var x,y;
 	//x = parseInt(pawns[player].getAttribute("cx"));
 	//y = parseInt(pawns[player].getAttribute("cy"));
-	this.pawns[player].setAttribute("cx", (pawnCoords[1]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED);
-	this.pawns[player].setAttribute("cy", (pawnCoords[0]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED);
+	this.svgPawns[player].setAttribute("cx", (pawnCoords[1]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED);
+	this.svgPawns[player].setAttribute("cy", (pawnCoords[0]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED);
 
 	//console.log("x:%d", x);
 	//console.log("efwefwewww");
@@ -495,22 +483,21 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 	
 	if (placeWallIfAllowed){
 		this.board.placeWall(PLAYER1,startCellId, isNorthSouthOriented, false);
-		
 		this.outputWalls();
 	}else{	
 		//colorize line
 		if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
-			this.lines[lineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
+			this.svgLineSegments[lineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
 		}else{
-			this.lines[lineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
+			this.svgLineSegments[lineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
 		}
 		
 		//colorize neighbour line if possible
 		if (neighbourCellId != 666){
 			if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
-				this.lines[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
+				this.svgLineSegments[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
 			}else{
-				this.lines[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
+				this.svgLineSegments[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
 			}		
 		}
 	}
@@ -519,12 +506,19 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 
 Game.prototype.buildUpBoard = function(svgElement){
 	
+	
+	
 	//add_circle(svgElement, x, y, r, id, color
 	var circleTest = add_circle(svgElement, 0,50,50,"tmp", "blue");
 	
 	circleTest.addEventListener("click", function() { this.setAttribute('fill', 'red') });
 	circleTest.addEventListener("mouseout", function() { this.setAttribute('fill', 'blue') });
 
+	//wall lines:
+	//all line segements go in an array, their position index corresponds with their ID.
+	//horizontal line segments: correspond with cell ID (with cell on the west)
+	//vertical line segments, after subtracting by 72 (=number of horizontal line segments) correspond with cell ID(with cell on the north)
+	
 	
 	var index = 0;
 	//horizontal lines
@@ -533,7 +527,7 @@ Game.prototype.buildUpBoard = function(svgElement){
 		// x1, y1, x2, y2
 		for (var j=0; j<9;j++){
 			// createLine(svgElement, 0*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED , BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_LINE_COLOR, 10*BOARD_SCALE);	
-			this.lines.push(createLine(svgElement, 
+			this.svgLineSegments.push(createLine(svgElement, 
 			j * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED,
 			(i+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED ,
 			(j+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
@@ -543,9 +537,9 @@ Game.prototype.buildUpBoard = function(svgElement){
 			//lines[lines.length-1].addEventListener("mouseover", function() { this.setAttribute('stroke', 'red') });
 			//lines[lines.length-1].addEventListener("mouseout", function() { this.setAttribute('stroke', 'blue') });
 			
-			this.lines[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
-			this.lines[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
-			this.lines[index].addEventListener("click", function (){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("click", function (){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
 			index+= 1;
 		}
 	}
@@ -557,7 +551,7 @@ Game.prototype.buildUpBoard = function(svgElement){
 			//j<8 is sufficient, but we use the id to link it to a cell, as this is also the index in the array, we want to keep things easier. (the other EAST vertical pieces are ON the board edge)
 			
 			// createLine(svgElement, 0*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED , BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_LINE_COLOR, 10*BOARD_SCALE);	
-			this.lines.push(createLine(svgElement, 
+			this.svgLineSegments.push(createLine(svgElement, 
 			(j+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED,
 			 i* BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED ,
 			(j+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
@@ -567,9 +561,9 @@ Game.prototype.buildUpBoard = function(svgElement){
 			//lines[lines.length-1].addEventListener("mouseover", function() { this.setAttribute('stroke', 'red') });
 			//lines[lines.length-1].addEventListener("mouseout", function() { this.setAttribute('stroke', 'blue') });
 			
-			this.lines[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
-			this.lines[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
-			this.lines[index].addEventListener("click", function (){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("click", function (){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
 			index+= 1;
 		}
 	}
@@ -601,10 +595,10 @@ Game.prototype.buildUpBoard = function(svgElement){
 	//players init --> set position to just somewhere on the board....
 	//player 1
 	//pawns.push(add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 50*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
-	this.pawns.push(add_circle(svgElement, 365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
+	this.svgPawns.push(add_circle(svgElement, 365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
 	//player 2
 	//pawns.push( add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 850*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
-	this.pawns.push( add_circle(svgElement, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
+	this.svgPawns.push( add_circle(svgElement, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
 	
 	
 	//bottom walls unused placement.
@@ -889,7 +883,36 @@ Board.prototype.init = function (){
 };
 
 
-Board.prototype.movePawnStraightJump = function(player, twoStepsDirection){
+
+Board.prototype.getValidPawnMoveDirections = function(player){
+	var validDirections = []
+	for (var i =0;i<12;i++){
+		validDirections.push(this.movePawn(player,i,true));
+	}
+	return validDirections;
+}
+
+Board.prototype.movePawn = function(player, direction,isSimulation){
+	var isValidMove;
+	if (direction< 4){
+		isValidMove = this.movePawnSingleCell(player, direction,isSimulation);
+		
+	}else if (direction <8){
+		isValidMove =  this.movePawnDiagonalJump(player, direction,isSimulation);
+		
+	}else if (direction <12){
+		isValidMove = this.movePawnStraightJump(player, direction,isSimulation);
+		 
+	}else{
+		console.log("ASSERT ERROR: non valid pawn move direction");
+		isValidMove = false;
+	}
+	
+	return isValidMove;
+	
+}
+
+Board.prototype.movePawnStraightJump = function(player, twoStepsDirection, isSimulation){
 	//check if neighbour cell exists
 	var cell = this.cells[this.pawnCellsIds[player]];
 	
@@ -924,18 +947,20 @@ Board.prototype.movePawnStraightJump = function(player, twoStepsDirection){
 	// console.log(neighbourId);
 	//console.log(twoNeighbourdIds);
 	
+	if (!isSimulation){
+		//make the move
+		cell.releasePawn(player); //release pawn for current cell
 		
-	//make the move
-	cell.releasePawn(player); //release pawn for current cell
+		this.pawnCellsIds[player] = twoNeighbourdIds; 
+		
+		this.cells[this.pawnCellsIds[player]].acquirePawn(player);//acquire pawn
+	}
 	
-	this.pawnCellsIds[player] = twoNeighbourdIds; 
-	
-	this.cells[this.pawnCellsIds[player]].acquirePawn(player);//acquire pawn
 	return true;
 	
 }
 
-Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection){
+Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSimulation){
 	//check if neighbour cell exists
 	var cell = this.cells[this.pawnCellsIds[player]];
 	
@@ -999,20 +1024,20 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection){
 	}
 	
 	
-	
-	//do actual move.
-	//make the move
-	cell.releasePawn(player); //release pawn for current cell
-	
-	this.pawnCellsIds[player] = twoNeighbourdIds; 
-	
-	this.cells[this.pawnCellsIds[player]].acquirePawn(player);//acquire pawn
-	
+	if (!isSimulation){
+		//do actual move.
+		//make the move
+		cell.releasePawn(player); //release pawn for current cell
+		
+		this.pawnCellsIds[player] = twoNeighbourdIds; 
+		
+		this.cells[this.pawnCellsIds[player]].acquirePawn(player);//acquire pawn
+	}
 	return true;
 	
 }
 
-Board.prototype.movePawnSingleCell = function(player, direction){
+Board.prototype.movePawnSingleCell = function(player, direction, isSimulation){
 	//player 0 or player 1
 	//check for walls, sides and other pawn, notify event "win" 
 	
@@ -1038,11 +1063,13 @@ Board.prototype.movePawnSingleCell = function(player, direction){
 		return false
 	}
 	
-	//make the move
-	cell.releasePawn(player); //release pawn
-	this.pawnCellsIds[player] = neighbour;
-	cell = this.cells[this.pawnCellsIds[player]];
-	cell.acquirePawn(player);//acquire pawn
+	if (!isSimulation){
+		//make the move
+		cell.releasePawn(player); //release pawn
+		this.pawnCellsIds[player] = neighbour;
+		cell = this.cells[this.pawnCellsIds[player]];
+		cell.acquirePawn(player);//acquire pawn
+	}
 	return true;
 	
 }
