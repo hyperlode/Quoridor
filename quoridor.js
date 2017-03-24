@@ -20,9 +20,12 @@ var BOARD_LINE_HOVER_WALL_POSSIBLE_COLOR = "grey";
 var BOARD_LINE_HOVER_WALL_NOT_POSSIBLE_COLOR = "red";
 
 var BOARD_LINE_SIDE_COLOR = "grey";
-var PAWN_RADIUS = 35;
+var BOARD_PAWN_RADIUS = 35;
 var BOARD_PAWN_1_COLOR = "lightskyblue";
 var BOARD_PAWN_2_COLOR = "lightsalmon";
+var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE = BOARD_BACKGROUND_COLOR;
+var BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1 = "paleturquoise";
+var BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2 = "peachpuff";
 
 var WALL_START_DISTANCE_FROM_BOARD_X = 80;
 var WALL_START_DISTANCE_FROM_BOARD_Y = 20	;
@@ -122,7 +125,7 @@ function initQuoridorDOM(){
 	aGame.playTurnByVerboseNotation(PLAYER1, "d5");
 	aGame.playTurnByVerboseNotation(PLAYER1, "4d");
 	
-	console.log(aGame.board.getValidPawnMoveDirections(PLAYER1));
+	
 	
 	//aGame.playTurnByVerboseNotation(PLAYER1, "sw");
 	//aGame.playTurnByVerboseNotation(PLAYER2,"x");
@@ -184,6 +187,7 @@ function Game(svgField){
 	this.walls_2 = [];
 	this.svgPawns = [];
 	this.svgLineSegments = [];
+	this.svgCellsAsPawnShapes = []
 	
 	//this.board;
 	this.board = new Board();
@@ -435,6 +439,49 @@ Game.prototype.outputPawn = function(player){
 	//console.log("efwefwewww");
 }
 
+Game.prototype.mouseClickPawnElement = function (callerElement){
+	//this.mouseWallEvent(callerElement,true, true);
+	this.mouseEventPawn(callerElement,true);
+}
+Game.prototype.mouseHoversInPawnElement = function (callerElement){
+	//this.mouseWallEvent(callerElement,true, false);
+	this.mouseEventPawn(callerElement,true);
+}
+
+Game.prototype.mouseHoversOutPawnElement = function (callerElement){
+	//this.mouseWallEvent(callerElement, false, false);
+	this.mouseEventPawn(callerElement,false);
+}
+
+Game.prototype.mouseEventPawn = function (callerElement,isHoveringInElseOut){
+	var id = callerElement.id;
+	var player  = parseInt(id.substr(12,13)) -1;
+	
+	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2];
+	
+	var directions = this.board.getValidPawnMoveDirections(player);
+	for (var i=0;i<directions.length;i++){
+		//for every direction that exists, we color the pawn circle in the correct cell.
+		if (directions[i]){
+			//get cell id of active direction
+			//id of player cell = 
+			var cellId = this.board.pawnCellsIds[player];
+			var activeCell = this.board.cells[cellId];
+			var neighbourId = activeCell.getNeighbourId(i);
+			if (isHoveringInElseOut){
+				this.svgCellsAsPawnShapes[neighbourId].setAttribute('fill',colours[player + 1]);
+			}else{
+				this.svgCellsAsPawnShapes[neighbourId].setAttribute('fill',colours[0]);
+				
+				
+			}
+		}
+	}
+	
+	
+}
+
+//wall lines mouse events
 Game.prototype.mouseClickWallElement = function (callerElement){
 	this.mouseWallEvent(callerElement,true, true);
 }
@@ -445,6 +492,8 @@ Game.prototype.mouseHoversInWallElement = function (callerElement){
 Game.prototype.mouseHoversOutWallElement = function (callerElement){
 	this.mouseWallEvent(callerElement, false, false);
 }
+
+
 
 Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,placeWallIfAllowed){
 	var lineIndex= parseInt(callerElement.id);
@@ -592,14 +641,35 @@ Game.prototype.buildUpBoard = function(svgElement){
 		BOARD_LINE_SIDE_COLOR, 10*BOARD_SCALE);	
 	}
 	
+	
+	
+	//add pawnPositions
+	var circleId;
+	for (var i=0; i<9;i++){ //rows
+		// x1, y1, x2, y2
+		for (var j=0; j<9;j++){ //cols
+				circleId = (9*i) + j;
+				this.svgCellsAsPawnShapes.push(add_circle(svgElement, (j+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED  , (i+0.5) *BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "cell_pawnCircle_" + circleId, BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE));
+		}
+	}
+	
+	
 	//players init --> set position to just somewhere on the board....
 	//player 1
-	//pawns.push(add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 50*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
-	this.svgPawns.push(add_circle(svgElement, 365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_1_pawn", BOARD_PAWN_1_COLOR));
-	//player 2
-	//pawns.push( add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 850*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
-	this.svgPawns.push( add_circle(svgElement, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, PAWN_RADIUS *BOARD_SCALE, "player_2_pawn", BOARD_PAWN_2_COLOR));
+	//pawns.push(add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 50*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_1", BOARD_PAWN_1_COLOR));
+	this.svgPawns.push(add_circle(svgElement, 365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_1", BOARD_PAWN_1_COLOR));
 	
+	
+	//player 2
+	//pawns.push( add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 850*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_2", BOARD_PAWN_2_COLOR));
+	this.svgPawns.push( add_circle(svgElement, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_2", BOARD_PAWN_2_COLOR));
+	
+	//add mouse events to player pawns
+	for (var i = 0;i<2;i++){
+		this.svgPawns[i].addEventListener("mouseover", function (){this.mouseHoversInPawnElement(event.target);}.bind(this)); //works, sends back line#id
+		this.svgPawns[i].addEventListener("mouseout", function (){this.mouseHoversOutPawnElement(event.target);}.bind(this)); //works, sends back line#id
+		this.svgPawns[i].addEventListener("click", function (){this.mouseClickPawnElement(event.target);}.bind(this)); //works, sends back line#id
+	}
 	
 	//bottom walls unused placement.
 	for (var i=0; i<10;i++){
