@@ -121,7 +121,7 @@ function initQuoridorDOM(){
 	aGame.playTurnByVerboseNotation(PLAYER1, "c5");
 	aGame.playTurnByVerboseNotation(PLAYER1, "d5");
 	aGame.playTurnByVerboseNotation(PLAYER1, "4d");
-	aGame.playTurnByVerboseNotation(PLAYER1, "sw");
+	//aGame.playTurnByVerboseNotation(PLAYER1, "sw");
 	//aGame.playTurnByVerboseNotation(PLAYER2,"x");
 	/**/
 	//aGame.outputWalls();
@@ -448,27 +448,27 @@ Game.prototype.outputPawn = function(player){
 }
 
 Game.prototype.mouseClickWallElement = function (callerElement){
-	
+	this.mouseWallEvent(callerElement,true, true);
 }
 Game.prototype.mouseHoversInWallElement = function (callerElement){
-	this.mouseHoverWallEvent(callerElement,true);
+	this.mouseWallEvent(callerElement,true, false);
 }
 
 Game.prototype.mouseHoversOutWallElement = function (callerElement){
-	this.mouseHoverWallEvent(callerElement, false);
+	this.mouseWallEvent(callerElement, false, false);
 }
 
-Game.prototype.mouseHoverWallEvent = function (callerElement,isHoveringIn){
+Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,placeWallIfAllowed){
 	var lineIndex= parseInt(callerElement.id);
 	//console.log("hover: %d",parseInt(lineIndex));
 	
 	
 	
 	var colors = [[BOARD_LINE_HOVER_WALL_POSSIBLE_COLOR, BOARD_LINE_HOVER_WALL_NOT_POSSIBLE_COLOR],[BOARD_LINE_COLOR, BOARD_LINE_COLOR]];
-	if (isHoveringIn){
-		isHoveringIn = 0;
+	if (isHoveringInElseOut){
+		isHoveringInElseOut = 0;
 	}else{
-		isHoveringIn =1;
+		isHoveringInElseOut =1;
 	}
 	//assume horizontal
 	var isNorthSouthOriented = false; 
@@ -493,22 +493,27 @@ Game.prototype.mouseHoverWallEvent = function (callerElement,isHoveringIn){
 		}
 	}
 	
-	console.log(neighbourCellId);
-	
-	if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
-		this.lines[lineIndex].setAttribute('stroke',colors[isHoveringIn][0]);
-	}else{
-		this.lines[lineIndex].setAttribute('stroke',colors[isHoveringIn][1]);
-	}
-	
-	if (neighbourCellId != 666){
+	if (placeWallIfAllowed){
+		this.board.placeWall(PLAYER1,startCellId, isNorthSouthOriented, false);
+		
+		this.outputWalls();
+	}else{	
+		//colorize line
 		if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
-			this.lines[neighbourLineIndex].setAttribute('stroke',colors[isHoveringIn][0]);
+			this.lines[lineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
 		}else{
-			this.lines[neighbourLineIndex].setAttribute('stroke',colors[isHoveringIn][1]);
-		}		
+			this.lines[lineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
+		}
+		
+		//colorize neighbour line if possible
+		if (neighbourCellId != 666){
+			if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
+				this.lines[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
+			}else{
+				this.lines[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
+			}		
+		}
 	}
-
 
 }
 
@@ -517,7 +522,7 @@ Game.prototype.buildUpBoard = function(svgElement){
 	//add_circle(svgElement, x, y, r, id, color
 	var circleTest = add_circle(svgElement, 0,50,50,"tmp", "blue");
 	
-	circleTest.addEventListener("mouseover", function() { this.setAttribute('fill', 'red') });
+	circleTest.addEventListener("click", function() { this.setAttribute('fill', 'red') });
 	circleTest.addEventListener("mouseout", function() { this.setAttribute('fill', 'blue') });
 
 	
@@ -540,16 +545,13 @@ Game.prototype.buildUpBoard = function(svgElement){
 			
 			this.lines[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
 			this.lines[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.lines[index].addEventListener("click", function (){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
 			index+= 1;
 		}
-		
-	
 	}
-	
 	
 	//add vertical lines (cell sized)
 	for (var i=0; i<9;i++){
-		
 		// x1, y1, x2, y2
 		for (var j=0; j<9;j++){
 			//j<8 is sufficient, but we use the id to link it to a cell, as this is also the index in the array, we want to keep things easier. (the other EAST vertical pieces are ON the board edge)
@@ -567,13 +569,10 @@ Game.prototype.buildUpBoard = function(svgElement){
 			
 			this.lines[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
 			this.lines[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
-			this.lines[index].addEventListener("onclick", function (){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.lines[index].addEventListener("click", function (){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
 			index+= 1;
 		}
-		
-	
 	}
-	
 	
 	/**/
 	//add top and bottom horizontal lines
@@ -736,10 +735,10 @@ Board.prototype.getWallsCombined = function (){
 Board.prototype.isCenterPointAvailableForWallPlacement = function(startCellId, orientation){
 	//check if centerpoint is already occupied.
 	var wallCenterPointAndOrientation = this.getWallCenterPointWithOrientationFromStartCellIdAndOrientation(startCellId, orientation);
-	console.log(wallCenterPointAndOrientation);
+	//console.log(wallCenterPointAndOrientation);
 	var walls = this.getWallsCombined();
 	var positionIsAvailable = true
-	console.log(walls);
+	//console.log(walls);
 	for (var i=0;i<walls.length;i++){	
 		
 		if (walls[i][0] == wallCenterPointAndOrientation[0] && walls[i][1] == wallCenterPointAndOrientation[1]){
