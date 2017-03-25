@@ -11,6 +11,7 @@ var BOARD_HEIGHT = 1500;
 var BOARD_SCALE = 0.4;
 var BOARD_X_OFFSET = 50;
 var BOARD_Y_OFFSET = 300;
+var SOUND_ENABLED_AT_STARTUP = false;
 
 var BOARD_X_OFFSET_SCALED = BOARD_X_OFFSET * BOARD_SCALE;
 var BOARD_Y_OFFSET_SCALED = BOARD_Y_OFFSET * BOARD_SCALE;
@@ -23,6 +24,7 @@ var BOARD_LINE_SIDE_COLOR = "grey";
 var BOARD_PAWN_RADIUS = 35;
 var BOARD_PAWN_1_COLOR = "lightskyblue";
 var BOARD_PAWN_2_COLOR = "lightsalmon";
+var BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER = "red";
 var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE = BOARD_BACKGROUND_COLOR;
 var BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1 = "paleturquoise";
 var BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2 = "peachpuff";
@@ -84,34 +86,10 @@ function initQuoridorDOM(){
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	var aGame = new Game(field);
-	/*
-	//aGame.placeWallByVerboseNotation(PLAYER1, "q8");
-	aGame.placeWallByVerboseNotation(PLAYER1, "8a");
-	aGame.placeWallByVerboseNotation(PLAYER1, "a1");
-	aGame.placeWallByVerboseNotation(PLAYER1, "h8");
 	
-	aGame.placeWallByVerboseNotation(PLAYER1, "1d");
-	aGame.placeWallByVerboseNotation(PLAYER1, "1d");
-	aGame.placeWallByVerboseNotation(PLAYER1, "d1");
-	aGame.placeWallByVerboseNotation(PLAYER1, "1f");
-		
-	
-	aGame.movePawn(PLAYER1, NORTH);
-	aGame.movePawn(PLAYER1, NORTH);
-	aGame.movePawn(PLAYER1, NORTH);
-	aGame.movePawn(PLAYER1, NORTH);
-	aGame.movePawn(PLAYER1, NORTH);
-	aGame.movePawn(PLAYER1, NORTH);
-	aGame.movePawn(PLAYER2, SOUTH);
-	aGame.movePawn(PLAYER2, SOUTH);
-	aGame.movePawn(PLAYER2, SOUTH);
-	aGame.movePawn(PLAYER2, SOUTH);
-	aGame.movePawn(PLAYER2, SOUTH);
-	aGame.movePawn(PLAYER2, SOUTH);
-	*/
 	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
 //	aGame.testPlaceWall(PLAYER1, "h1");
-/**/
+/**/	
 	aGame.playTurnByVerboseNotation(PLAYER1,"N");
 	aGame.playTurnByVerboseNotation(PLAYER2,"S");
 	aGame.playTurnByVerboseNotation(PLAYER1,"N");
@@ -135,7 +113,7 @@ function initQuoridorDOM(){
 	var movesHistory = ["n","s","n","s","n","s","3d","3g","e3","s","c4","sw","nw","nn","nn","w","n","s","n"];
 	var replay = new GameReplay(aGame, movesHistory);
 	replay.replay(0);
-	*/
+	/**/
 }
 
 
@@ -439,6 +417,65 @@ Game.prototype.outputPawn = function(player){
 	//console.log("efwefwewww");
 }
 
+Game.prototype.mouseClickCellAsPawnCircleElement = function (callerElement){
+	this.mouseCellAsPawnCircleElement(callerElement, true,true);
+}
+Game.prototype.mouseHoversInCellAsPawnCircleElement = function (callerElement){
+	this.mouseCellAsPawnCircleElement(callerElement, true,false);
+}
+Game.prototype.mouseHoversOutCellAsPawnCircleElement = function (callerElement){
+	this.mouseCellAsPawnCircleElement(callerElement, false,false);
+}
+	
+Game.prototype.mouseCellAsPawnCircleElement = function (callerElement, isHoveringInElseOut, movePawnIfPossible){
+	
+	var colours = [ BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2];
+		
+	var id = callerElement.id;
+	var cellId  = parseInt(id.substr(16,17));
+	console.log(cellId);
+	
+	if (!isHoveringInElseOut){
+		//set color back to default value when hovering out. ALWAYS
+		this.svgCellsAsPawnShapes[cellId].setAttribute('fill',BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE);
+		return false;
+	}
+	
+	//var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2];
+	//var neighboursPerDirection = this.board.getAllNeighBourCellIds(cellId);
+	var neighboursPerDirection = this.board.getPawnAllNeighBourCellIds(PLAYER1);
+		
+	//check if cellId is one of the neighbours. 
+	var directionOfNeighbour = neighboursPerDirection.indexOf(cellId);
+	//console.log(directionOfNeighbour);
+	if ( directionOfNeighbour == -1){ //http://webcache.googleusercontent.com/search?q=cache:fRIiu706MDoJ:stackoverflow.com/questions/1181575/determine-whether-an-array-contains-a-value+&cd=1&hl=en&ct=clnk&gl=ca
+		//cellId is not one of the neighbours, so pawn can never move to this position...., exit without doing anything
+		this.svgCellsAsPawnShapes[cellId].setAttribute('fill',BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER);
+		return false;
+	}
+	
+	//check if move is possible
+	var canPawnBeMovedHereForAllDirections = this.board.getValidPawnMoveDirections(PLAYER1);
+	
+	if (!canPawnBeMovedHereForAllDirections[directionOfNeighbour]){
+		//console.log("moveIsNOTPOssible"); 
+		//pawn cant be moved
+		//color forbidden movement.... on hover in
+		this.svgCellsAsPawnShapes[cellId].setAttribute('fill',BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER);
+		return false;
+	}
+	
+	//color move allowed at hover in
+	this.svgCellsAsPawnShapes[cellId].setAttribute('fill',colours[PLAYER1]);
+	
+	if (movePawnIfPossible){
+		console.log(directionOfNeighbour);
+		this.board.movePawn(PLAYER1, directionOfNeighbour, false);
+		this.outputPawns();
+	}	
+	return true;
+}
+
 Game.prototype.mouseClickPawnElement = function (callerElement){
 	//this.mouseWallEvent(callerElement,true, true);
 	this.mouseEventPawn(callerElement,true);
@@ -459,19 +496,19 @@ Game.prototype.mouseEventPawn = function (callerElement,isHoveringInElseOut){
 	
 	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2];
 	
-	var directions = this.board.getValidPawnMoveDirections(player);
-	for (var i=0;i<directions.length;i++){
+	var canPawnBeMovedHereForAllDirections = this.board.getValidPawnMoveDirections(player);
+	var neighboursPerDirection = this.board.getPawnAllNeighBourCellIds(player);
+	
+	for (var i=0;i<canPawnBeMovedHereForAllDirections.length;i++){
 		//for every direction that exists, we color the pawn circle in the correct cell.
-		if (directions[i]){
+		if (canPawnBeMovedHereForAllDirections[i]){
 			//get cell id of active direction
 			//id of player cell = 
-			var cellId = this.board.pawnCellsIds[player];
-			var activeCell = this.board.cells[cellId];
-			var neighbourId = activeCell.getNeighbourId(i);
+			
 			if (isHoveringInElseOut){
-				this.svgCellsAsPawnShapes[neighbourId].setAttribute('fill',colours[player + 1]);
+				this.svgCellsAsPawnShapes[neighboursPerDirection[i]].setAttribute('fill',colours[player + 1]);
 			}else{
-				this.svgCellsAsPawnShapes[neighbourId].setAttribute('fill',colours[0]);
+				this.svgCellsAsPawnShapes[neighboursPerDirection[i	]].setAttribute('fill',colours[0]);
 				
 				
 			}
@@ -644,12 +681,15 @@ Game.prototype.buildUpBoard = function(svgElement){
 	
 	
 	//add pawnPositions
-	var circleId;
+	var index;
 	for (var i=0; i<9;i++){ //rows
 		// x1, y1, x2, y2
 		for (var j=0; j<9;j++){ //cols
-				circleId = (9*i) + j;
-				this.svgCellsAsPawnShapes.push(add_circle(svgElement, (j+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED  , (i+0.5) *BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "cell_pawnCircle_" + circleId, BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE));
+				index = (9*i) + j;
+				this.svgCellsAsPawnShapes.push(add_circle(svgElement, (j+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED  , (i+0.5) *BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "cell_pawnCircle_" + index, BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE));
+				this.svgCellsAsPawnShapes[index].addEventListener("click", function (){this.mouseClickCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
+				this.svgCellsAsPawnShapes[index].addEventListener("mouseover", function (){this.mouseHoversInCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
+				this.svgCellsAsPawnShapes[index].addEventListener("mouseout", function (){this.mouseHoversOutCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
 		}
 	}
 	
@@ -668,7 +708,7 @@ Game.prototype.buildUpBoard = function(svgElement){
 	for (var i = 0;i<2;i++){
 		this.svgPawns[i].addEventListener("mouseover", function (){this.mouseHoversInPawnElement(event.target);}.bind(this)); //works, sends back line#id
 		this.svgPawns[i].addEventListener("mouseout", function (){this.mouseHoversOutPawnElement(event.target);}.bind(this)); //works, sends back line#id
-		this.svgPawns[i].addEventListener("click", function (){this.mouseClickPawnElement(event.target);}.bind(this)); //works, sends back line#id
+		//this.svgPawns[i].addEventListener("click", function (){this.mouseClickPawnElement(event.target);}.bind(this)); //works, sends back line#id
 	}
 	
 	//bottom walls unused placement.
@@ -701,9 +741,10 @@ Game.prototype.beep = function() {
 
 Game.prototype.play_song = function(){
 	//https://www.playonloop.com/2015-music-loops/cookie-island/
-	var song = new Audio("POL-cookie-island-short.wav");
-	song.play();
-	
+	if (SOUND_ENABLED_AT_STARTUP){
+		var song = new Audio("POL-cookie-island-short.wav");
+		song.play();
+	}
 }
 
 function Board(){
@@ -953,6 +994,26 @@ Board.prototype.init = function (){
 };
 
 
+
+Board.prototype.getAllNeighBourCellIds= function(cellId){
+	var activeCell = this.cells[cellId];
+	var neighbourIds = [];
+	for (var i=0;i<12;i++){
+		//for every direction that exists, we color the pawn circle in the correct cell.
+		//get cell id of active direction
+		//id of player cell = 
+		neighbourIds.push(activeCell.getNeighbourId(i));
+	}
+	return neighbourIds;
+}
+
+Board.prototype.getPawnAllNeighBourCellIds= function(player){
+	
+	//for the 12 directions.
+	var cellId = this.pawnCellsIds[player];
+	return this.getAllNeighBourCellIds(cellId);
+	
+}
 
 Board.prototype.getValidPawnMoveDirections = function(player){
 	var validDirections = []
