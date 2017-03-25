@@ -26,8 +26,10 @@ var BOARD_PAWN_1_COLOR = "lightskyblue";
 var BOARD_PAWN_2_COLOR = "lightsalmon";
 var BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER = "red";
 var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE = BOARD_BACKGROUND_COLOR;
-var BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1 = "paleturquoise";
-var BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2 = "peachpuff";
+var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1 = "paleturquoise";
+var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "deepskyblue";
+var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2 = "peachpuff";
+var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "salmon";
 
 var WALL_START_DISTANCE_FROM_BOARD_X = 80;
 var WALL_START_DISTANCE_FROM_BOARD_Y = 20	;
@@ -38,6 +40,7 @@ var WALL_LENGTH = 2*BOARD_SQUARE_SPACING - WALL_WIDTH-10;
 // var WALL_COLOR = "steelblue";
 var WALL_COLOR = "teal";
 
+var DIRECTIONS_VERBOSE = ["n","e","s","w","ne","se","sw","nw","nn","ee","ss","ww"];
 var NORTH = 0;
 var EAST = 1
 var SOUTH = 2;
@@ -55,7 +58,7 @@ var PLAYER1 = 0;
 var PLAYER2 = 1;
 GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
 //GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 70;
-
+PRINT_ASSERT_ERRORS = true;
 
 
 
@@ -89,19 +92,19 @@ function initQuoridorDOM(){
 	
 	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
 //	aGame.testPlaceWall(PLAYER1, "h1");
-/**/	
-	aGame.playTurnByVerboseNotation(PLAYER1,"N");
-	aGame.playTurnByVerboseNotation(PLAYER2,"S");
-	aGame.playTurnByVerboseNotation(PLAYER1,"N");
-	aGame.playTurnByVerboseNotation(PLAYER2,"S");
-	aGame.playTurnByVerboseNotation(PLAYER1,"N");
-	aGame.playTurnByVerboseNotation(PLAYER2,"S");
-	aGame.playTurnByVerboseNotation(PLAYER1,"N");
-	aGame.playTurnByVerboseNotation(PLAYER1, "6d");
-	aGame.playTurnByVerboseNotation(PLAYER1, "ne");
-	aGame.playTurnByVerboseNotation(PLAYER1, "c5");
-	aGame.playTurnByVerboseNotation(PLAYER1, "d5");
-	aGame.playTurnByVerboseNotation(PLAYER1, "4d");
+/*	
+	aGame.playTurnByVerboseNotation("N");
+	aGame.playTurnByVerboseNotation("S");
+	aGame.playTurnByVerboseNotation("N");
+	aGame.playTurnByVerboseNotation("S");
+	aGame.playTurnByVerboseNotation("N");
+	aGame.playTurnByVerboseNotation("S");
+	aGame.playTurnByVerboseNotation("N");
+	aGame.playTurnByVerboseNotation("6d");
+	aGame.playTurnByVerboseNotation("ne");
+	aGame.playTurnByVerboseNotation("c5");
+	aGame.playTurnByVerboseNotation("d5");
+	aGame.playTurnByVerboseNotation("4d");
 	
 	
 	
@@ -112,7 +115,7 @@ function initQuoridorDOM(){
 	/*
 	var movesHistory = ["n","s","n","s","n","s","3d","3g","e3","s","c4","sw","nw","nn","nn","w","n","s","n"];
 	var replay = new GameReplay(aGame, movesHistory);
-	replay.replay(0);
+	replay.replay();
 	/**/
 }
 
@@ -120,22 +123,22 @@ function initQuoridorDOM(){
 
 function GameReplay (game, recordedMoves){
 	//this.replayGame = new Game(); //init board
-	this.qgame = game;
+	this.replayGame = game;
 	this.recordedGame = recordedMoves;
-	this.moveCounter = 0;
-	console.log(this.qgame);
+	//this.moveCounter = 0;
+	console.log(this.replayGame);
 }
 
-GameReplay.prototype.replay = function (moveCounter){
+GameReplay.prototype.replay = function (){
 
-	if (moveCounter < this.recordedGame.length){
-		console.log("player moving: %d",moveCounter%2 );
+	if (this.replayGame.moveCounter < this.recordedGame.length){
+		//console.log("player moving: %d",moveCounter%2 );
 		// window.setTimeout(this.callback(moveCounter%2, this.recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
-		window.setTimeout(function (){this.callback(moveCounter%2, this.recordedGame[moveCounter])}.bind(this),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+		window.setTimeout(function (){this.callback( this.recordedGame[this.replayGame.moveCounter])}.bind(this),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	}
 }
 
-GameReplay.prototype.callback = function(player, verboseMove){
+GameReplay.prototype.callback = function( verboseMove){
 	// return function(){
 			
        // this.qgame.movePawn(player, direction);
@@ -143,9 +146,9 @@ GameReplay.prototype.callback = function(player, verboseMove){
 	   
 	   // this.replay(this.moveCounter);
     // }
-	this.qgame.playTurnByVerboseNotation(player, verboseMove);
-	this.moveCounter += 1;
-	this.replay(this.moveCounter);
+	this.replayGame.playTurnByVerboseNotation( verboseMove);
+	//this.moveCounter += 1;
+	this.replay();
 }
 
 /*
@@ -171,33 +174,78 @@ function Game(svgField){
 	this.board = new Board();
 	this.buildUpBoard(svgField);
 	this.outputPawns();
+	
 	this.play_song();
+	
+	//administration
+	this.playerAtMove = PLAYER1;
+	this.recordingOfGameInProgress = [];
+	this.moveCounter = 0;
+	
+	this.indicateActivePlayer();
 }
 
+//Game.prototype.playTurn
 
-Game.prototype.playTurnByVerboseNotation = function(player, verboseNotation){
-	//try if verbose notation is for moving the pawn, 
-	//console.log("Move of player %d, move: %s", player, verboseNotation);
-	console.log("-------------------------------------");
-	if (verboseNotation == "x" || verboseNotation == "X"){
-		console.log ("player %d gave up... (not implemented yet...) (%s)", player, verboseNotation);
-		return false;
-	}else if (this.placeWallByVerboseNotation(player,verboseNotation)){
-		console.log("player %d placed wall (%s)", player, verboseNotation);
-		return true;
-	}else if (this.movePawnByVerboseNotation(player,verboseNotation)){
-		console.log("player %d moved pawn (%s)", player, verboseNotation);
-		return true;
-	}else {
-		console.log("wrong notation? invalid move? --> please correct this move: %s", verboseNotation);
+
+
+
+
+Game.prototype.wallToVerboseNotation = function(cellId, directionIsNorthToSouth){
+	var row = 8 - Math.floor(cellId/9);
+	var rowString = String.fromCharCode(48 + row);
+	var col = cellId%9;
+	var colLetter = String.fromCharCode(97 + col);
+	
+	if (directionIsNorthToSouth){
+		return colLetter + rowString;
+	}else{
+		return rowString + colLetter;
+	}
+	
+
+}
+Game.prototype.pawnDirectionToVerboseNotation = function(direction){
+	if (direction<0 ||direction >12){
+		console.log("ASSERT ERROR: direction oustide limits...");
 		return false;
 	}
-	;
+	return DIRECTIONS_VERBOSE[direction];
 	
-	//if not valid, try placing a wall
+}
+
+Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
+	//try if verbose notation is for moving the pawn, 
+	//console.log("Move of player %d, move: %s", player, verboseNotation);
+	var validMove = false;
+	//console.log("-------------------------------------");
+	if (verboseNotation == "x" || verboseNotation == "X"){
+		console.log ("player %d gave up... (not implemented yet...) (%s)", this.playerAtMove, verboseNotation);
+		validMove = false;
+	}else if (this.movePawnByVerboseNotation(this.playerAtMove,verboseNotation)){
+		console.log("player %d moved pawn (%s)", this.playerAtMove, verboseNotation);
+		validMove= true;
+	}else if (this.board.wallNotationToCellAndOrientation(verboseNotation)){
+		this.placeWallByVerboseNotation(this.playerAtMove,verboseNotation);
+		console.log("player %d placed wall (%s)", this.playerAtMove, verboseNotation);
+		validMove = true;
 	
-	//
+	}else {
+		console.log("wrong notation? invalid move? --> please correct this move: %s", verboseNotation);
+		validMove = false;
+	}
 	
+	if (!validMove){
+		return false;
+	}
+	
+	
+	//check with administration
+	this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
+	this.moveCounter++;
+	this.recordingOfGameInProgress.push(verboseNotation);
+	this.indicateActivePlayer();
+	return true;
 }
 
 Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
@@ -210,14 +258,19 @@ Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
 	return isValidMove;
 	
 }
+
+
+
 Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 	
 	var direction = this.pawnVerboseNotationToDirection(verboseCoordinate);
-	var isValidMove = this.board.movePawn(player, direction);
+	var isValidMove = this.board.movePawn(player, direction,true); //simulate first
+	
 	
 	if (!isValidMove){
 		return false;
 	}else{
+		this.board.movePawn(player, direction,false); //actual move
 		this.outputPawn(player);
 		return true;
 	}
@@ -226,6 +279,20 @@ Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 }
 	
 Game.prototype.pawnVerboseNotationToDirection = function ( verboseCoordinate ){	
+	//to lower case
+	
+	var verboseLowerCase = verboseCoordinate.toLowerCase();
+	
+	var direction = DIRECTIONS_VERBOSE.indexOf(verboseLowerCase);
+	if (direction == -1){
+		return false;
+	}else{
+		return direction;
+	}
+}
+/*
+Game.prototype.pawnVerboseNotationToDirectionOLD = function ( verboseCoordinate ){	
+
 	//get direction from letter
 	//notation maximum two characters.
 	
@@ -332,21 +399,8 @@ Game.prototype.pawnVerboseNotationToDirection = function ( verboseCoordinate ){
 	}
 	
 }
-/*
-Game.prototype.movePawn = function(player, direction){
-	
-	this.board.movePawn(player, direction);
-	
-	//console.log("joijivjv	");
-	//var x,y;
-	//x = parseInt(pawns[player].getAttribute("cx"));
-	//y = pawns[player].getAttribute("cy");
-	//pawns[player].setAttribute("cx", x + BOARD_SQUARE_SPACING*BOARD_SCALE);
-	//console.log("x:%d", x);
-//	pawns[player].setAttribute("cy", y + 100);
-	
-}
 */
+
 
 Game.prototype.outputWalls = function(){
 	/*
@@ -401,7 +455,18 @@ Game.prototype.outputPawns = function(){
 	this.outputPawn(PLAYER1);
 	this.outputPawn(PLAYER2);
 }
-
+Game.prototype.indicateActivePlayer = function(){
+	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED];
+	if (this.playerAtMove == PLAYER1){
+		
+		this.svgPawns[PLAYER1].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED);
+		this.svgPawns[PLAYER2].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2);
+	}else{
+		this.svgPawns[PLAYER1].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1	);
+		this.svgPawns[PLAYER2].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED);
+	}
+	
+}
 Game.prototype.outputPawn = function(player){
 	var pawnCoords = (this.board.getPawnCoordinates(player));
 	//console.log("player: %d : ", player);
@@ -429,7 +494,7 @@ Game.prototype.mouseHoversOutCellAsPawnCircleElement = function (callerElement){
 	
 Game.prototype.mouseCellAsPawnCircleElement = function (callerElement, isHoveringInElseOut, movePawnIfPossible){
 	
-	var colours = [ BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2];
+	var colours = [ BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2];
 		
 	var id = callerElement.id;
 	var cellId  = parseInt(id.substr(16,17));
@@ -441,9 +506,9 @@ Game.prototype.mouseCellAsPawnCircleElement = function (callerElement, isHoverin
 		return false;
 	}
 	
-	//var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2];
+	//var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2];
 	//var neighboursPerDirection = this.board.getAllNeighBourCellIds(cellId);
-	var neighboursPerDirection = this.board.getPawnAllNeighBourCellIds(PLAYER1);
+	var neighboursPerDirection = this.board.getPawnAllNeighBourCellIds(this.playerAtMove);
 		
 	//check if cellId is one of the neighbours. 
 	var directionOfNeighbour = neighboursPerDirection.indexOf(cellId);
@@ -455,10 +520,11 @@ Game.prototype.mouseCellAsPawnCircleElement = function (callerElement, isHoverin
 	}
 	
 	//check if move is possible
-	var canPawnBeMovedHereForAllDirections = this.board.getValidPawnMoveDirections(PLAYER1);
+	var canPawnBeMovedHereForAllDirections = this.board.getValidPawnMoveDirections(this.playerAtMove);
 	
 	if (!canPawnBeMovedHereForAllDirections[directionOfNeighbour]){
 		//console.log("moveIsNOTPOssible"); 
+		//console.log("active player: %d ",this.playerAtMove);
 		//pawn cant be moved
 		//color forbidden movement.... on hover in
 		this.svgCellsAsPawnShapes[cellId].setAttribute('fill',BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER);
@@ -466,12 +532,13 @@ Game.prototype.mouseCellAsPawnCircleElement = function (callerElement, isHoverin
 	}
 	
 	//color move allowed at hover in
-	this.svgCellsAsPawnShapes[cellId].setAttribute('fill',colours[PLAYER1]);
+	this.svgCellsAsPawnShapes[cellId].setAttribute('fill',colours[this.playerAtMove]);
 	
 	if (movePawnIfPossible){
-		console.log(directionOfNeighbour);
-		this.board.movePawn(PLAYER1, directionOfNeighbour, false);
-		this.outputPawns();
+		//console.log(directionOfNeighbour);
+		this.playTurnByVerboseNotation(this.pawnDirectionToVerboseNotation(directionOfNeighbour));
+		//this.board.movePawn(PLAYER1, directionOfNeighbour, false);
+		//this.outputPawns();
 	}	
 	return true;
 }
@@ -493,8 +560,12 @@ Game.prototype.mouseHoversOutPawnElement = function (callerElement){
 Game.prototype.mouseEventPawn = function (callerElement,isHoveringInElseOut){
 	var id = callerElement.id;
 	var player  = parseInt(id.substr(12,13)) -1;
+	if (player!= this.playerAtMove){
+		//only show options for active player.		
+		return false;
+	}
 	
-	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_ACTIVE_PLAYER_2];
+	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2];
 	
 	var canPawnBeMovedHereForAllDirections = this.board.getValidPawnMoveDirections(player);
 	var neighboursPerDirection = this.board.getPawnAllNeighBourCellIds(player);
@@ -568,8 +639,14 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 	}
 	
 	if (placeWallIfAllowed){
-		this.board.placeWall(PLAYER1,startCellId, isNorthSouthOriented, false);
-		this.outputWalls();
+		//this.board.placeWall(PLAYER1,startCellId, isNorthSouthOriented, false);
+		//this.outputWalls();
+		//console.log();
+		if(this.board.placeWall (PLAYER1, startCellId, isNorthSouthOriented, true)){
+			var verboseNotationWallPlacement = this.wallToVerboseNotation(startCellId, isNorthSouthOriented);
+			this.playTurnByVerboseNotation(verboseNotationWallPlacement);
+		}
+		
 	}else{	
 		//colorize line
 		if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
@@ -593,13 +670,13 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 Game.prototype.buildUpBoard = function(svgElement){
 	
 	
-	
+	/*
 	//add_circle(svgElement, x, y, r, id, color
 	var circleTest = add_circle(svgElement, 0,50,50,"tmp", "blue");
 	
 	circleTest.addEventListener("click", function() { this.setAttribute('fill', 'red') });
 	circleTest.addEventListener("mouseout", function() { this.setAttribute('fill', 'blue') });
-
+*/
 	//wall lines:
 	//all line segements go in an array, their position index corresponds with their ID.
 	//horizontal line segments: correspond with cell ID (with cell on the west)
@@ -764,7 +841,9 @@ Board.prototype.wallNotationToCellAndOrientation = function (verboseCoordinate){
 	
 	//get vertical wall line
 	if (verboseCoordinate.length != 2){
-		console.log("ASSERT ERROR  not a wall move, notation should be two characters");
+		if (PRINT_ASSERT_ERRORS){
+			console.log("ASSERT ERROR  not a wall move, notation should be two characters");
+		}
 		return false;
 	}
 	//var wallLines = verboseCoordinate.split('');
@@ -775,6 +854,7 @@ Board.prototype.wallNotationToCellAndOrientation = function (verboseCoordinate){
 	//https://webserver2.tecgraf.puc-rio.br/cd/img/vectorfont_default.png
 	for(var i=0;i<2;i++){
 		if (charVals[i]>= 49 && charVals[i]<=56){
+			//number
 			isLetter[i] =false;
 			values.push(charVals[i]-48);
 		}else if (charVals[i]>= 65 && charVals[i]<=72){
@@ -787,7 +867,9 @@ Board.prototype.wallNotationToCellAndOrientation = function (verboseCoordinate){
 			values.push(charVals[i]-96);
 		}else{
 			//assert error
-			console.log("ASSERT ERROR not a wall move, invalid character in notation to place a wall.");
+			if (PRINT_ASSERT_ERRORS){
+				console.log("ASSERT ERROR not a wall move, invalid character in notation to place a wall.");
+			}
 			return false;
 		}
 	}
@@ -795,7 +877,9 @@ Board.prototype.wallNotationToCellAndOrientation = function (verboseCoordinate){
 	//check validity
 	if (isLetter[0] == isLetter[1]){
 		//check if both are number or letter
-		console.log("ASSERT ERROR: should be a letternumber or numberletter")
+		if (PRINT_ASSERT_ERRORS){
+			console.log("ASSERT ERROR: should be a letternumber or numberletter")
+		}
 		return false;
 	}else if (isLetter[0]){
 		isNorthSouthOriented = true;
@@ -823,10 +907,7 @@ Board.prototype.getWallCenterPointWithOrientationFromStartCellIdAndOrientation =
 	var rowCol = this.cells[startCellId].getRowColFromId();
 	return [rowCol[0]+1 , rowCol[1]+1, orientation];
 }
-Board.prototype.getWallCenterPointWithOrientationFromVerboseCoordinate = function(verboseCoordinate){
-	return wallNotationToCellAndOrientation(verboseCoordinate);
-	
-}
+
 Board.prototype.getWalls = function (){
 	return [this.walls_1 , this.walls_2];
 }
@@ -1035,7 +1116,9 @@ Board.prototype.movePawn = function(player, direction,isSimulation){
 		isValidMove = this.movePawnStraightJump(player, direction,isSimulation);
 		 
 	}else{
-		console.log("ASSERT ERROR: non valid pawn move direction");
+		if (!isSimulation){
+			console.log("ASSERT ERROR: non valid pawn move direction");
+		};
 		isValidMove = false;
 	}
 	
@@ -1049,7 +1132,9 @@ Board.prototype.movePawnStraightJump = function(player, twoStepsDirection, isSim
 	
 	singleStepDirection = twoStepsDirection-8
 	if (!cell.isThereAnExistingNeighbourOnThisSide(twoStepsDirection)){
-		console.log("ASSERT ERROR: no neighbour cell existing");
+		if (!isSimulation){
+			console.log("ASSERT ERROR: no neighbour cell existing");
+		}
 		return false;
 	}
 	
@@ -1097,7 +1182,9 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 	
 	if (!cell.isThereAnExistingNeighbourOnThisSide(diagonalDirection)){
 		//this works, if both orthogonals existing, diagonal is existing too
-		console.log("ASSERT ERROR: no neighbour cell existing");
+		if(!isSimulation){
+			console.log("ASSERT ERROR: no neighbour cell existing");
+		}
 		return false;
 	}
 	
@@ -1123,7 +1210,9 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 	if (!this.cells[neighbourId].getIsOccupied() || this.cells[neighbourId].getIsOccupied() == player+1 ){
 		
 		console.log (this.cells[neighbourId].getIsOccupied() == player+1);
-		console.log ("no pawn detected at adjecent cell, no jump allowed.");
+		if(!isSimulation){
+			console.log ("no pawn detected at adjecent cell, no jump allowed.");
+		}
 		return false;
 	}
 	
@@ -1138,19 +1227,25 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 	
 	//check wall blocking move from cell to neighbour
 	if (!cell.isSideOpen(firstDirection)){
-		console.log ("no diagonal jump allowed, not possible to move to reach neighbour cell");
+		if(!isSimulation){
+			console.log ("no diagonal jump allowed, not possible to move to reach neighbour cell");
+		}
 		return false;
 	}
 	
 	//check wall blocking straight jump from neighbour to second neighbour
 	if (this.cells[neighbourId].isSideOpen(firstDirection)){
-		console.log ("no diagonal jump allowed, the forward side has to be blocked, otherwise it would be a straight jump");
+		if(!isSimulation){
+			console.log ("no diagonal jump allowed, the forward side has to be blocked, otherwise it would be a straight jump");
+		}
 		return false;
 	}
 		
 	//check wall blocking diag jump from neighbour to second neighbour
 	if (!this.cells[neighbourId].isSideOpen(secondDirection)){
-		console.log ("no diagonal jump allowed, a side ways side is preventing the jump.");
+		if(!isSimulation){
+			console.log ("no diagonal jump allowed, a side ways side is preventing the jump.");
+		}	
 		return false;
 	}
 	
@@ -1176,7 +1271,9 @@ Board.prototype.movePawnSingleCell = function(player, direction, isSimulation){
 	//check if neighbour cell exists 
 	var cell = this.cells[this.pawnCellsIds[player]];
 	if (!cell.isThereAnExistingNeighbourOnThisSide(direction)){
-		console.log("ASSERT ERROR: no neighbour cell existing");
+		if(!isSimulation){
+			console.log("ASSERT ERROR: no neighbour cell existing");
+		}
 		return false;
 	}
 	
@@ -1275,22 +1372,33 @@ Cell.prototype.isThereAnExistingNeighbourOnThisSide = function(direction){
 	}else if (direction < 12){
 			return this.isThereAnExistingNeighbourOnThisSide(direction - 8);
 	}else{
+		//if (PRINT_ASSERT_ERRORS){
 		console.log("ASSERT ERROR DIRECITON NOT EXISTING");
+		//}
+		return 666;
 	}
 }
 
 Cell.prototype.acquirePawn= function(player){
 	if(this.occupiedByPawn >0){
-		console.log("ASSERT ERROR: cell already contains pawn");
+		//if (PRINT_ASSERT_ERRORS){
+			console.log("ASSERT ERROR: cell already contains pawn");
+		//}
+		return false;
 	}else{
 		this.occupiedByPawn = player+1;
+		return true;
 	}
 }
 Cell.prototype.releasePawn =function(player){
 	if(this.occupiedByPawn <1){
-		console.log("ASSERT ERROR: cell does not contain pawn");
+		//if (PRINT_ASSERT_ERRORS){
+			console.log("ASSERT ERROR: cell does not contain pawn");
+		//}
+		return false;
 	}else{
 		this.occupiedByPawn = 0;
+		return true;
 	}
 }
 
@@ -1298,7 +1406,9 @@ Cell.prototype.getNeighbourId= function (direction){
 	//direction: 0 is North, 1 E, 2S, 3 West
 	//4NE, 5SE, 6, SW, 7 NW , 8NN, 9 EE, 10 SS, 11, WW
 	if (!this.isThereAnExistingNeighbourOnThisSide(direction)){
-		console.log("ASSERT ERROR neighbour not existing");
+		if(PRINT_ASSERT_ERRORS){
+			console.log("ASSERT ERROR neighbour not existing");
+		}
 		return false;
 	}
 	//assert neighbour is existing. 
