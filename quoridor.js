@@ -73,6 +73,14 @@ function initQuoridorDOM(){
 	var quoridorField = document.getElementById("quoridor-field");
 	//addDiv(setShowField, "card");
 	addSvg(quoridorField, "quoridorFieldSvg",BOARD_WIDTH*BOARD_SCALE, BOARD_HEIGHT*BOARD_SCALE,BOARD_BACKGROUND_COLOR,"black");
+	var statsDiv = document.createElement('div');
+	statsDiv.id = 'statsDiv';
+	statsDiv.className = 'stats';
+	//document.getElementById('statsDiv').innerHTML += '<br>Some new content!';
+	
+	statsDiv.innerHTML += '<br>TestGame';
+	quoridorField.appendChild(statsDiv);
+	
 	var field = document.getElementById("quoridorFieldSvg");		
 	
 	//movePawnToPosition(PLAYER1,NORTH);
@@ -185,6 +193,7 @@ function Game(svgField){
 	this.moveCounter = 0;
 	
 	this.indicateActivePlayer();
+	this.outputGameStats();
 }
 
 //Game.prototype.playTurn
@@ -247,8 +256,30 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.moveCounter++;
 	this.recordingOfGameInProgress.push(verboseNotation);
 	this.indicateActivePlayer();
-	console.log(this.recordingOfGameInProgress);
+	//console.log(this.recordingOfGameInProgress);
+	this.outputGameStats();
+	
 	return true;
+}
+
+Game.prototype.outputGameStats= function(){
+	
+	if (this.playerAtMove == PLAYER1){
+		document.getElementById('statsDiv').innerHTML = 'Blue Player playing.';
+	}else{
+		document.getElementById('statsDiv').innerHTML = 'Red Player playing.';
+	}
+	document.getElementById('statsDiv').innerHTML += '<br>Stats:';
+	for (var i =0; i<this.recordingOfGameInProgress.length;i++){
+		if (i%2 == 0){
+			document.getElementById('statsDiv').innerHTML += ('<br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);		
+		}else{
+			document.getElementById('statsDiv').innerHTML += (' ' + this.recordingOfGameInProgress[i]);		
+		}
+	}
+	
+	
+	
 }
 
 Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
