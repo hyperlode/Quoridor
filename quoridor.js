@@ -27,9 +27,11 @@ var BOARD_PAWN_2_COLOR = "lightsalmon";
 var BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER = "red";
 var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE = BOARD_BACKGROUND_COLOR;
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1 = "paleturquoise";
-var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "deepskyblue";
+// var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "deepskyblue";
+var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "paleturquoise";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2 = "peachpuff";
-var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "salmon";
+var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "peachpuff";
+// var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "salmon";
 
 var WALL_START_DISTANCE_FROM_BOARD_X = 80;
 var WALL_START_DISTANCE_FROM_BOARD_Y = 20	;
@@ -58,7 +60,7 @@ var PLAYER1 = 0;
 var PLAYER2 = 1;
 GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
 //GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 70;
-PRINT_ASSERT_ERRORS = true;
+PRINT_ASSERT_ERRORS = false;
 
 
 
@@ -245,6 +247,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.moveCounter++;
 	this.recordingOfGameInProgress.push(verboseNotation);
 	this.indicateActivePlayer();
+	console.log(this.recordingOfGameInProgress);
 	return true;
 }
 
@@ -403,30 +406,11 @@ Game.prototype.pawnVerboseNotationToDirectionOLD = function ( verboseCoordinate 
 
 
 Game.prototype.outputWalls = function(){
-	/*
-	var horiLineNumber = 4;
-	var vertLineNumber = 3;
-	//vertical wall
-	
-	this.walls_1[0].setAttribute("x1", BOARD_SQUARE_SPACING * vertLineNumber * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
-	this.walls_1[0].setAttribute("x2", BOARD_SQUARE_SPACING * vertLineNumber * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
-	this.walls_1[0].setAttribute("y1", BOARD_SQUARE_SPACING * (horiLineNumber - 1) * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
-	this.walls_1[0].setAttribute("y2", BOARD_SQUARE_SPACING * (horiLineNumber + 1)* BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
-	
-	horiLineNumber = 5;
-	vertLineNumber = 7;
-	//horizontal wall
-	*/
-	//console.log("fefeeeee");
 	var wallElements = [this.walls_1, this.walls_2];
 	var allWalls = this.board.getWalls();
-	//console.log(allWalls);
-	
 	
 	for (var player=0;player<2;player++){
 	//	console.log(allWalls[player].length);
-		
-			
 		for (var wallIndex = 0; wallIndex < allWalls[player].length ; wallIndex++){
 			//console.log(wallIndex);
 			var wall = allWalls[player][wallIndex];
@@ -447,7 +431,6 @@ Game.prototype.outputWalls = function(){
 				wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][0] * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
 			}
 		}
-		
 	}	
 }
 
@@ -498,7 +481,7 @@ Game.prototype.mouseCellAsPawnCircleElement = function (callerElement, isHoverin
 		
 	var id = callerElement.id;
 	var cellId  = parseInt(id.substr(16,17));
-	console.log(cellId);
+	//console.log(cellId);
 	
 	if (!isHoveringInElseOut){
 		//set color back to default value when hovering out. ALWAYS
@@ -967,15 +950,19 @@ Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented,
 	
 	//check if within board limits:
 	if (!(startCell.row >=0 && startCell.row<=7 && startCell.col >=0 && startCell.col<=7)){
-		console.log("ASSER ERROR WRONG CELL as wall start identifier ");
-		console.log("-------------------------");
-		console.log(startCell);
+		if (!onlyCheckAvailabilityDontPlaceWall){
+			console.log("ASSER ERROR WRONG CELL as wall start identifier ");
+			console.log("-------------------------");
+			console.log(startCell);
+		}	
 		return false;
 	}
 	
 	//first check if centerpoint is available
 	if (!this.isCenterPointAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
-		console.log("centerpoint wall occupied. wall cannot be placed.");
+		if (!onlyCheckAvailabilityDontPlaceWall){
+			console.log("centerpoint wall occupied. wall cannot be placed.");
+		}
 		
 		return false;
 	}	
@@ -1013,7 +1000,9 @@ Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented,
 	}
 	if (!isAllAffectedSideOpen){
 		//wall cannot be placed because another wall is blocking its path somewhere.
-		console.log("position not valid for wall placement");
+		if (!onlyCheckAvailabilityDontPlaceWall){
+			console.log("position not valid for wall placement");
+		} 
 		return false;
 	}
 	
@@ -1021,7 +1010,6 @@ Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented,
 	//check completed, return results if only simulation.
 	if (onlyCheckAvailabilityDontPlaceWall){
 		return true;
-	
 	}
 	
 	//place wall
@@ -1147,13 +1135,17 @@ Board.prototype.movePawnStraightJump = function(player, twoStepsDirection, isSim
 	
 	//check if direction not blocked by wall
 	if (!cell.isSideOpen(singleStepDirection) || !this.cells[neighbourId].isSideOpen(singleStepDirection)){
-		console.log("one or two walls in the way, can't jump in direction %d (N=0, E=1, S=2, W=3)", singleStepDirection);
+		if (!isSimulation){
+			console.log("one or two walls in the way, can't jump in direction %d (N=0, E=1, S=2, W=3)", singleStepDirection);
+		}
 		return false;
 	}
 	
 	//check if neighbour has pawn
 	if (!this.cells[neighbourId].getIsOccupied()){
-		console.log("Can only jump if neighbour has a pawn");
+		if (!isSimulation){
+			console.log("Can only jump if neighbour has a pawn");
+		}
 		return false
 	}
 	
@@ -1209,7 +1201,7 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 	//check neighbour containing other pawn
 	if (!this.cells[neighbourId].getIsOccupied() || this.cells[neighbourId].getIsOccupied() == player+1 ){
 		
-		console.log (this.cells[neighbourId].getIsOccupied() == player+1);
+		//console.log (this.cells[neighbourId].getIsOccupied() == player+1);
 		if(!isSimulation){
 			console.log ("no pawn detected at adjecent cell, no jump allowed.");
 		}
@@ -1279,7 +1271,10 @@ Board.prototype.movePawnSingleCell = function(player, direction, isSimulation){
 	
 	//check if direction not blocked by wall
 	if (!cell.isSideOpen(direction)){
-		console.log("wall in the way, can't move in direction %d (N=0, E=1, S=2, W=3)", direction);
+		if(!isSimulation){
+			console.log("wall in the way, can't move in direction %d (N=0, E=1, S=2, W=3)", direction);
+		}
+		
 		return false;
 	}
 	
@@ -1287,7 +1282,9 @@ Board.prototype.movePawnSingleCell = function(player, direction, isSimulation){
 	var neighbour = cell.getNeighbourId(direction); //get neighbour id
 	
 	if (this.cells[neighbour].getIsOccupied()){
-		console.log("cant move, destination cell contains other pawn. Please perform a jump move.");
+		if (!isSimulation){
+			console.log("cant move, destination cell contains other pawn. Please perform a jump move.");
+		}
 		return false
 	}
 	
