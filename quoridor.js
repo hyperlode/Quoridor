@@ -901,12 +901,18 @@ Board.prototype.getShortestPathToFinish = function (player){
 		
 		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+finishCellsLookupTable[player][finishCell]);
 		//console.log(pathToFinish);
-		if (pathToFinish.length < shortestPath.length || finishCell == 0){
-			shortestPath = pathToFinish ;
-			//console.log("poyeee");
+		if (pathToFinish != null){
+			if (pathToFinish.length < shortestPath.length || finishCell == 0){
+				shortestPath = pathToFinish ;
+				//console.log("poyeee");
+			}
 		}
+		
+		
 	}
-	
+	if (pathToFinish == null){
+		return false;
+	}
 	var shortestPathToInt=[];
 	for (var i=0;i<shortestPath.length;i++){
 		shortestPathToInt.push(parseInt(shortestPath[i]));
