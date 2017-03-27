@@ -883,7 +883,8 @@ function Board(){
 
 Board.prototype.getShortestPathToFinish = function (player){
 	//get cell with player.
-	var finishCellsLookupTable = [[1,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
+	//var finishCellsLookupTable = [["0","1","2","3","4","5","6","7","8"],["72","73","74","75","76","77","78","79","80"]]; //valid finish cellIDs for player 1 and player 2
+	var finishCellsLookupTable = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 	
 	var playerCell = this.getPawnCellId(player);
 	var searchGraph = new Graph(this.boardGraph);
@@ -898,7 +899,7 @@ Board.prototype.getShortestPathToFinish = function (player){
 	/**/
 	for (var finishCell=0;finishCell<9;finishCell++){
 		
-		pathToFinish = searchGraph.findShortestPath(playerCell, finishCellsLookupTable[player][finishCell]);
+		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+finishCellsLookupTable[player][finishCell]);
 		//console.log(pathToFinish);
 		if (pathToFinish.length < shortestPath.length || finishCell == 0){
 			shortestPath = pathToFinish ;
@@ -906,7 +907,11 @@ Board.prototype.getShortestPathToFinish = function (player){
 		}
 	}
 	
-	
+	var shortestPathToInt=[];
+	for (var i=0;i<shortestPath.length;i++){
+		shortestPathToInt.push(parseInt(shortestPath[i]));
+	}
+	shortestPath = shortestPathToInt;
 	this.shortestPathPerPlayer[player] = shortestPath;
 	return shortestPath;
 	
@@ -984,15 +989,16 @@ Board.prototype.boardCellsToGraph = function (weighted){
 	if (weighted){
 		var weightedGraph = {}
 		for (var i = 0; i< Object.keys(graph).length; i++){
-			//console.log(graph[i]);
+			
 			var subgraph = {};
 			if (i in graph){ //check if key exists.
 				for(var j =0; j<graph[i].length; j++){
-					subgraph[graph[i][j]]=1;
+					subgraph[""+graph[i][j]]=1;
 					
 				}
-				weightedGraph[i]=subgraph;
+				weightedGraph[""+i]=subgraph;
 			}
+			// console.log(subgraph);
 		}
 		//console.log("weightedGraph");
 		//console.log(weightedGraph);
