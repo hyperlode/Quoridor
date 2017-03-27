@@ -94,12 +94,14 @@ var Graph = (function (undefined) {
 	}
 	
 	var findShortestPath = function (map, nodes) {
-		var start = nodes.shift(),
+
+	var start = nodes.shift(),
 		    end,
 		    predecessors,
 		    path = [],
 		    shortest;
-
+//console.log("rqqqqqqrrrr");
+//console.log(nodes);
 		while (nodes.length) {
 			end = nodes.shift();
 			predecessors = findPaths(map, start, end);
@@ -136,12 +138,15 @@ var Graph = (function (undefined) {
 	}
 
 	Graph.prototype.findShortestPath = function (start, end) {
+		
 		if (Object.prototype.toString.call(start) === '[object Array]') {
+			
 			return findShortestPath(this.map, start);
 		} else if (arguments.length === 2) {
 			
 			return findShortestPath(this.map, [start, end]);
 		} else {
+			
 			return findShortestPath(this.map, toArray(arguments));
 		}
 	}
@@ -152,10 +157,13 @@ var Graph = (function (undefined) {
 	
 	Graph.findShortestPath = function (map, start, end) {
 		if (Object.prototype.toString.call(start) === '[object Array]') {
+			
 			return findShortestPath(map, start);
 		} else if (arguments.length === 3) {
+			
 			return findShortestPath(map, [start, end]);
 		} else {
+			
 			return findShortestPath(map, toArray(arguments, 1));
 		}
 	}

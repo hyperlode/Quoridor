@@ -288,8 +288,8 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.outputGameStats();
 	this.board.boardCellsToGraph(true);
 	
-	console.log(this.board.boardGraph);
-	this.board.getShortestPathToFinish(this.playerAtMove);
+	//console.log(this.board.boardGraph);
+	console.log(this.board.getShortestPathToFinish(this.playerAtMove));
 	
 	return true;
 }
@@ -877,26 +877,44 @@ function Board(){
 	
 	this.init();
 	this.boardGraph= {};
+	this.boardCellsToGraph(true);
+	this.shortestPathPerPlayer = [[]];
 }
 
 Board.prototype.getShortestPathToFinish = function (player){
 	//get cell with player.
-	var finishCellsLookupTable = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
+	var finishCellsLookupTable = [[1,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 	
 	var playerCell = this.getPawnCellId(player);
-	var graph = new Graph(this.boardGraph);
+	var searchGraph = new Graph(this.boardGraph);
 	
-	console.log(graph.findShortestPath(4,80));	
+	//console.log(graph.findShortestPath(4,80));	
 	var shortestPath = [];
-	console.log(playerCell);
-	console.log(finishCellsLookupTable[player][0]);
+	console.log("playerCell %d",playerCell);
+//	console.log(finishCellsLookupTable[player][0]);
 	
-	/*
+	var pathToFinish = [];
+	//console.log(this.boardGraph);
+	/**/
 	for (var finishCell=0;finishCell<9;finishCell++){
-		console.log(searchGraph.findShortestPath(playerCell, finishCellsLookupTable[player][finishCell]));
 		
+		pathToFinish = searchGraph.findShortestPath(playerCell, finishCellsLookupTable[player][finishCell]);
+		//console.log(pathToFinish);
+		if (pathToFinish.length < shortestPath.length || finishCell == 0){
+			shortestPath = pathToFinish ;
+			//console.log("poyeee");
+		}
 	}
-	*/
+	
+	
+	this.shortestPathPerPlayer[player] = shortestPath;
+	return shortestPath;
+	
+	/**/
+	
+	
+	
+	//console.log(searchGraph.findPaths(playerCell));
 }
 Board.prototype.boardCellsToGraph = function (weighted){
 	
