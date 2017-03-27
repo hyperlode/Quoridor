@@ -1,4 +1,4 @@
-//docReady(function() { 
+ //docReady(function() { 
 	// initQuoridorDOM();
 	
 
@@ -65,9 +65,27 @@ PRINT_ASSERT_ERRORS = false;
 
 
 document.addEventListener("DOMContentLoaded", function() {
-  initQuoridorDOM();
-  
+
+   //var map = {a:{b:3,c:1,d:3},b:{a:2,c:1,d:1},c:{a:4,b:1},d:{a:8,b:1}};
+   
+  // var test = {};
+   
+  // test[0]=[1,2,3];
+  // test[1]=[3,4,2];
+//test[1].push(5);
+  // 
+	//console.log(test);
+	//graph = new Graph(map);
+	//console.log(graph.findShortestPath('a', 'b'));
+	//console.log(graph.findPaths('a'));
+	
+	
+	
+	initQuoridorDOM();
 });
+
+
+
 
 function initQuoridorDOM(){
 	var quoridorField = document.getElementById("quoridor-field");
@@ -194,6 +212,16 @@ function Game(svgField){
 	
 	this.indicateActivePlayer();
 	this.outputGameStats();
+	
+	//testing:
+	this.board.boardCellsToGraph(true);
+	//console.log(this.board.boardGraph);
+	
+	//console.log(test);
+	//var graph = new Graph(this.board.boardGraph);
+	//console.log(graph.findShortestPath(4, 80));
+	//console.log(graph.findPaths('a'));
+	
 }
 
 //Game.prototype.playTurn
@@ -258,6 +286,10 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.indicateActivePlayer();
 	//console.log(this.recordingOfGameInProgress);
 	this.outputGameStats();
+	this.board.boardCellsToGraph(true);
+	
+	console.log(this.board.boardGraph);
+	this.board.getShortestPathToFinish(this.playerAtMove);
 	
 	return true;
 }
@@ -844,6 +876,114 @@ function Board(){
 	this.walls_2 = []; //store walls;
 	
 	this.init();
+	this.boardGraph= {};
+}
+
+Board.prototype.getShortestPathToFinish = function (player){
+	//get cell with player.
+	var finishCellsLookupTable = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
+	
+	var playerCell = this.getPawnCellId(player);
+	var graph = new Graph(this.boardGraph);
+	
+	console.log(graph.findShortestPath(4,80));	
+	var shortestPath = [];
+	console.log(playerCell);
+	console.log(finishCellsLookupTable[player][0]);
+	
+	/*
+	for (var finishCell=0;finishCell<9;finishCell++){
+		console.log(searchGraph.findShortestPath(playerCell, finishCellsLookupTable[player][finishCell]));
+		
+	}
+	*/
+}
+Board.prototype.boardCellsToGraph = function (weighted){
+	
+	//create graph with cellIds as vertexes and edges are accessible nieghbours.
+	var graph = {};
+	var extendedDirectionsLookUpTable= [[NORTHNORTH,NORTHEAST,NORTHWEST],[EASTEAST,NORTHEAST,SOUTHEAST],[SOUTHSOUTH,SOUTHEAST,SOUTHWEST],[WESTWEST,NORTHWEST,SOUTHWEST]]; 
+	for (var cellId=0; cellId<this.cells.length;cellId++){
+	//for (var cellId=0; cellId<3;cellId++){
+		//check neighbours of the cell. not necessaraly physical neighbours, as pawns can jump.
+		var neighbours= [];
+		
+		for (var direction = 0; direction <4;direction++){
+			//check neighbours
+			var neighbourId = this.cells[cellId].getNeighbourId(direction);
+			//console.log("directiontest: %d ... %d", direction,neighbourId);
+			
+			//console.log(neighbourId);
+			if (neighbourId>=0){
+				
+				var containsPawnIfSoWhichPlayer = this.cells[neighbourId].getIsOccupied();
+				//console.log("pawn: %d ... ", containsPawnIfSoWhichPlayer);
+				if (containsPawnIfSoWhichPlayer){
+						//console.log("neighbourId");
+						//console.log(neighbourId);
+						//console.log(direction);
+						
+					//if neighbours contains the opposing pawn, "neighbouring cells" become jump cells
+					//cell contains pawns, check all jump directions. i.e. n contains pawn--> ne, nn, nw.
+					
+					
+					//first check straight jump
+					if (this.movePawnStraightJump(cellId, extendedDirectionsLookUpTable[direction][0], true,true)){
+						neighbours.push(this.cells[cellId].getNeighbourId(extendedDirectionsLookUpTable[direction][0]));
+						
+					}else {
+						//check diagonal jump 
+						for (var n=1;n<3;n++){
+							//console.log (this.movePawnDiagonalJump(cellId,extendedDirectionsLookUpTable[direction][n],true,true));
+							if (this.movePawnDiagonalJump(cellId,extendedDirectionsLookUpTable[direction][n],true,true)){
+								neighbours.push(this.cells[cellId].getNeighbourId(extendedDirectionsLookUpTable[direction][n]));
+							}
+						}
+						
+					}
+					
+				}else{
+					//player
+					//console.log("direction:%d" ,direction);
+					if (this.movePawnSingleCell(cellId, direction,true,true)){
+						neighbours.push(this.cells[cellId].getNeighbourId(direction));
+						
+					};
+					
+				}
+			}
+				
+			
+			
+		}
+		//console.log(cellId);
+		//console.log(neighbours);
+		if (neighbours.length > 0){
+			graph[cellId] = neighbours;
+		}
+	}
+	
+	if (weighted){
+		var weightedGraph = {}
+		for (var i = 0; i< Object.keys(graph).length; i++){
+			//console.log(graph[i]);
+			var subgraph = {};
+			if (i in graph){ //check if key exists.
+				for(var j =0; j<graph[i].length; j++){
+					subgraph[graph[i][j]]=1;
+					
+				}
+				weightedGraph[i]=subgraph;
+			}
+		}
+		//console.log("weightedGraph");
+		//console.log(weightedGraph);
+		this.boardGraph = weightedGraph;
+	}else{
+	
+		this.boardGraph = graph;
+	}
+	//return graph;
 }
 
 
@@ -1126,13 +1266,13 @@ Board.prototype.getValidPawnMoveDirections = function(player){
 Board.prototype.movePawn = function(player, direction,isSimulation){
 	var isValidMove;
 	if (direction< 4){
-		isValidMove = this.movePawnSingleCell(player, direction,isSimulation);
+		isValidMove = this.movePawnSingleCell(player, direction,isSimulation,false);
 		
 	}else if (direction <8){
-		isValidMove =  this.movePawnDiagonalJump(player, direction,isSimulation);
+		isValidMove =  this.movePawnDiagonalJump(player, direction,isSimulation,false);
 		
 	}else if (direction <12){
-		isValidMove = this.movePawnStraightJump(player, direction,isSimulation);
+		isValidMove = this.movePawnStraightJump(player, direction,isSimulation,false);
 		 
 	}else{
 		if (!isSimulation){
@@ -1145,11 +1285,20 @@ Board.prototype.movePawn = function(player, direction,isSimulation){
 	
 }
 
-Board.prototype.movePawnStraightJump = function(player, twoStepsDirection, isSimulation){
-	//check if neighbour cell exists
-	var cell = this.cells[this.pawnCellsIds[player]];
+Board.prototype.movePawnStraightJump = function(player, twoStepsDirection, isSimulation, playerContainsStartCellIdInsteadOfPlayer){
+	//player is the jumping player.
+	//twostepsdirection nn,ee,ss,ww
+	//isSimulation-> does not output console log.
 	
-	singleStepDirection = twoStepsDirection-8
+	
+	if (playerContainsStartCellIdInsteadOfPlayer){
+		var cell = this.cells[player];
+	}else{
+		var cell = this.cells[this.pawnCellsIds[player]];
+	}
+	
+	singleStepDirection = twoStepsDirection-8;
+	//check if neighbour cell exists
 	if (!cell.isThereAnExistingNeighbourOnThisSide(twoStepsDirection)){
 		if (!isSimulation){
 			console.log("ASSERT ERROR: no neighbour cell existing");
@@ -1199,9 +1348,14 @@ Board.prototype.movePawnStraightJump = function(player, twoStepsDirection, isSim
 	
 }
 
-Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSimulation){
+Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSimulation,playerContainsStartCellIdInsteadOfPlayer){
 	//check if neighbour cell exists
-	var cell = this.cells[this.pawnCellsIds[player]];
+	
+	if (playerContainsStartCellIdInsteadOfPlayer){
+		var cell = this.cells[player];
+	}else{
+		var cell = this.cells[this.pawnCellsIds[player]];
+	}
 	
 	if (!cell.isThereAnExistingNeighbourOnThisSide(diagonalDirection)){
 		//this works, if both orthogonals existing, diagonal is existing too
@@ -1228,13 +1382,21 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 		secondDirection = lookupTable[diagonalDirection - 4][0];
 	}
 	
-	
-	//check neighbour containing other pawn
-	if (!this.cells[neighbourId].getIsOccupied() || this.cells[neighbourId].getIsOccupied() == player+1 ){
-		
+	//check neighbour containing pawn
+	if (!this.cells[neighbourId].getIsOccupied()){
 		//console.log (this.cells[neighbourId].getIsOccupied() == player+1);
 		if(!isSimulation){
 			console.log ("no pawn detected at adjecent cell, no jump allowed.");
+		}
+		return false;
+	}
+	
+	//check neighbour containing other pawn
+	if (!playerContainsStartCellIdInsteadOfPlayer && this.cells[neighbourId].getIsOccupied() == player+1 ){
+		
+		//console.log (this.cells[neighbourId].getIsOccupied() == player+1);
+		if(!isSimulation){
+			console.log ("no opposite player pawn detected at adjecent cell, no jump allowed.");
 		}
 		return false;
 	}
@@ -1286,13 +1448,20 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 	
 }
 
-Board.prototype.movePawnSingleCell = function(player, direction, isSimulation){
-	//player 0 or player 1
+Board.prototype.movePawnSingleCell = function(player, direction, isSimulation,playerContainsStartCellIdInsteadOfPlayer){
+	//check if neighbour cell exists
+	
+	
+	
 	//check for walls, sides and other pawn, notify event "win" 
 	
 	//side check
 	//check if neighbour cell exists 
-	var cell = this.cells[this.pawnCellsIds[player]];
+	if (playerContainsStartCellIdInsteadOfPlayer){
+		var cell = this.cells[player];
+	}else{
+		var cell = this.cells[this.pawnCellsIds[player]];
+	}
 	if (!cell.isThereAnExistingNeighbourOnThisSide(direction)){
 		if(!isSimulation){
 			console.log("ASSERT ERROR: no neighbour cell existing");
@@ -1337,6 +1506,16 @@ Board.prototype.rowColToCellId = function(row,col){
 	return row*9+col;
 }
 
+
+Board.prototype.getPawnCellId = function(player){
+	if (player == PLAYER1 || player == PLAYER2){
+		return this.pawnCellsIds[player];
+	}else{
+		console.log("ASSERT ERROR NO VALID PLAYER");
+		return -666;
+	}
+}
+
 Board.prototype.getPawnCoordinates = function(player){
 	//console.log("playercell: %d ", this.pawnCellsIds[player]);
 	return  this.cells[this.pawnCellsIds[player]].getRowColFromId();
@@ -1356,10 +1535,7 @@ function Cell (row, col, openToNorth, openToEast, openToSouth, openToWest){
 	//console.log(this.row);
 	
 }
-Cell.prototype.closeSide = function(direction){
-	//direction: 0 is North, 1 E, 2S, 3 West
-	this.openSides[direction] = false;
-}
+
 
 Cell.prototype.getId = function(){
 	return this.id;
@@ -1406,7 +1582,10 @@ Cell.prototype.isThereAnExistingNeighbourOnThisSide = function(direction){
 		return 666;
 	}
 }
-
+Cell.prototype.closeSide = function(direction){
+	//direction: 0 is North, 1 E, 2S, 3 West
+	this.openSides[direction] = false;
+}
 Cell.prototype.acquirePawn= function(player){
 	if(this.occupiedByPawn >0){
 		//if (PRINT_ASSERT_ERRORS){
@@ -1437,7 +1616,7 @@ Cell.prototype.getNeighbourId= function (direction){
 		if(PRINT_ASSERT_ERRORS){
 			console.log("ASSERT ERROR neighbour not existing");
 		}
-		return false;
+		return -666;
 	}
 	//assert neighbour is existing. 
 	switch (direction){
