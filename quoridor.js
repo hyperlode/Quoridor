@@ -254,6 +254,14 @@ Game.prototype.pawnDirectionToVerboseNotation = function(direction){
 }
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
+	
+	
+	var undo_walls_1 = (JSON.parse(JSON.stringify(this.board.walls_1)));
+	var undo_walls_2 = (JSON.parse(JSON.stringify(this.board.walls_2)));
+	var undo_cells = cloneObject(this.board.cells);
+	// clone(this.board.cells,undo_cells);
+	
+	//var undoBoard = this.board;
 	//try if verbose notation is for moving the pawn, 
 	//console.log("Move of player %d, move: %s", player, verboseNotation);
 	var validMove = false;
@@ -279,19 +287,112 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	}
 	
 	
-	//check with administration
-	this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
-	this.moveCounter++;
-	this.recordingOfGameInProgress.push(verboseNotation);
-	this.indicateActivePlayer();
-	//console.log(this.recordingOfGameInProgress);
-	this.outputGameStats();
+	
 	this.board.boardCellsToGraph(true);
 	
 	//console.log(this.board.boardGraph);
-	console.log(this.board.getShortestPathToFinish(this.playerAtMove));
+	//console.log(this.board.getShortestPathToFinish(this.playerAtMove));
+	//console.log(undowalls_1);
+	//console.log(this.board.cells);
+
+	
+	
+	if (!this.board.isCurrentBoardLegal()){
+		//this.board.walls_1 = (JSON.parse(JSON.stringify(undo_walls_1)));
+		//this.board.walls_2 = (JSON.parse(JSON.stringify(undo_walls_2)));
+		//this.board.cells = (JSON.parse(JSON.stringify(undo_cells)));
+		//this.board.cells =  cloneObject(undo_cells);
+		//	console.log(this.board.cells);
+			
+		//clone(undo_cells,this.board.cells);
+		//console.log(this.board.cells);
+		console.log("undo move");
+		//console.log(this.board.walls_1);
+		
+		//this.outputBoard();
+		this.undoLastWall(this.playerAtMove);
+		
+		
+	}else{
+		//check with administration
+		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
+		this.moveCounter++;
+		this.recordingOfGameInProgress.push(verboseNotation);
+		this.indicateActivePlayer();
+		//console.log(this.recordingOfGameInProgress);
+		this.outputGameStats();
+	}
+	//console.log(this.board);
 	
 	return true;
+}
+
+function cloneObject(obj) 
+{
+	//http://stackoverflow.com/questions/10151216/javascript-cloned-object-looses-its-prototype-functions
+   obj = obj && obj instanceof Object ? obj : '';
+
+   // Handle Date (return new Date object with old value)
+   if (obj instanceof Date) {
+     return new Date(obj); 
+   }
+
+   // Handle Array (return a full slice of the array)
+   if (obj instanceof Array) {
+     return obj.slice();
+   }
+
+   // Handle Object
+   if (obj instanceof Object) {
+     var copy = new obj.constructor();
+     for (var attr in obj) {
+         if (obj.hasOwnProperty(attr)){
+             if (obj[attr] instanceof Object){
+                 copy[attr] = cloneObject(obj[attr]);
+             } else {
+                 copy[attr] = obj[attr];
+             }
+         }
+     }
+     return copy;
+   }
+
+   throw new Error("Unable to copy obj! Its type isn't supported.");
+}
+
+
+function clone(destination, source) {
+        for (var property in source) {
+            if (typeof source[property] === "object" && source[property] !== null && destination[property]) { 
+                clone(destination[property], source[property]);
+            } else {
+                destination[property] = source[property];
+            }
+        }
+    };
+
+Game.prototype.undoLastWall= function(player){
+	//walls in game are the svg elements
+	//walls in board contain the position and orientation
+	//cells have the sides blocked.
+	
+	//1. get wall from board for the given player
+	//2. set cell sides back to open
+	//3. remove wall from board.walls_1 or 2
+	this.board.removeLastWall(player); //step 1 and 2
+	
+	
+	//4.set svg wall back in the garage.
+	this.outputBoard();
+	//5.update game administration.
+	//do nothing for administration. we check first for legal move and do administration when all is good!
+	//var walls = this.board.getWalls(); //[player]
+	//console.log(player);
+	//console.log(walls);
+	//var playerWalls = walls[player];
+	//var lastWall = playerWalls.pop();
+	//
+	//console.log(lastWall);
 }
 
 Game.prototype.outputGameStats= function(){
@@ -309,9 +410,6 @@ Game.prototype.outputGameStats= function(){
 			document.getElementById('statsDiv').innerHTML += (' ' + this.recordingOfGameInProgress[i]);		
 		}
 	}
-	
-	
-	
 }
 
 Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
@@ -356,142 +454,95 @@ Game.prototype.pawnVerboseNotationToDirection = function ( verboseCoordinate ){
 		return direction;
 	}
 }
-/*
-Game.prototype.pawnVerboseNotationToDirectionOLD = function ( verboseCoordinate ){	
 
-	//get direction from letter
-	//notation maximum two characters.
-	
-	if (verboseCoordinate.length > 2){
-		console.log("ASSERT ERROR  move notation should be one or sometimes (when jumping) two characters ");
-		return false;
-	}
-	var charVals = [verboseCoordinate.charCodeAt(0), verboseCoordinate.charCodeAt(1)];
-	//console.log(charVals);	
-	//console.log(charVals[1]);	
-	var isJumper =verboseCoordinate.length-1;
-	var values  = [];
-	//https://webserver2.tecgraf.puc-rio.br/cd/img/vectorfont_default.png
-	var illegalMove = 0;
-	//direction
-	//for(var i=0;i<charVals.length;i++){
-	var letter = charVals[0];
-	if (isJumper){
-		var extraLetter = charVals[1];
-	}
-	
-	if (letter == 78 || letter == 110){
-		//north
-		if (isJumper){
-			if (extraLetter == 78 || extraLetter == 110){
-				//north north jump
-				return NORTHNORTH;
-			}else if (extraLetter == 69 || extraLetter == 101){
-				//north east jump
-				return NORTHEAST;
-			}else if ( extraLetter == 87 || extraLetter == 119 ){
-				//north west jump
-				return NORTHWEST;
-			}else {
-				illegalMove =1;
-			}
-		}else{
-			//north
-			return NORTH;
-		}
-	}else if (letter == 69 || letter == 101){
-		//east
-		if (isJumper){
-			 if (extraLetter == 69 || extraLetter == 101){
-				//east east jump
-				return EASTEAST;
-			}else {
-				//illegal command
-				illegalMove = 2;
-			}
-		}else{
-			//east
-			return EAST;
-		}
-	
-	
-	}else if (letter == 83 || letter == 115){
-		//south
-		
-		if (isJumper){
-			if (extraLetter == 83 || extraLetter == 115){
-				//south south jump
-				return SOUTHSOUTH;
-			}else if (extraLetter == 69 || extraLetter == 101){
-				//south east jump
-				return SOUTHEAST;
-			}else if ( extraLetter == 87 || extraLetter == 119 ){
-				//south west jump
-				return SOUTHWEST;
-			}else {
-				illegalMove = 3;
-			}
-		}else{
-			//south single
-			return SOUTH;
-		}
-	}else if ( letter == 87 || letter == 119 ){	
-		//west
-		//console.log("isJumper");
-		//console.log(isJumper);
-		//console.log(extraLetter);
-		if (isJumper){
-			 if (extraLetter == 87 || extraLetter == 119){
-				//west west jump
-				return WESTWEST;
-			}else {
-				//illegal command
-				illegalMove = 4;
-			}
-		}else{
-			//west
-			return WEST;
-		}
-	}else{
-		//illegalmove
-		illegalMove = 5;
-		
-	}
-	
-	if (illegalMove !=0){
-		console.log("command was not valid: %s , code: %d", verboseCoordinate, illegalMove);
-		return false;
-		
-	}
-	
+Game.prototype.outputBoard = function(){
+	this.outputWalls();
+	this.outputPawns();
 }
-*/
-
 
 Game.prototype.outputWalls = function(){
 	var wallElements = [this.walls_1, this.walls_2];
 	var allWalls = this.board.getWalls();
 	
+	
+	/*
+	
+		
+		
+	}
+	
+	//top walls unused placement.
+	for (var i=0; i<10;i++){
+		this.walls_2.push(createLine(svgElement, 
+			(WALL_START_DISTANCE_FROM_BOARD_X + i * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE    ,
+			BOARD_Y_OFFSET_SCALED - WALL_START_DISTANCE_FROM_BOARD_Y,  
+			(WALL_START_DISTANCE_FROM_BOARD_X + i * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE,
+			BOARD_Y_OFFSET_SCALED - WALL_START_DISTANCE_FROM_BOARD_Y - WALL_LENGTH * BOARD_SCALE, 
+			WALL_COLOR,
+			WALL_WIDTH * BOARD_SCALE));	
+	}
+	*/
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	for (var player=0;player<2;player++){
 	//	console.log(allWalls[player].length);
-		for (var wallIndex = 0; wallIndex < allWalls[player].length ; wallIndex++){
-			//console.log(wallIndex);
-			var wall = allWalls[player][wallIndex];
-			//orientation in wall[2]
-			if (wall[2]){
-				//vertical walls
-				// x = column [1]
- 				// y = row. [0]
-				//orientation is [2]
-				wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][1] * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
-				wallElements[player][wallIndex].setAttribute("x2", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][1] * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
-				wallElements[player][wallIndex].setAttribute("y1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] ) * BOARD_SCALE + BOARD_Y_OFFSET_SCALED - WALL_LENGTH/2 * BOARD_SCALE) ;
-				wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] )* BOARD_SCALE + BOARD_Y_OFFSET_SCALED +  WALL_LENGTH/2 * BOARD_SCALE) ;
+		for (var wallIndex = 0; wallIndex < 10 ; wallIndex++){
+			
+			
+			if (wallIndex > allWalls[player].length-1){
+				//wall in garage (needs to be updated in case a wall was removed...)
+				//console.log("ingarage");
+				
+				if (player == PLAYER1){
+					
+					// (   ,
+					// 900*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + WALL_START_DISTANCE_FROM_BOARD_Y,  
+					// (WALL_START_DISTANCE_FROM_BOARD_X + i * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE,
+					// 900*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + WALL_START_DISTANCE_FROM_BOARD_Y + WALL_LENGTH * BOARD_SCALE, 
+					// WALL_COLOR,
+					// WALL_WIDTH * BOARD_SCALE));	
+					//x1,y1,x2,y2
+					wallElements[player][wallIndex].setAttribute("x1", (WALL_START_DISTANCE_FROM_BOARD_X + wallIndex * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE ) ;
+					wallElements[player][wallIndex].setAttribute("x2",(WALL_START_DISTANCE_FROM_BOARD_X + wallIndex * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE) ;
+					wallElements[player][wallIndex].setAttribute("y1", 900*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + WALL_START_DISTANCE_FROM_BOARD_Y) ;
+					wallElements[player][wallIndex].setAttribute("y2", 900*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + WALL_START_DISTANCE_FROM_BOARD_Y + WALL_LENGTH * BOARD_SCALE) ;
+				}else{
+					wallElements[player][wallIndex].setAttribute("x1", (WALL_START_DISTANCE_FROM_BOARD_X + wallIndex * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE) ;
+					wallElements[player][wallIndex].setAttribute("x2",(WALL_START_DISTANCE_FROM_BOARD_X + wallIndex * WALL_START_DISTANCE_FROM_EACH_OTHER) * BOARD_SCALE) ;
+					wallElements[player][wallIndex].setAttribute("y1",BOARD_Y_OFFSET_SCALED - WALL_START_DISTANCE_FROM_BOARD_Y) ;
+					wallElements[player][wallIndex].setAttribute("y2", BOARD_Y_OFFSET_SCALED - WALL_START_DISTANCE_FROM_BOARD_Y - WALL_LENGTH * BOARD_SCALE) ;
+				}
+				
 			}else{
-				wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1] ) * BOARD_SCALE + BOARD_X_OFFSET_SCALED - WALL_LENGTH/2 * BOARD_SCALE) ;
-				wallElements[player][wallIndex].setAttribute("x2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1]) * BOARD_SCALE + BOARD_X_OFFSET_SCALED +  WALL_LENGTH/2 * BOARD_SCALE) ;
-				wallElements[player][wallIndex].setAttribute("y1", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][0] * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
-				wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][0] * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+				//wall on board
+				var wall = allWalls[player][wallIndex];
+				//orientation in wall[2]
+				
+				
+				if (wall[2]){
+					//vertical walls
+					// x = column [1]
+					// y = row. [0]
+					//orientation is [2]
+					wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][1] * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
+					wallElements[player][wallIndex].setAttribute("x2", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][1] * BOARD_SCALE + BOARD_X_OFFSET_SCALED) ;
+					wallElements[player][wallIndex].setAttribute("y1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] ) * BOARD_SCALE + BOARD_Y_OFFSET_SCALED - WALL_LENGTH/2 * BOARD_SCALE) ;
+					wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][0] )* BOARD_SCALE + BOARD_Y_OFFSET_SCALED +  WALL_LENGTH/2 * BOARD_SCALE) ;
+				}else{
+					wallElements[player][wallIndex].setAttribute("x1", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1] ) * BOARD_SCALE + BOARD_X_OFFSET_SCALED - WALL_LENGTH/2 * BOARD_SCALE) ;
+					wallElements[player][wallIndex].setAttribute("x2", BOARD_SQUARE_SPACING * (allWalls[player][wallIndex][1]) * BOARD_SCALE + BOARD_X_OFFSET_SCALED +  WALL_LENGTH/2 * BOARD_SCALE) ;
+					wallElements[player][wallIndex].setAttribute("y1", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][0] * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+					wallElements[player][wallIndex].setAttribute("y2", BOARD_SQUARE_SPACING * allWalls[player][wallIndex][0] * BOARD_SCALE + BOARD_Y_OFFSET_SCALED) ;
+				}
 			}
 		}
 	}	
@@ -500,18 +551,6 @@ Game.prototype.outputWalls = function(){
 Game.prototype.outputPawns = function(){
 	this.outputPawn(PLAYER1);
 	this.outputPawn(PLAYER2);
-}
-Game.prototype.indicateActivePlayer = function(){
-	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED];
-	if (this.playerAtMove == PLAYER1){
-		
-		this.svgPawns[PLAYER1].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED);
-		this.svgPawns[PLAYER2].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2);
-	}else{
-		this.svgPawns[PLAYER1].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1	);
-		this.svgPawns[PLAYER2].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED);
-	}
-	
 }
 Game.prototype.outputPawn = function(player){
 	var pawnCoords = (this.board.getPawnCoordinates(player));
@@ -526,6 +565,20 @@ Game.prototype.outputPawn = function(player){
 
 	//console.log("x:%d", x);
 	//console.log("efwefwewww");
+}
+
+
+Game.prototype.indicateActivePlayer = function(){
+	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED];
+	if (this.playerAtMove == PLAYER1){
+		
+		this.svgPawns[PLAYER1].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED);
+		this.svgPawns[PLAYER2].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2);
+	}else{
+		this.svgPawns[PLAYER1].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1	);
+		this.svgPawns[PLAYER2].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED);
+	}
+	
 }
 
 Game.prototype.mouseClickCellAsPawnCircleElement = function (callerElement){
@@ -881,6 +934,17 @@ function Board(){
 	this.shortestPathPerPlayer = [[]];
 }
 
+
+Board.prototype.isCurrentBoardLegal = function (){
+	//check if each player can reach a finish field.
+	for(var player =0;player<2;player++){
+		if (!this.getShortestPathToFinish(player)){
+			console.log("illegal move!!");
+			return false;
+		}
+	}
+	return true;
+}
 Board.prototype.getShortestPathToFinish = function (player){
 	//get cell with player.
 	//var finishCellsLookupTable = [["0","1","2","3","4","5","6","7","8"],["72","73","74","75","76","77","78","79","80"]]; //valid finish cellIDs for player 1 and player 2
@@ -891,7 +955,7 @@ Board.prototype.getShortestPathToFinish = function (player){
 	
 	//console.log(graph.findShortestPath(4,80));	
 	var shortestPath = [];
-	console.log("playerCell %d",playerCell);
+	//console.log("playerCell %d",playerCell);
 //	console.log(finishCellsLookupTable[player][0]);
 	
 	var pathToFinish = [];
@@ -1091,7 +1155,12 @@ Board.prototype.getWallCenterPointWithOrientationFromStartCellIdAndOrientation =
 	var rowCol = this.cells[startCellId].getRowColFromId();
 	return [rowCol[0]+1 , rowCol[1]+1, orientation];
 }
-
+Board.prototype.getStartCellIdAndOrientationFromWallCenterPointWithOrientation = function(row, col, orientation){
+	//wall = [ horizontalLine, verticalLine, isOrientationNorthSouth]
+	//console.log(startCellId);
+	var startCellId = (row-1)*9 + (col-1);
+	return [startCellId, orientation];
+}
 Board.prototype.getWalls = function (){
 	return [this.walls_1 , this.walls_2];
 }
@@ -1140,6 +1209,38 @@ Board.prototype.placeWallByVerboseCoordinate= function (player,verboseCoordinate
 		return false;
 	}
 	return this.placeWall(player, wallCoords[0],wallCoords[1],false );
+}
+Board.prototype.removeLastWall = function(player){
+	var lastWall = this.getWalls()[player].pop();//remove last wall fromlist.
+	// console.log(lastWall);
+	var lastWallCoords = this.getStartCellIdAndOrientationFromWallCenterPointWithOrientation(lastWall[0],lastWall[1],lastWall[2]);
+	
+	var lastWallStartCellId = lastWallCoords[0];
+	var lastWallOrientationIsNorthSouth = lastWallCoords[1];
+	
+	var startCell = this.cells[lastWallStartCellId];
+	var neighEastId = startCell.getNeighbourId(EAST);
+	var neighSouthId = startCell.getNeighbourId(SOUTH);
+	var neighSouthEastId = startCell.getNeighbourId(SOUTHEAST);
+	// console.log(lastWallCoords[0]);
+	// console.log(neighEastId);
+	// console.log(neighSouthId);
+	// console.log(neighSouthEastId);
+	var allInvolvedCellsIds = [lastWallStartCellId, neighEastId, neighSouthEastId, neighSouthId];
+	//--> pattern for 4 cells: startcell, then east, then southeast, then south
+	var sidesForNorthSouthOrientation = [EAST,WEST,WEST,EAST];
+	var sidesForEastWestOrientation = [SOUTH,SOUTH,NORTH,NORTH];
+	
+	//decide which sides are affected.
+	var sidesToChange = sidesForEastWestOrientation; ////assume east west oriented
+	if (lastWallOrientationIsNorthSouth){
+		sidesToChange = sidesForNorthSouthOrientation;//north south oriented
+	}
+	//console.log(lastWallCoords);
+	//remove Wall from cells.
+	for (var i=0;i<4;i++){
+		this.cells[allInvolvedCellsIds[i]].openSide(sidesToChange[i]) ;
+	}
 }
 
 Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented, onlyCheckAvailabilityDontPlaceWall){
@@ -1552,6 +1653,8 @@ Board.prototype.getPawnCoordinates = function(player){
 }
 
 
+
+
 // function Cell (bool wallNorth, bool wallEast, bool wallSouth, bool wallWest, bool pawnPlayerA, bool pawnPlayerB){
 function Cell (row, col, openToNorth, openToEast, openToSouth, openToWest){
 	this.row = row;
@@ -1615,6 +1718,10 @@ Cell.prototype.isThereAnExistingNeighbourOnThisSide = function(direction){
 Cell.prototype.closeSide = function(direction){
 	//direction: 0 is North, 1 E, 2S, 3 West
 	this.openSides[direction] = false;
+}
+Cell.prototype.openSide = function(direction){
+	//direction: 0 is North, 1 E, 2S, 3 West
+	this.openSides[direction] = true;
 }
 Cell.prototype.acquirePawn= function(player){
 	if(this.occupiedByPawn >0){
