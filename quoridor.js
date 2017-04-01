@@ -11,7 +11,7 @@ var BOARD_HEIGHT = 1500;
 var BOARD_SCALE = 0.4;
 var BOARD_X_OFFSET = 50;
 var BOARD_Y_OFFSET = 300;
-var SOUND_ENABLED_AT_STARTUP = false;
+var SOUND_ENABLED_AT_STARTUP = true;
 
 var BOARD_X_OFFSET_SCALED = BOARD_X_OFFSET * BOARD_SCALE;
 var BOARD_Y_OFFSET_SCALED = BOARD_Y_OFFSET * BOARD_SCALE;
@@ -94,16 +94,17 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 function initQuoridorDOM(){
-	var quoridorField = document.getElementById("quoridor-field");
+	var quoridorField = document.getElementById("board");
+	//console.log(quoridorField);
 	//addDiv(setShowField, "card");
 	addSvg(quoridorField, "quoridorFieldSvg",BOARD_WIDTH*BOARD_SCALE, BOARD_HEIGHT*BOARD_SCALE,BOARD_BACKGROUND_COLOR,"black");
-	var statsDiv = document.createElement('div');
-	statsDiv.id = 'statsDiv';
-	statsDiv.className = 'stats';
+	//var statsDiv = document.createElement('div');
+	//statsDiv.id = 'statsDiv';
+	//statsDiv.className = 'stats';
 	//document.getElementById('statsDiv').innerHTML += '<br>Some new content!';
 	
-	statsDiv.innerHTML += '<br>TestGame';
-	quoridorField.appendChild(statsDiv);
+	//statsDiv.innerHTML += '<br>TestGame';
+	//quoridorField.appendChild(statsDiv);
 	
 	var field = document.getElementById("quoridorFieldSvg");		
 	
@@ -278,9 +279,9 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		console.log("game finished, restart to replay.  status: %d", this.gameStatus	);
 		return false;
 	}
-	var undo_walls_1 = (JSON.parse(JSON.stringify(this.board.walls_1)));
-	var undo_walls_2 = (JSON.parse(JSON.stringify(this.board.walls_2)));
-	var undo_cells = cloneObject(this.board.cells);
+	//var undo_walls_1 = (JSON.parse(JSON.stringify(this.board.walls_1)));
+	//var undo_walls_2 = (JSON.parse(JSON.stringify(this.board.walls_2)));
+	//var undo_cells = cloneObject(this.board.cells);
 	// clone(this.board.cells,undo_cells);
 	
 	//var undoBoard = this.board;
@@ -311,54 +312,32 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	
 	
 	this.board.boardCellsToGraph(true);
-	
-	//console.log(this.board.boardGraph);
-	//console.log(this.board.getShortestPathToFinish(this.playerAtMove));
-	//console.log(undowalls_1);
-	//console.log(this.board.cells);
-
-	
-	
 	if (!this.board.isCurrentBoardLegal()){
-
-
-
-
-
-
-		//clone(undo_cells,this.board.cells);
-		//console.log(this.board.cells);
-		console.log("undo movew");
-		//console.log(this.board.walls_1);
-		
-		//this.outputBoard();
+		console.log("undo move");
 		this.undoLastWall(this.playerAtMove);
-		
-		
-	}else{
-		//check with administration
-		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
-		this.moveCounter++;
-		this.recordingOfGameInProgress.push(verboseNotation);
-		this.indicateActivePlayer();
-		//console.log(this.recordingOfGameInProgress);
-		this.outputGameStats();
+		return false;
 	}
-	/**/
+	
 	//check if there is a winner
 	if (this.board.isThereAWinner()[0]){
 		console.log("The winner of the game is player %d",this.board.isThereAWinner()[1]+1);
+		//this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0 //set previous player back to winner...
 		this.gameStatus = FINISHED;
 		//console.log(this.board.isThereAWinner());
-		
 	}else{
-		//console.log("no winner");
-		//console.log(this.board.isThereAWinner());
+		//prepare for next move.
+		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
+		this.moveCounter++;
+		this.indicateActivePlayer();
+		//console.log(this.recordingOfGameInProgress);
+		
 	}
-	/**/
-	
-	//console.log(this.board);
-	
+		
+	//administration	
+	this.recordingOfGameInProgress.push(verboseNotation);
+	this.outputGameStats();
+		
+
 	return true;
 }
 
@@ -434,19 +413,29 @@ Game.prototype.undoLastWall= function(player){
 
 Game.prototype.outputGameStats= function(){
 	
-	if (this.playerAtMove == PLAYER1){
-		document.getElementById('statsDiv').innerHTML = 'Blue Player playing.';
-	}else{
-		document.getElementById('statsDiv').innerHTML = 'Red Player playing.';
+	var htmlString = "";
+	var playerColors = ["Blue" , "Red" ]
+	
+	if (this.gameStatus == SETUP){
+		htmlString += 'Blue Player starts the game.'
+	} else if (this.gameStatus == FINISHED){
+		htmlString += ''+ playerColors[this.playerAtMove] + ' player won!';
+		
+	}else if (this.gameStatus == PLAYING){
+	
+		htmlString += ''+ playerColors[this.playerAtMove] + ' player playing.';
 	}
-	document.getElementById('statsDiv').innerHTML += '<br>Stats:';
+	
+	htmlString += '<br>Stats:';
 	for (var i =0; i<this.recordingOfGameInProgress.length;i++){
 		if (i%2 == 0){
-			document.getElementById('statsDiv').innerHTML += ('<br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);		
+			htmlString += ('<br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);		
 		}else{
-			document.getElementById('statsDiv').innerHTML += (' ' + this.recordingOfGameInProgress[i]);		
+			htmlString += (' ' + this.recordingOfGameInProgress[i]);		
 		}
 	}
+	
+	document.getElementById('stats').innerHTML = htmlString;
 }
 
 Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
