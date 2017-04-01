@@ -62,7 +62,13 @@ GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
 //GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 70;
 PRINT_ASSERT_ERRORS = false;
 
+//game status
+var SETUP =0;
+var PLAYING=1;
+var FINISHED=2;
 
+
+var FINISH_CELLS_LOOKUP_TABLE = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -120,7 +126,7 @@ function initQuoridorDOM(){
 	
 	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
 //	aGame.testPlaceWall(PLAYER1, "h1");
-/*	
+	/*
 	aGame.playTurnByVerboseNotation("N");
 	aGame.playTurnByVerboseNotation("S");
 	aGame.playTurnByVerboseNotation("N");
@@ -128,6 +134,15 @@ function initQuoridorDOM(){
 	aGame.playTurnByVerboseNotation("N");
 	aGame.playTurnByVerboseNotation("S");
 	aGame.playTurnByVerboseNotation("N");
+	aGame.playTurnByVerboseNotation("SS");
+	 aGame.playTurnByVerboseNotation("N");
+	 aGame.playTurnByVerboseNotation("S");
+	 aGame.playTurnByVerboseNotation("N");
+	 aGame.playTurnByVerboseNotation("S");
+	 aGame.playTurnByVerboseNotation("N");
+	
+	
+	
 	aGame.playTurnByVerboseNotation("6d");
 	aGame.playTurnByVerboseNotation("ne");
 	aGame.playTurnByVerboseNotation("c5");
@@ -209,6 +224,7 @@ function Game(svgField){
 	this.playerAtMove = PLAYER1;
 	this.recordingOfGameInProgress = [];
 	this.moveCounter = 0;
+	this.gameStatus = SETUP;
 	
 	this.indicateActivePlayer();
 	this.outputGameStats();
@@ -222,6 +238,7 @@ function Game(svgField){
 	//console.log(graph.findShortestPath(4, 80));
 	//console.log(graph.findPaths('a'));
 	
+	this.gameStatus = PLAYING;
 }
 
 //Game.prototype.playTurn
@@ -253,9 +270,14 @@ Game.prototype.pawnDirectionToVerboseNotation = function(direction){
 	
 }
 
+
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	
-	
+	if (this.gameStatus != PLAYING){
+		
+		console.log("game finished, restart to replay.  status: %d", this.gameStatus	);
+		return false;
+	}
 	var undo_walls_1 = (JSON.parse(JSON.stringify(this.board.walls_1)));
 	var undo_walls_2 = (JSON.parse(JSON.stringify(this.board.walls_2)));
 	var undo_cells = cloneObject(this.board.cells);
@@ -298,15 +320,15 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	
 	
 	if (!this.board.isCurrentBoardLegal()){
-		//this.board.walls_1 = (JSON.parse(JSON.stringify(undo_walls_1)));
-		//this.board.walls_2 = (JSON.parse(JSON.stringify(undo_walls_2)));
-		//this.board.cells = (JSON.parse(JSON.stringify(undo_cells)));
-		//this.board.cells =  cloneObject(undo_cells);
-		//	console.log(this.board.cells);
-			
+
+
+
+
+
+
 		//clone(undo_cells,this.board.cells);
 		//console.log(this.board.cells);
-		console.log("undo move");
+		console.log("undo movew");
 		//console.log(this.board.walls_1);
 		
 		//this.outputBoard();
@@ -322,10 +344,25 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		//console.log(this.recordingOfGameInProgress);
 		this.outputGameStats();
 	}
+	/**/
+	//check if there is a winner
+	if (this.board.isThereAWinner()[0]){
+		console.log("The winner of the game is player %d",this.board.isThereAWinner()[1]+1);
+		this.gameStatus = FINISHED;
+		//console.log(this.board.isThereAWinner());
+		
+	}else{
+		//console.log("no winner");
+		//console.log(this.board.isThereAWinner());
+	}
+	/**/
+	
 	//console.log(this.board);
 	
 	return true;
 }
+
+
 
 function cloneObject(obj) 
 {
@@ -934,6 +971,34 @@ function Board(){
 	this.shortestPathPerPlayer = [[]];
 }
 
+Board.prototype.isThereAWinner = function(){
+	isPlayer1Winner = false;
+	
+	//check player 1 on winning cells?
+	if (FINISH_CELLS_LOOKUP_TABLE[PLAYER1].indexOf(this.getPawnCellId(PLAYER1)) != -1){
+		isPlayer1Winner = true;  //player1 won
+		//console.log("tnpssem");
+	}
+	//check player2
+	if (FINISH_CELLS_LOOKUP_TABLE[PLAYER2].indexOf(this.getPawnCellId(PLAYER2)) != -1 ){
+		
+		if (isPlayer1Winner){
+			//return 2 winners error
+			console.log("ASSERT ERROR: TWO WINNERS, BOTH PAWNS ON WINNING FIELD");
+			return [false,666];
+		}else{
+			//return player 2 winner
+			return [true,PLAYER2];
+		}
+	}else if (isPlayer1Winner){
+		//return player 1 winner
+		return [true,PLAYER1];
+	}else{
+		return [false,666];
+	}
+	//return no winners
+	return [false,666];
+}
 
 Board.prototype.isCurrentBoardLegal = function (){
 	//check if each player can reach a finish field.
@@ -945,10 +1010,11 @@ Board.prototype.isCurrentBoardLegal = function (){
 	}
 	return true;
 }
+
 Board.prototype.getShortestPathToFinish = function (player){
 	//get cell with player.
 	//var finishCellsLookupTable = [["0","1","2","3","4","5","6","7","8"],["72","73","74","75","76","77","78","79","80"]]; //valid finish cellIDs for player 1 and player 2
-	var finishCellsLookupTable = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
+	//var finishCellsLookupTable = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 	
 	var playerCell = this.getPawnCellId(player);
 	var searchGraph = new Graph(this.boardGraph);
@@ -963,7 +1029,7 @@ Board.prototype.getShortestPathToFinish = function (player){
 	/**/
 	for (var finishCell=0;finishCell<9;finishCell++){
 		
-		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+finishCellsLookupTable[player][finishCell]);
+		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+FINISH_CELLS_LOOKUP_TABLE[player][finishCell]);
 		//console.log(pathToFinish);
 		if (pathToFinish != null){
 			if (pathToFinish.length < shortestPath.length || finishCell == 0){
@@ -1651,7 +1717,6 @@ Board.prototype.getPawnCoordinates = function(player){
 	//console.log("playercell: %d ", this.pawnCellsIds[player]);
 	return  this.cells[this.pawnCellsIds[player]].getRowColFromId();
 }
-
 
 
 
