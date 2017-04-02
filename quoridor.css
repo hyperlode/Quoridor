@@ -1,24 +1,24 @@
-body {
-	text-align:center;
-}
+/* body { */
+	/* text-align:center; */
+/* } */
 
-.row {
-  width: 100%;
-  text-align: center; // center the content of the container
-}
+/* .row { */
+  /* width: 100%; */
+  /* text-align: center; // center the content of the container */
+/* } */
 
-.quoridor-field {
+/* .quoridor-field { */
 	/* overflow:hidden; */
-	width: 100%;
-}
+	/* width: 100%; */
+/* } */
 
-.board {
+/* .board { */
 	/* float: left; */
-}
+/* } */
 
-.stats{
+/* .stats{ */
 	
-}
+/* } */
 /* <div style="width: 100%; overflow: hidden;"> */
     /* <div style="width: 600px; float: left;"> Left </div> */
     /* <div style="margin-left: 620px;"> Right </div> */
