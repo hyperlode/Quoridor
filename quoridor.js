@@ -125,31 +125,51 @@ function initQuoridorDOM(){
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	var aGame = new Game(field);
 	
+	
+	/*
+	1. n s
+3. n s
+5. n s
+7. 3d 6d
+9. 3f 6f
+11. 3b s
+13. nn c6
+15. a4 6h
+17. 3h 6b
+19. e5 7a
+21. 2a w
+
+illegal move when wall is placed at c8...
+*/
+
+
+	
+	
 	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
 //	aGame.testPlaceWall(PLAYER1, "h1");
-	/*
-	aGame.playTurnByVerboseNotation("N");
-	aGame.playTurnByVerboseNotation("S");
-	aGame.playTurnByVerboseNotation("N");
-	aGame.playTurnByVerboseNotation("S");
-	aGame.playTurnByVerboseNotation("N");
-	aGame.playTurnByVerboseNotation("S");
-	aGame.playTurnByVerboseNotation("N");
-	aGame.playTurnByVerboseNotation("SS");
-	 aGame.playTurnByVerboseNotation("N");
-	 aGame.playTurnByVerboseNotation("S");
-	 aGame.playTurnByVerboseNotation("N");
-	 aGame.playTurnByVerboseNotation("S");
-	 aGame.playTurnByVerboseNotation("N");
-	
-	
-	
-	aGame.playTurnByVerboseNotation("6d");
-	aGame.playTurnByVerboseNotation("ne");
-	aGame.playTurnByVerboseNotation("c5");
-	aGame.playTurnByVerboseNotation("d5");
-	aGame.playTurnByVerboseNotation("4d");
-	
+	/**/
+aGame.playTurnByVerboseNotation("n");
+aGame.playTurnByVerboseNotation("s");
+aGame.playTurnByVerboseNotation("n");
+aGame.playTurnByVerboseNotation("s");
+aGame.playTurnByVerboseNotation("n");
+aGame.playTurnByVerboseNotation("s");
+aGame.playTurnByVerboseNotation("3d");
+aGame.playTurnByVerboseNotation("6d");
+aGame.playTurnByVerboseNotation("3f");
+aGame.playTurnByVerboseNotation("6f");
+aGame.playTurnByVerboseNotation("3b");
+aGame.playTurnByVerboseNotation("s");
+aGame.playTurnByVerboseNotation("nn");
+aGame.playTurnByVerboseNotation("c6");
+aGame.playTurnByVerboseNotation("a4");
+aGame.playTurnByVerboseNotation("6h");
+aGame.playTurnByVerboseNotation("3h");
+aGame.playTurnByVerboseNotation("6b");
+aGame.playTurnByVerboseNotation("e5");
+aGame.playTurnByVerboseNotation("7a");
+aGame.playTurnByVerboseNotation("2a");
+aGame.playTurnByVerboseNotation("w");
 	
 	
 	//aGame.playTurnByVerboseNotation(PLAYER1, "sw");
@@ -1015,6 +1035,7 @@ Board.prototype.getShortestPathToFinish = function (player){
 	
 	var pathToFinish = [];
 	//console.log(this.boardGraph);
+	//console.log("player %d paths to finish: ", player);
 	/**/
 	for (var finishCell=0;finishCell<9;finishCell++){
 		
@@ -1029,7 +1050,8 @@ Board.prototype.getShortestPathToFinish = function (player){
 		
 		
 	}
-	if (pathToFinish == null){
+	if (shortestPath == null){
+		//console.log("oioii");
 		return false;
 	}
 	var shortestPathToInt=[];
