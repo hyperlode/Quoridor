@@ -31,6 +31,7 @@ var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1 = "paleturquoise";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "paleturquoise";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2 = "peachpuff";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "peachpuff";
+BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION = "white"
 // var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "salmon";
 
 var WALL_START_DISTANCE_FROM_BOARD_X = 80;
@@ -170,7 +171,32 @@ aGame.playTurnByVerboseNotation("e5");
 aGame.playTurnByVerboseNotation("7a");
 aGame.playTurnByVerboseNotation("2a");
 aGame.playTurnByVerboseNotation("w");
-	
+
+
+
+aGame.playTurnByVerboseNotation("c8");
+aGame.playTurnByVerboseNotation("c2");
+//aGame.playTurnByVerboseNotation("b8");
+// aGame.playTurnByVerboseNotation("b1");
+// aGame.playTurnByVerboseNotation("w");
+// aGame.playTurnByVerboseNotation("5c");
+// aGame.playTurnByVerboseNotation("b5");
+
+ // w
+// e s
+// s w
+// w n
+// s n
+// w w
+// w n
+// n s
+// n s
+// w s
+// n s
+// e e
+// e e
+// n s
+// n
 	
 	//aGame.playTurnByVerboseNotation(PLAYER1, "sw");
 	//aGame.playTurnByVerboseNotation(PLAYER2,"x");
@@ -247,18 +273,22 @@ function Game(svgField){
 	this.moveCounter = 0;
 	this.gameStatus = SETUP;
 	
-	this.indicateActivePlayer();
+	
 	this.outputGameStats();
 	
 	//testing:
-	this.board.boardCellsToGraph(true);
+	
 	//console.log(this.board.boardGraph);
 	
 	//console.log(test);
 	//var graph = new Graph(this.board.boardGraph);
-	//console.log(graph.findShortestPath(4, 80));
-	//console.log(graph.findPaths('a'));
 	
+	
+	//prepare game:
+	this.board.boardCellsToGraph(true);
+	this.board.isCurrentBoardLegal();
+	console.log(this.shortestPathPerPlayer);
+	this.outputBoard();
 	this.gameStatus = PLAYING;
 }
 
@@ -356,7 +386,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	//administration	
 	this.recordingOfGameInProgress.push(verboseNotation);
 	this.outputGameStats();
-		
+	this.outputBoard();
 
 	return true;
 }
@@ -502,19 +532,18 @@ Game.prototype.pawnVerboseNotationToDirection = function ( verboseCoordinate ){
 }
 
 Game.prototype.outputBoard = function(){
+	this.eraseCellAsCircleElements();
 	this.outputWalls();
+	this.outputShortestPath(this.playerAtMove);
 	this.outputPawns();
+	this.indicateActivePlayer();
 }
 
 Game.prototype.outputWalls = function(){
 	var wallElements = [this.walls_1, this.walls_2];
 	var allWalls = this.board.getWalls();
 	
-	
 	/*
-	
-		
-		
 	}
 	
 	//top walls unused placement.
@@ -528,26 +557,12 @@ Game.prototype.outputWalls = function(){
 			WALL_WIDTH * BOARD_SCALE));	
 	}
 	*/
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 	for (var player=0;player<2;player++){
 	//	console.log(allWalls[player].length);
 		for (var wallIndex = 0; wallIndex < 10 ; wallIndex++){
-			
-			
 			if (wallIndex > allWalls[player].length-1){
 				//wall in garage (needs to be updated in case a wall was removed...)
-				//console.log("ingarage");
-				
 				if (player == PLAYER1){
 					
 					// (   ,
@@ -573,7 +588,6 @@ Game.prototype.outputWalls = function(){
 				var wall = allWalls[player][wallIndex];
 				//orientation in wall[2]
 				
-				
 				if (wall[2]){
 					//vertical walls
 					// x = column [1]
@@ -598,6 +612,7 @@ Game.prototype.outputPawns = function(){
 	this.outputPawn(PLAYER1);
 	this.outputPawn(PLAYER2);
 }
+
 Game.prototype.outputPawn = function(player){
 	var pawnCoords = (this.board.getPawnCoordinates(player));
 	//console.log("player: %d : ", player);
@@ -608,11 +623,25 @@ Game.prototype.outputPawn = function(player){
 	//y = parseInt(pawns[player].getAttribute("cy"));
 	this.svgPawns[player].setAttribute("cx", (pawnCoords[1]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED);
 	this.svgPawns[player].setAttribute("cy", (pawnCoords[0]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED);
-
 	//console.log("x:%d", x);
-	//console.log("efwefwewww");
 }
 
+Game.prototype.eraseCellAsCircleElements = function(){
+	for(var cellId =0; cellId<this.svgCellsAsPawnShapes.length;cellId++){
+		this.svgCellsAsPawnShapes[cellId].setAttribute('fill',BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE);
+	}
+}
+
+Game.prototype.outputShortestPath = function(player){
+	// console.log(player);
+	// console.log(this.board.shortestPathPerPlayer);
+	var cells = this.board.shortestPathPerPlayer[player];
+	// console.log(cells);
+	for (var i =  1; i<cells.length;i++){
+		this.svgCellsAsPawnShapes[cells[i]].setAttribute('fill',BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION);
+		
+	}
+}
 
 Game.prototype.indicateActivePlayer = function(){
 	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED];
@@ -1042,9 +1071,10 @@ Board.prototype.getShortestPathToFinish = function (player){
 		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+FINISH_CELLS_LOOKUP_TABLE[player][finishCell]);
 		//console.log(pathToFinish);
 		if (pathToFinish != null){
-			if (pathToFinish.length < shortestPath.length || finishCell == 0){
+			if (pathToFinish.length < shortestPath.length || shortestPath.length == 0){ //if shorter of not yet existing, save as shortest path
 				shortestPath = pathToFinish ;
 				//console.log("poyeee");
+				//console.log(shortestPath);
 			}
 		}
 		
@@ -1060,6 +1090,8 @@ Board.prototype.getShortestPathToFinish = function (player){
 	}
 	shortestPath = shortestPathToInt;
 	this.shortestPathPerPlayer[player] = shortestPath;
+	// console.log("shortestPath per pl:");
+	// console.log(this.shortestPathPerPlayer);
 	return shortestPath;
 	
 	/**/
