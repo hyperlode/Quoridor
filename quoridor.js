@@ -31,8 +31,13 @@ var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1 = "paleturquoise";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "paleturquoise";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2 = "peachpuff";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "peachpuff";
+var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_2=BOARD_PAWN_2_COLOR;
+var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_1=BOARD_PAWN_1_COLOR;
+var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_TRANSPARENCY = 0.4;
 BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION = "white"
 // var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "salmon";
+var BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION_TRANSPARENCY = 0.4;
+var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE_TRANSPARENCY = 1; //http://stackoverflow.com/questions/6042550/svg-fill-color-transparency-alpha
 
 var WALL_START_DISTANCE_FROM_BOARD_X = 80;
 var WALL_START_DISTANCE_FROM_BOARD_Y = 20	;
@@ -148,7 +153,7 @@ illegal move when wall is placed at c8...
 	
 	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
 //	aGame.testPlaceWall(PLAYER1, "h1");
-	/**/
+	/*
 aGame.playTurnByVerboseNotation("n");
 aGame.playTurnByVerboseNotation("s");
 aGame.playTurnByVerboseNotation("n");
@@ -473,10 +478,17 @@ Game.prototype.outputGameStats= function(){
 		
 	}else if (this.gameStatus == PLAYING){
 	
-		htmlString += ''+ playerColors[this.playerAtMove] + ' player playing.';
+		
+		var redMovesToFinish = this.board.shortestPathPerPlayer[1].length-1;
+		var blueMovesToFinish = this.board.shortestPathPerPlayer[0].length-1;
+		htmlString += 'Estimated number of moves to finish:';
+		htmlString += '<br>'+ blueMovesToFinish + ' for blue player.';
+		htmlString += '<br>'+ redMovesToFinish + ' for red player.';
+		
+		htmlString += '<br><br>'+ playerColors[this.playerAtMove] + ' player playing.';
 	}
 	
-	htmlString += '<br>Stats:';
+	htmlString += '<br><br>Stats:';
 	for (var i =0; i<this.recordingOfGameInProgress.length;i++){
 		if (i%2 == 0){
 			htmlString += ('<br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);		
@@ -537,6 +549,7 @@ Game.prototype.outputBoard = function(){
 	this.outputShortestPath(this.playerAtMove);
 	this.outputPawns();
 	this.indicateActivePlayer();
+	this.setCellAsCircleElementsPlayerFinishLines();
 }
 
 Game.prototype.outputWalls = function(){
@@ -629,7 +642,18 @@ Game.prototype.outputPawn = function(player){
 Game.prototype.eraseCellAsCircleElements = function(){
 	for(var cellId =0; cellId<this.svgCellsAsPawnShapes.length;cellId++){
 		this.svgCellsAsPawnShapes[cellId].setAttribute('fill',BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE);
+		this.svgCellsAsPawnShapes[cellId].setAttribute('fill-opacity',BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE_TRANSPARENCY);
 	}
+}
+Game.prototype.setCellAsCircleElementsPlayerFinishLines = function(){
+	var playerFinishColours = [BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_1, BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_2 ];
+	//for(var i=0; i<2; i++){
+		for (var cellIndex=0;cellIndex<9;cellIndex++){
+			this.svgCellsAsPawnShapes[FINISH_CELLS_LOOKUP_TABLE[this.playerAtMove][cellIndex]].setAttribute('fill',playerFinishColours[this.playerAtMove]);
+			this.svgCellsAsPawnShapes[FINISH_CELLS_LOOKUP_TABLE[this.playerAtMove][cellIndex]].setAttribute('fill-opacity',BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_TRANSPARENCY);
+		}
+	//}
+	
 }
 
 Game.prototype.outputShortestPath = function(player){
@@ -639,6 +663,7 @@ Game.prototype.outputShortestPath = function(player){
 	// console.log(cells);
 	for (var i =  1; i<cells.length;i++){
 		this.svgCellsAsPawnShapes[cells[i]].setAttribute('fill',BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION);
+		this.svgCellsAsPawnShapes[cells[i]].setAttribute('fill-opacity',BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION_TRANSPARENCY);
 		
 	}
 }
@@ -660,6 +685,7 @@ Game.prototype.mouseClickCellAsPawnCircleElement = function (callerElement){
 	this.mouseCellAsPawnCircleElement(callerElement, true,true);
 }
 Game.prototype.mouseHoversInCellAsPawnCircleElement = function (callerElement){
+	this.eraseCellAsCircleElements(); //erase shortest path or other thingies
 	this.mouseCellAsPawnCircleElement(callerElement, true,false);
 }
 Game.prototype.mouseHoversOutCellAsPawnCircleElement = function (callerElement){
@@ -768,6 +794,7 @@ Game.prototype.mouseClickWallElement = function (callerElement){
 	this.mouseWallEvent(callerElement,true, true);
 }
 Game.prototype.mouseHoversInWallElement = function (callerElement){
+	this.eraseCellAsCircleElements(); //erase shortest path or other thingies
 	this.mouseWallEvent(callerElement,true, false);
 }
 
