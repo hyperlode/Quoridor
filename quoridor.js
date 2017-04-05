@@ -132,6 +132,8 @@ function initQuoridorDOM(){
 	var aGame = new Game(field);
 	
 	
+	
+	
 	/*
 	1. n s
 3. n s
@@ -203,8 +205,6 @@ aGame.playTurnByVerboseNotation("c2");
 // n s
 // n
 	
-	//aGame.playTurnByVerboseNotation(PLAYER1, "sw");
-	//aGame.playTurnByVerboseNotation(PLAYER2,"x");
 	/**/
 	//aGame.outputWalls();
 	/*
@@ -212,6 +212,26 @@ aGame.playTurnByVerboseNotation("c2");
 	var replay = new GameReplay(aGame, movesHistory);
 	replay.replay();
 	/**/
+	
+	
+/*	
+aGame.playTurnByVerboseNotation("n");
+aGame.playTurnByVerboseNotation("s");
+aGame.playTurnByVerboseNotation("n");
+aGame.playTurnByVerboseNotation("3d");
+aGame.playTurnByVerboseNotation("e");
+aGame.playTurnByVerboseNotation("3f");
+aGame.playTurnByVerboseNotation("c2");
+aGame.playTurnByVerboseNotation("s");
+aGame.playTurnByVerboseNotation("e");
+aGame.playTurnByVerboseNotation("3h");
+aGame.playTurnByVerboseNotation("4b");
+aGame.playTurnByVerboseNotation("4d");
+aGame.playTurnByVerboseNotation("a5");
+aGame.playTurnByVerboseNotation("6a");
+aGame.playTurnByVerboseNotation("4f");
+aGame.playTurnByVerboseNotation("4h");
+	*/
 }
 
 
@@ -292,7 +312,7 @@ function Game(svgField){
 	//prepare game:
 	this.board.boardCellsToGraph(true);
 	this.board.isCurrentBoardLegal();
-	console.log(this.shortestPathPerPlayer);
+	this.shortestPathPerPlayer;
 	this.outputBoard();
 	this.gameStatus = PLAYING;
 }
@@ -1093,6 +1113,9 @@ Board.prototype.getShortestPathToFinish = function (player){
 	//console.log(this.boardGraph);
 	//console.log("player %d paths to finish: ", player);
 	/**/
+	//console.log("beforeshortseijfeijf");
+	//console.log(shortestPath);
+	
 	for (var finishCell=0;finishCell<9;finishCell++){
 		
 		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+FINISH_CELLS_LOOKUP_TABLE[player][finishCell]);
@@ -1107,7 +1130,9 @@ Board.prototype.getShortestPathToFinish = function (player){
 		
 		
 	}
-	if (shortestPath == null){
+	//console.log("shortseijfeijf");
+	//console.log(shortestPath);
+	if (shortestPath.length == 0){
 		//console.log("oioii");
 		return false;
 	}
