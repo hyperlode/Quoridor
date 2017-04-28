@@ -1010,9 +1010,9 @@ Game.prototype.buildUpBoard = function(svgElement){
 			//lines[lines.length-1].addEventListener("mouseover", function() { this.setAttribute('stroke', 'red') });
 			//lines[lines.length-1].addEventListener("mouseout", function() { this.setAttribute('stroke', 'blue') });
 			
-			this.svgLineSegments[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
-			this.svgLineSegments[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
-			this.svgLineSegments[index].addEventListener("click", function (){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("mouseover", function (event){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("mouseout", function (event){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("click", function (event){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
 			index+= 1;
 		}
 	}
@@ -1036,9 +1036,9 @@ Game.prototype.buildUpBoard = function(svgElement){
 			//lines[lines.length-1].addEventListener("mouseover", function() { this.setAttribute('stroke', 'red') });
 			//lines[lines.length-1].addEventListener("mouseout", function() { this.setAttribute('stroke', 'blue') });
 			
-			this.svgLineSegments[index].addEventListener("mouseover", function (){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
-			this.svgLineSegments[index].addEventListener("mouseout", function (){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
-			this.svgLineSegments[index].addEventListener("click", function (){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("mouseover", function (event){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("mouseout", function (event){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
+			this.svgLineSegments[index].addEventListener("click", function (event){this.mouseClickWallElement(event.target);}.bind(this)); //works, sends back line#id
 			index+= 1;
 		}
 	}
@@ -1076,9 +1076,9 @@ Game.prototype.buildUpBoard = function(svgElement){
 		for (var j=0; j<9;j++){ //cols
 				index = (9*i) + j;
 				this.svgCellsAsPawnShapes.push(add_circle(svgElement, (j+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED  , (i+0.5) *BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "cell_pawnCircle_" + index, BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE));
-				this.svgCellsAsPawnShapes[index].addEventListener("click", function (){this.mouseClickCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
-				this.svgCellsAsPawnShapes[index].addEventListener("mouseover", function (){this.mouseHoversInCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
-				this.svgCellsAsPawnShapes[index].addEventListener("mouseout", function (){this.mouseHoversOutCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
+				this.svgCellsAsPawnShapes[index].addEventListener("click", function (event){this.mouseClickCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
+				this.svgCellsAsPawnShapes[index].addEventListener("mouseover", function (event){this.mouseHoversInCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
+				this.svgCellsAsPawnShapes[index].addEventListener("mouseout", function (event){this.mouseHoversOutCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
 		}
 	}
 	
@@ -1095,9 +1095,9 @@ Game.prototype.buildUpBoard = function(svgElement){
 	
 	//add mouse events to player pawns
 	for (var i = 0;i<2;i++){
-		this.svgPawns[i].addEventListener("mouseover", function (){this.mouseHoversInPawnElement(event.target);}.bind(this)); //works, sends back line#id
-		this.svgPawns[i].addEventListener("mouseout", function (){this.mouseHoversOutPawnElement(event.target);}.bind(this)); //works, sends back line#id
-		//this.svgPawns[i].addEventListener("click", function (){this.mouseClickPawnElement(event.target);}.bind(this)); //works, sends back line#id
+		this.svgPawns[i].addEventListener("mouseover", function (event){this.mouseHoversInPawnElement(event.target);}.bind(this)); //works, sends back line#id
+		this.svgPawns[i].addEventListener("mouseout", function (event){this.mouseHoversOutPawnElement(event.target);}.bind(this)); //works, sends back line#id
+		//this.svgPawns[i].addEventListener("click", function (event){this.mouseClickPawnElement(event.target);}.bind(this)); //works, sends back line#id
 	}
 	
 	//bottom walls unused placement.
