@@ -11,7 +11,7 @@ var BOARD_HEIGHT = 1500;
 var BOARD_SCALE = 0.4;
 var BOARD_X_OFFSET = 50;
 var BOARD_Y_OFFSET = 300;
-var SOUND_ENABLED_AT_STARTUP = true;
+var SOUND_ENABLED_AT_STARTUP = false;
 
 var BOARD_X_OFFSET_SCALED = BOARD_X_OFFSET * BOARD_SCALE;
 var BOARD_Y_OFFSET_SCALED = BOARD_Y_OFFSET * BOARD_SCALE;
@@ -25,6 +25,7 @@ var BOARD_PAWN_RADIUS = 35;
 var BOARD_PAWN_1_COLOR = "lightskyblue";
 var BOARD_PAWN_2_COLOR = "lightsalmon";
 var BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER = "red";
+//var BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER = "white";
 var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE = BOARD_BACKGROUND_COLOR;
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1 = "paleturquoise";
 // var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "deepskyblue";
@@ -34,9 +35,10 @@ var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "peachpuff";
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_2=BOARD_PAWN_2_COLOR;
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_1=BOARD_PAWN_1_COLOR;
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_TRANSPARENCY = 0.4;
-BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION = "white"
+// BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION = "white";
+BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION = BOARD_BACKGROUND_COLOR;
 // var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "salmon";
-var BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION_TRANSPARENCY = 0.4;
+var BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION_TRANSPARENCY = 0.3;
 var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE_TRANSPARENCY = 1; //http://stackoverflow.com/questions/6042550/svg-fill-color-transparency-alpha
 
 var WALL_START_DISTANCE_FROM_BOARD_X = 80;
@@ -75,6 +77,13 @@ var FINISHED=2;
 
 
 var FINISH_CELLS_LOOKUP_TABLE = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
+
+document.onkeypress = function(evt) {
+    evt = evt || window.event;
+    var charCode = evt.keyCode || evt.which;
+    var charStr = String.fromCharCode(charCode);
+    alert(charStr);
+};
 
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -828,6 +837,7 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 	var lineIndex= parseInt(callerElement.id);
 	//console.log("hover: %d",parseInt(lineIndex));
 	
+	//line segments are half cell width, so there are two of them per cell.
 	
 	
 	var colors = [[BOARD_LINE_HOVER_WALL_POSSIBLE_COLOR, BOARD_LINE_HOVER_WALL_NOT_POSSIBLE_COLOR],[BOARD_LINE_COLOR, BOARD_LINE_COLOR]];
@@ -836,26 +846,102 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 	}else{
 		isHoveringInElseOut =1;
 	}
-	//assume horizontal
-	var isNorthSouthOriented = false; 
-	var startCellId = lineIndex;
-	var neighbourCellId = startCellId +1;
-	neighbourLineIndex = lineIndex +1;
-	if (startCellId % 9 >= 8){
-			neighbourCellId = 666;
-	}
 	
-	if (lineIndex >= 72){
-		//is vertical
+	
+	if (lineIndex < 144){
+		// horizontal (lines 0--> 143)
 		
-		isNorthSouthOriented = true;
-		startCellId = lineIndex - 72;
-		neighbourCellId = startCellId + 9 ;
-		neighbourLineIndex = neighbourCellId + 72;
+		//get same cell neighbour line 
+		var sameCellLineIndex = lineIndex-1;
+		if (lineIndex % 2 == 0){
+			sameCellLineIndex = lineIndex+1;
+		}
+		var affectedLinesIndeces = [lineIndex, sameCellLineIndex];
+		
+		var isNorthSouthOriented = false; 
+		var startCellId = parseInt(lineIndex/2);
+				
+		if ( lineIndex %18 == 0 || lineIndex % 18 == 17){
+			//extremities have no neighbours. 
+			neighbourCellId = 666; //illegal neighbour
+			startCellId  = 8; // if startcell is 0, it would allow to place a wall.... so, give it an illegal wall place startcell number. 
+		}else{
+			//define neighbourcells.
+			if (lineIndex % 2 == 0){
+				//Western neighbour
+				
+				startCellId = startCellId - 1;
+				var neighbourCellId = startCellId + 1;
+				affectedLinesIndeces.push(lineIndex-1);
+				affectedLinesIndeces.push(lineIndex-2);
+			}else{
+				//eastern neighbour
+				var neighbourCellId = startCellId + 1;
+				affectedLinesIndeces.push(lineIndex+1);
+				affectedLinesIndeces.push(lineIndex+2);
+			}
+		}
+		
+	}else{
+		/*
+		//is vertical
+		var isNorthSouthOriented = true;
+		var startCellId =  parseInt(lineIndex/2) - 72;
+		var neighbourCellId = startCellId + 9 ;
+		var neighbourLineIndex = neighbourCellId + 72;
 		//console.log("startCellId : vertical %d", startCellId);
 		if (startCellId > 71){
 			//console.log("aaargh id= %d", startCellId);
 			neighbourCellId = 666;
+		}
+		*/
+		
+		//is vertical
+		
+		//get same cell neighbour line 
+		var hoveredLineIndex = lineIndex;
+		if (lineIndex % 18 >= 9){
+			//south oriented line clicked in the cell...
+			lineIndex = lineIndex - 9;
+			var sameCellLineIndex = lineIndex+9;
+			
+		}else{
+			var sameCellLineIndex = lineIndex+9;
+		}
+		var affectedLinesIndeces = [lineIndex, sameCellLineIndex];
+		
+		
+		var isNorthSouthOriented = true;
+		var neighbourCellId;
+		if ( hoveredLineIndex <=151 ){
+			//northern extremity
+			neighbourCellId = 666; //illegal neighbour
+			startCellId  = 8; // if startcell is 0, it would allow to place a wall.... so, give it an illegal wall place startcell number. 
+			
+		}else if ( hoveredLineIndex >= 297){
+			//southern extremity.
+			//extremities have no neighbours. 
+			neighbourCellId = 666; //illegal neighbour
+			startCellId  = 8; // if startcell is 0, it would allow to place a wall.... so, give it an illegal wall place startcell number. 
+			
+		}else{
+			
+			//check startcellId
+			var startCellId =  (parseInt(lineIndex/18) -8	)*9 + lineIndex%18;
+			
+			if (hoveredLineIndex % 18 >= 9){
+				//southern line --> neighbour south
+				affectedLinesIndeces.push(hoveredLineIndex + 9);
+				affectedLinesIndeces.push(hoveredLineIndex + 18);
+				neighbourCellId = startCellId+9;
+			}else{
+				//northern line --> neighbour north
+				affectedLinesIndeces.push(hoveredLineIndex - 9);
+				affectedLinesIndeces.push(hoveredLineIndex - 18);
+				startCellId = startCellId-9;
+				neighbourCellId = startCellId+9;
+			}
+		
 		}
 	}
 	
@@ -863,6 +949,8 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 		//this.board.placeWall(PLAYER1,startCellId, isNorthSouthOriented, false);
 		//this.outputWalls();
 		//console.log();
+		
+		
 		if(this.board.placeWall (PLAYER1, startCellId, isNorthSouthOriented, true)){
 			var verboseNotationWallPlacement = this.wallToVerboseNotation(startCellId, isNorthSouthOriented);
 			this.playTurnByVerboseNotation(verboseNotationWallPlacement);
@@ -870,20 +958,22 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 		
 	}else{	
 		//colorize line
-		if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
-			this.svgLineSegments[lineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
-		}else{
-			this.svgLineSegments[lineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
+		var placementIsPossible = this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)?1:0;
+		for (var i = 0; i<affectedLinesIndeces.length; i++){
+			this.svgLineSegments[affectedLinesIndeces[i]].setAttribute('stroke',colors[isHoveringInElseOut][placementIsPossible]);
+			//this.svgLineSegments[affectedLinesIndeces[i]].setAttribute('stroke','red');
 		}
 		
-		//colorize neighbour line if possible
-		if (neighbourCellId != 666){
-			if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
-				this.svgLineSegments[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
-			}else{
-				this.svgLineSegments[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
-			}		
-		}
+		
+		// //colorize neighbour line if possible
+		// if (neighbourCellId != 666){
+			// if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
+				// this.svgLineSegments[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
+			// }else{
+				// this.svgLineSegments[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
+			// }		
+		// }
+		
 	}
 
 }
@@ -903,18 +993,17 @@ Game.prototype.buildUpBoard = function(svgElement){
 	//horizontal line segments: correspond with cell ID (with cell on the west)
 	//vertical line segments, after subtracting by 72 (=number of horizontal line segments) correspond with cell ID(with cell on the north)
 	
-	
 	var index = 0;
 	//horizontal lines
 	for (var i=0; i<8;i++){
 		
 		// x1, y1, x2, y2
-		for (var j=0; j<9;j++){
+		for (var j=0; j<18;j++){
 			// createLine(svgElement, 0*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED , BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_LINE_COLOR, 10*BOARD_SCALE);	
 			this.svgLineSegments.push(createLine(svgElement, 
-			j * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED,
+			(j) * (BOARD_SQUARE_SPACING/2)*BOARD_SCALE + BOARD_X_OFFSET_SCALED,
 			(i+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED ,
-			(j+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
+			(j+1) * (BOARD_SQUARE_SPACING/2)*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
 			(i+1)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 
 			BOARD_LINE_COLOR, 10*BOARD_SCALE, index)	//BOARD_LINE_COLOR
 			);
@@ -929,17 +1018,19 @@ Game.prototype.buildUpBoard = function(svgElement){
 	}
 	
 	//add vertical lines (cell sized)
-	for (var i=0; i<9;i++){
+	// for (var i=0; i<9;i++){
+	for (var i=0; i<18;i++){
 		// x1, y1, x2, y2
+		// for (var j=0; j<9;j++){
 		for (var j=0; j<9;j++){
 			//j<8 is sufficient, but we use the id to link it to a cell, as this is also the index in the array, we want to keep things easier. (the other EAST vertical pieces are ON the board edge)
 			
 			// createLine(svgElement, 0*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED , BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_X_OFFSET_SCALED, i*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_LINE_COLOR, 10*BOARD_SCALE);	
 			this.svgLineSegments.push(createLine(svgElement, 
 			(j+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED,
-			 i* BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED ,
+			 i* (BOARD_SQUARE_SPACING/2)*BOARD_SCALE + BOARD_Y_OFFSET_SCALED ,
 			(j+1) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 
-			(i+1)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 
+			(i+1)*(BOARD_SQUARE_SPACING/2)*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 
 			BOARD_LINE_COLOR, 10*BOARD_SCALE, index)	//BOARD_LINE_COLOR
 			);
 			//lines[lines.length-1].addEventListener("mouseover", function() { this.setAttribute('stroke', 'red') });
@@ -1045,918 +1136,5 @@ Game.prototype.play_song = function(){
 	}
 }
 
-function Board(){
-	this.cells =[];
-	this.walls_1 = []; //store walls;
-	this.walls_2 = []; //store walls;
-	
-	this.init();
-	this.boardGraph= {};
-	this.boardCellsToGraph(true);
-	this.shortestPathPerPlayer = [[]];
-}
 
-Board.prototype.isThereAWinner = function(){
-	isPlayer1Winner = false;
-	
-	//check player 1 on winning cells?
-	if (FINISH_CELLS_LOOKUP_TABLE[PLAYER1].indexOf(this.getPawnCellId(PLAYER1)) != -1){
-		isPlayer1Winner = true;  //player1 won
-		//console.log("tnpssem");
-	}
-	//check player2
-	if (FINISH_CELLS_LOOKUP_TABLE[PLAYER2].indexOf(this.getPawnCellId(PLAYER2)) != -1 ){
-		
-		if (isPlayer1Winner){
-			//return 2 winners error
-			console.log("ASSERT ERROR: TWO WINNERS, BOTH PAWNS ON WINNING FIELD");
-			return [false,666];
-		}else{
-			//return player 2 winner
-			return [true,PLAYER2];
-		}
-	}else if (isPlayer1Winner){
-		//return player 1 winner
-		return [true,PLAYER1];
-	}else{
-		return [false,666];
-	}
-	//return no winners
-	return [false,666];
-}
-
-Board.prototype.isCurrentBoardLegal = function (){
-	//check if each player can reach a finish field.
-	for(var player =0;player<2;player++){
-		if (!this.getShortestPathToFinish(player)){
-			console.log("illegal move!!");
-			return false;
-		}
-	}
-	return true;
-}
-
-Board.prototype.getShortestPathToFinish = function (player){
-	//get cell with player.
-	//var finishCellsLookupTable = [["0","1","2","3","4","5","6","7","8"],["72","73","74","75","76","77","78","79","80"]]; //valid finish cellIDs for player 1 and player 2
-	//var finishCellsLookupTable = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
-	
-	var playerCell = this.getPawnCellId(player);
-	var searchGraph = new Graph(this.boardGraph);
-	
-	//console.log(graph.findShortestPath(4,80));	
-	var shortestPath = [];
-	//console.log("playerCell %d",playerCell);
-//	console.log(finishCellsLookupTable[player][0]);
-	
-	var pathToFinish = [];
-	//console.log(this.boardGraph);
-	//console.log("player %d paths to finish: ", player);
-	/**/
-	//console.log("beforeshortseijfeijf");
-	//console.log(shortestPath);
-	
-	for (var finishCell=0;finishCell<9;finishCell++){
-		
-		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+FINISH_CELLS_LOOKUP_TABLE[player][finishCell]);
-		//console.log(pathToFinish);
-		if (pathToFinish != null){
-			if (pathToFinish.length < shortestPath.length || shortestPath.length == 0){ //if shorter of not yet existing, save as shortest path
-				shortestPath = pathToFinish ;
-				//console.log("poyeee");
-				//console.log(shortestPath);
-			}
-		}
-		
-		
-	}
-	//console.log("shortseijfeijf");
-	//console.log(shortestPath);
-	if (shortestPath.length == 0){
-		//console.log("oioii");
-		return false;
-	}
-	var shortestPathToInt=[];
-	for (var i=0;i<shortestPath.length;i++){
-		shortestPathToInt.push(parseInt(shortestPath[i]));
-	}
-	shortestPath = shortestPathToInt;
-	this.shortestPathPerPlayer[player] = shortestPath;
-	// console.log("shortestPath per pl:");
-	// console.log(this.shortestPathPerPlayer);
-	return shortestPath;
-	
-	/**/
-	
-	
-	
-	//console.log(searchGraph.findPaths(playerCell));
-}
-Board.prototype.boardCellsToGraph = function (weighted){
-	
-	//create graph with cellIds as vertexes and edges are accessible nieghbours.
-	var graph = {};
-	var extendedDirectionsLookUpTable= [[NORTHNORTH,NORTHEAST,NORTHWEST],[EASTEAST,NORTHEAST,SOUTHEAST],[SOUTHSOUTH,SOUTHEAST,SOUTHWEST],[WESTWEST,NORTHWEST,SOUTHWEST]]; 
-	for (var cellId=0; cellId<this.cells.length;cellId++){
-	//for (var cellId=0; cellId<3;cellId++){
-		//check neighbours of the cell. not necessaraly physical neighbours, as pawns can jump.
-		var neighbours= [];
-		
-		for (var direction = 0; direction <4;direction++){
-			//check neighbours
-			var neighbourId = this.cells[cellId].getNeighbourId(direction);
-			//console.log("directiontest: %d ... %d", direction,neighbourId);
-			
-			//console.log(neighbourId);
-			if (neighbourId>=0){
-				
-				var containsPawnIfSoWhichPlayer = this.cells[neighbourId].getIsOccupied();
-				//console.log("pawn: %d ... ", containsPawnIfSoWhichPlayer);
-				if (containsPawnIfSoWhichPlayer){
-						//console.log("neighbourId");
-						//console.log(neighbourId);
-						//console.log(direction);
-						
-					//if neighbours contains the opposing pawn, "neighbouring cells" become jump cells
-					//cell contains pawns, check all jump directions. i.e. n contains pawn--> ne, nn, nw.
-					
-					
-					//first check straight jump
-					if (this.movePawnStraightJump(cellId, extendedDirectionsLookUpTable[direction][0], true,true)){
-						neighbours.push(this.cells[cellId].getNeighbourId(extendedDirectionsLookUpTable[direction][0]));
-						
-					}else {
-						//check diagonal jump 
-						for (var n=1;n<3;n++){
-							//console.log (this.movePawnDiagonalJump(cellId,extendedDirectionsLookUpTable[direction][n],true,true));
-							if (this.movePawnDiagonalJump(cellId,extendedDirectionsLookUpTable[direction][n],true,true)){
-								neighbours.push(this.cells[cellId].getNeighbourId(extendedDirectionsLookUpTable[direction][n]));
-							}
-						}
-						
-					}
-					
-				}else{
-					//player
-					//console.log("direction:%d" ,direction);
-					if (this.movePawnSingleCell(cellId, direction,true,true)){
-						neighbours.push(this.cells[cellId].getNeighbourId(direction));
-						
-					};
-					
-				}
-			}
-				
-			
-			
-		}
-		//console.log(cellId);
-		//console.log(neighbours);
-		if (neighbours.length > 0){
-			graph[cellId] = neighbours;
-		}
-	}
-	
-	if (weighted){
-		var weightedGraph = {}
-		for (var i = 0; i< Object.keys(graph).length; i++){
-			
-			var subgraph = {};
-			if (i in graph){ //check if key exists.
-				for(var j =0; j<graph[i].length; j++){
-					subgraph[""+graph[i][j]]=1;
-					
-				}
-				weightedGraph[""+i]=subgraph;
-			}
-			// console.log(subgraph);
-		}
-		//console.log("weightedGraph");
-		//console.log(weightedGraph);
-		this.boardGraph = weightedGraph;
-	}else{
-	
-		this.boardGraph = graph;
-	}
-	//return graph;
-}
-
-
-Board.prototype.wallNotationToCellAndOrientation = function (verboseCoordinate){
-	//returns startcellId and isNorthSouthOriented orientation as [id, orientation]
-	//verboseCoordinate = string of two characters, one letters, one number. number from [1,8], letter [a,h]  i.e. b2 or 5C
-	//verboseCoordinate :  i.e.   starting with a letter = vertical, starting with a number is horizontal. , letters and numbers indicate the wall lines on the board (between the cells), the crossing of the wall lines indicates the center point of the wall.
-	//end result = four cells with each a direction.
-	
-	//get vertical wall line
-	if (verboseCoordinate.length != 2){
-		if (PRINT_ASSERT_ERRORS){
-			console.log("ASSERT ERROR  not a wall move, notation should be two characters");
-		}
-		return false;
-	}
-	//var wallLines = verboseCoordinate.split('');
-	var charVals = [verboseCoordinate.charCodeAt(0), verboseCoordinate.charCodeAt(1)];
-	var isLetter =[];
-	var values  = [];
-	//convert chars to wall lines 
-	//https://webserver2.tecgraf.puc-rio.br/cd/img/vectorfont_default.png
-	for(var i=0;i<2;i++){
-		if (charVals[i]>= 49 && charVals[i]<=56){
-			//number
-			isLetter[i] =false;
-			values.push(charVals[i]-48);
-		}else if (charVals[i]>= 65 && charVals[i]<=72){
-			//capital
-			isLetter[i] =true;
-			values.push(charVals[i]-64);
-		}else if (charVals[i]>= 97 && charVals[i]<=104){
-			//small letter
-			isLetter[i] =true;
-			values.push(charVals[i]-96);
-		}else{
-			//assert error
-			if (PRINT_ASSERT_ERRORS){
-				console.log("ASSERT ERROR not a wall move, invalid character in notation to place a wall.");
-			}
-			return false;
-		}
-	}
-	var isNorthSouthOriented = false;
-	//check validity
-	if (isLetter[0] == isLetter[1]){
-		//check if both are number or letter
-		if (PRINT_ASSERT_ERRORS){
-			console.log("ASSERT ERROR: should be a letternumber or numberletter")
-		}
-		return false;
-	}else if (isLetter[0]){
-		isNorthSouthOriented = true;
-		startCellCol = (values[0]-1);
-		startCellRow = (8-values[1]);
-	}else{
-		isNorthSouthOriented = false;
-		startCellRow = (8-values[0]);
-		startCellCol = (values[1]-1);
-	}
-	
-	return [this.rowColToCellId(startCellRow,startCellCol) , isNorthSouthOriented];
-	//get startcell row and col
-}
-
-
-
-
-
-
-
-Board.prototype.getWallCenterPointWithOrientationFromStartCellIdAndOrientation = function(startCellId, orientation){
-	//wall = [ horizontalLine, verticalLine, isOrientationNorthSouth]
-	//console.log(startCellId);
-	var rowCol = this.cells[startCellId].getRowColFromId();
-	return [rowCol[0]+1 , rowCol[1]+1, orientation];
-}
-Board.prototype.getStartCellIdAndOrientationFromWallCenterPointWithOrientation = function(row, col, orientation){
-	//wall = [ horizontalLine, verticalLine, isOrientationNorthSouth]
-	//console.log(startCellId);
-	var startCellId = (row-1)*9 + (col-1);
-	return [startCellId, orientation];
-}
-Board.prototype.getWalls = function (){
-	return [this.walls_1 , this.walls_2];
-}
-
-Board.prototype.getWallsCombined = function (){
-	//all walls together
-	return this.walls_1.concat(this.walls_2);
-}
-
-
-Board.prototype.isCenterPointAvailableForWallPlacement = function(startCellId, orientation){
-	//check if centerpoint is already occupied.
-	var wallCenterPointAndOrientation = this.getWallCenterPointWithOrientationFromStartCellIdAndOrientation(startCellId, orientation);
-	//console.log(wallCenterPointAndOrientation);
-	var walls = this.getWallsCombined();
-	var positionIsAvailable = true
-	//console.log(walls);
-	for (var i=0;i<walls.length;i++){	
-		
-		if (walls[i][0] == wallCenterPointAndOrientation[0] && walls[i][1] == wallCenterPointAndOrientation[1]){
-			positionIsAvailable=false;
-			return positionIsAvailable;
-		}
-	}
-	return positionIsAvailable;
-}
-
-Board.prototype.isPositionAvailableForWallPlacement = function(startCellId, isNorthSouthOriented){
-	
-	return this.placeWall(PLAYER1,startCellId, isNorthSouthOriented, true);
-}
-
-Board.prototype.isWallPositionAvailableByVerboseCoordinate= function (player,verboseCoordinate){
-	var wallCoords = this.wallNotationToCellAndOrientation(verboseCoordinate);
-	if(!wallCoords){
-		//notation unvalid
-		return false;
-	}
-	return this.placeWall(player, wallCoords[0],wallCoords[1],true );
-}
-
-Board.prototype.placeWallByVerboseCoordinate= function (player,verboseCoordinate){
-	var wallCoords = this.wallNotationToCellAndOrientation(verboseCoordinate);
-	if(!wallCoords){
-		//notation unvalid
-		return false;
-	}
-	return this.placeWall(player, wallCoords[0],wallCoords[1],false );
-}
-Board.prototype.removeLastWall = function(player){
-	var lastWall = this.getWalls()[player].pop();//remove last wall fromlist.
-	// console.log(lastWall);
-	var lastWallCoords = this.getStartCellIdAndOrientationFromWallCenterPointWithOrientation(lastWall[0],lastWall[1],lastWall[2]);
-	
-	var lastWallStartCellId = lastWallCoords[0];
-	var lastWallOrientationIsNorthSouth = lastWallCoords[1];
-	
-	var startCell = this.cells[lastWallStartCellId];
-	var neighEastId = startCell.getNeighbourId(EAST);
-	var neighSouthId = startCell.getNeighbourId(SOUTH);
-	var neighSouthEastId = startCell.getNeighbourId(SOUTHEAST);
-	// console.log(lastWallCoords[0]);
-	// console.log(neighEastId);
-	// console.log(neighSouthId);
-	// console.log(neighSouthEastId);
-	var allInvolvedCellsIds = [lastWallStartCellId, neighEastId, neighSouthEastId, neighSouthId];
-	//--> pattern for 4 cells: startcell, then east, then southeast, then south
-	var sidesForNorthSouthOrientation = [EAST,WEST,WEST,EAST];
-	var sidesForEastWestOrientation = [SOUTH,SOUTH,NORTH,NORTH];
-	
-	//decide which sides are affected.
-	var sidesToChange = sidesForEastWestOrientation; ////assume east west oriented
-	if (lastWallOrientationIsNorthSouth){
-		sidesToChange = sidesForNorthSouthOrientation;//north south oriented
-	}
-	//console.log(lastWallCoords);
-	//remove Wall from cells.
-	for (var i=0;i<4;i++){
-		this.cells[allInvolvedCellsIds[i]].openSide(sidesToChange[i]) ;
-	}
-}
-
-Board.prototype.placeWall = function (player, startCellId, isNorthSouthOriented, onlyCheckAvailabilityDontPlaceWall){
-	//wall covers always two cells, 
-	//if east west oriented: at South of startcell, and eastern neighbour cell
-	// if north east : at East o fstartcell, and southern neighbour cell
-	
-	var startCell = this.cells[startCellId];
-	
-	//check if within board limits:
-	if (!(startCell.row >=0 && startCell.row<=7 && startCell.col >=0 && startCell.col<=7)){
-		if (!onlyCheckAvailabilityDontPlaceWall){
-			console.log("ASSER ERROR WRONG CELL as wall start identifier ");
-			console.log("-------------------------");
-			console.log(startCell);
-		}	
-		return false;
-	}
-	
-	//first check if centerpoint is available
-	if (!this.isCenterPointAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
-		if (!onlyCheckAvailabilityDontPlaceWall){
-			console.log("centerpoint wall occupied. wall cannot be placed.");
-		}
-		
-		return false;
-	}	
-	
-	//check borders in cells.
-	//assume neighbours existing.
-	//for (var i=0; i<4;i++){
-	
-	var neighEastId = startCell.getNeighbourId(EAST);
-	var neighSouthId = startCell.getNeighbourId(SOUTH);
-	var neighSouthEastId = startCell.getNeighbourId(SOUTHEAST);
-	
-	
-	var allInvolvedCellsIds = [startCellId, neighEastId, neighSouthEastId, neighSouthId];
-	//--> pattern for 4 cells: startcell, then east, then southeast, then south
-	var sidesForNorthSouthOrientation = [EAST,WEST,WEST,EAST];
-	var sidesForEastWestOrientation = [SOUTH,SOUTH,NORTH,NORTH];
-	
-	//decide which sides are affected.
-	var sidesToChange = sidesForEastWestOrientation;
-	if (isNorthSouthOriented){
-		sidesToChange = sidesForNorthSouthOrientation;
-	}
-	
-	var isAllAffectedSideOpen = true;
-	
-	//console.log(allInvolvedCellsIds);
-	//console.log(sidesToChange);
-	//check if sides are already occupied.
-	for (var i=0;i<4;i++){
-		//console.log(this.cells[allInvolvedCellsIds[i]].isSideOpen(sidesToChange[i]));
-		if( !this.cells[allInvolvedCellsIds[i]].isSideOpen(sidesToChange[i])){
-			isAllAffectedSideOpen=false;
-		}
-	}
-	if (!isAllAffectedSideOpen){
-		//wall cannot be placed because another wall is blocking its path somewhere.
-		if (!onlyCheckAvailabilityDontPlaceWall){
-			console.log("position not valid for wall placement");
-		} 
-		return false;
-	}
-	
-	
-	//check completed, return results if only simulation.
-	if (onlyCheckAvailabilityDontPlaceWall){
-		return true;
-	}
-	
-	//place wall
-	for (var i=0;i<4;i++){
-		this.cells[allInvolvedCellsIds[i]].closeSide(sidesToChange[i]) ;
-	}
-	
-	
-	//store wall as wall (cells is not enough, we have to know the exact wall, for the gaps...)
-	if (player == PLAYER1){
-		this.walls_1.push(this.getWallCenterPointWithOrientationFromStartCellIdAndOrientation(startCellId, isNorthSouthOriented));
-		
-	}else{
-		this.walls_2.push(this.getWallCenterPointWithOrientationFromStartCellIdAndOrientation(startCellId, isNorthSouthOriented));
-		
-	}
-	return true;
-	
-}
-
-Board.prototype.init = function (){
-	var id=0;
-	
-	//cell numbering:
-	//  0,0 ---> + col
-	//  |
-	//  |
-	//  V +row
-	
-	//indication of sides and "wall" lines. Hx = horizontal, Vx= vertical, (x,x) =cell
-	//    H0        H0
-	//V0  (0,0)  V1  (0,1) V2  (0,2)  ....
-	//    H1        H1 
-	//V0  (1,0)  V1  (1,1) V2  (1,2)   ....
-	//    H1        H1   ....
-	//   ....      .... 
-	for (var row=0; row<9;row++){
-		for (var col=0; col<9;col++){
-			
-			this.cells.push(new Cell(row,col, row>0, col<8, row<8, col>0 ));
-			//this.cells[this.cells.length - 1].printToConsole();
-			//console.log(row);
-		}
-	}
-	//define cells with pawns.
-	this.pawnCellsIds = [this.rowColToCellId(8,4), this.rowColToCellId(0,4)];
-	this.cells[this.pawnCellsIds[PLAYER1]].acquirePawn(PLAYER1);
-	this.cells[this.pawnCellsIds[PLAYER2]].acquirePawn(PLAYER2);
-	
-	
-};
-
-
-
-Board.prototype.getAllNeighBourCellIds= function(cellId){
-	var activeCell = this.cells[cellId];
-	var neighbourIds = [];
-	for (var i=0;i<12;i++){
-		//for every direction that exists, we color the pawn circle in the correct cell.
-		//get cell id of active direction
-		//id of player cell = 
-		neighbourIds.push(activeCell.getNeighbourId(i));
-	}
-	return neighbourIds;
-}
-
-Board.prototype.getPawnAllNeighBourCellIds= function(player){
-	
-	//for the 12 directions.
-	var cellId = this.pawnCellsIds[player];
-	return this.getAllNeighBourCellIds(cellId);
-	
-}
-
-Board.prototype.getValidPawnMoveDirections = function(player){
-	var validDirections = []
-	for (var i =0;i<12;i++){
-		validDirections.push(this.movePawn(player,i,true));
-	}
-	return validDirections;
-}
-
-Board.prototype.movePawn = function(player, direction,isSimulation){
-	var isValidMove;
-	if (direction< 4){
-		isValidMove = this.movePawnSingleCell(player, direction,isSimulation,false);
-		
-	}else if (direction <8){
-		isValidMove =  this.movePawnDiagonalJump(player, direction,isSimulation,false);
-		
-	}else if (direction <12){
-		isValidMove = this.movePawnStraightJump(player, direction,isSimulation,false);
-		 
-	}else{
-		if (!isSimulation){
-			console.log("ASSERT ERROR: non valid pawn move direction");
-		};
-		isValidMove = false;
-	}
-	
-	return isValidMove;
-	
-}
-
-Board.prototype.movePawnStraightJump = function(player, twoStepsDirection, isSimulation, playerContainsStartCellIdInsteadOfPlayer){
-	//player is the jumping player.
-	//twostepsdirection nn,ee,ss,ww
-	//isSimulation-> does not output console log.
-	
-	
-	if (playerContainsStartCellIdInsteadOfPlayer){
-		var cell = this.cells[player];
-	}else{
-		var cell = this.cells[this.pawnCellsIds[player]];
-	}
-	
-	singleStepDirection = twoStepsDirection-8;
-	//check if neighbour cell exists
-	if (!cell.isThereAnExistingNeighbourOnThisSide(twoStepsDirection)){
-		if (!isSimulation){
-			console.log("ASSERT ERROR: no neighbour cell existing");
-		}
-		return false;
-	}
-	
-	//get the two neighbour ids.
-	var neighbourId = cell.getNeighbourId(singleStepDirection);
-	var twoNeighbourdIds = cell.getNeighbourId(twoStepsDirection);
-	// console.log(this.pawnCellsIds[player]);
-	// console.log(neighbourId);
-	// console.log(twoNeighbourdIds);
-	
-	//check if direction not blocked by wall
-	if (!cell.isSideOpen(singleStepDirection) || !this.cells[neighbourId].isSideOpen(singleStepDirection)){
-		if (!isSimulation){
-			console.log("one or two walls in the way, can't jump in direction %d (N=0, E=1, S=2, W=3)", singleStepDirection);
-		}
-		return false;
-	}
-	
-	//check if neighbour has pawn
-	if (!this.cells[neighbourId].getIsOccupied()){
-		if (!isSimulation){
-			console.log("Can only jump if neighbour has a pawn");
-		}
-		return false
-	}
-	
-	
-	
-	// console.log(this.pawnCellsIds[player]);
-	// console.log(neighbourId);
-	//console.log(twoNeighbourdIds);
-	
-	if (!isSimulation){
-		//make the move
-		cell.releasePawn(player); //release pawn for current cell
-		
-		this.pawnCellsIds[player] = twoNeighbourdIds; 
-		
-		this.cells[this.pawnCellsIds[player]].acquirePawn(player);//acquire pawn
-	}
-	
-	return true;
-	
-}
-
-Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSimulation,playerContainsStartCellIdInsteadOfPlayer){
-	//check if neighbour cell exists
-	
-	if (playerContainsStartCellIdInsteadOfPlayer){
-		var cell = this.cells[player];
-	}else{
-		var cell = this.cells[this.pawnCellsIds[player]];
-	}
-	
-	if (!cell.isThereAnExistingNeighbourOnThisSide(diagonalDirection)){
-		//this works, if both orthogonals existing, diagonal is existing too
-		if(!isSimulation){
-			console.log("ASSERT ERROR: no neighbour cell existing");
-		}
-		return false;
-	}
-	
-	lookupTable = [[NORTH,EAST],[SOUTH,EAST],[SOUTH,WEST],[NORTH,WEST]] ; //ne, se,sw,nw
-	
-	//neighbour id can be one of both, i.e. to go NE --> we can go first east then north, or first north than east.... --> the neighbour having the opponent pawn is the neighbour 
-	var neighbourId = cell.getNeighbourId(lookupTable[diagonalDirection - 4][0]); //assume one direction for neighbour
-	var firstDirection = lookupTable[diagonalDirection - 4][0];
-	var secondDirection = lookupTable[diagonalDirection - 4][1];
-	
-	//console.log(neighbourId);
-	//console.log(neighbourId);
-	//console.log(this.cells[neighbourId].getIsOccupied());
-	if (!this.cells[neighbourId].getIsOccupied()){  //...if not containing neighbour, assume other direction for neighbour
-		//console.log("other neighbour");
-		neighbourId = cell.getNeighbourId(lookupTable[diagonalDirection - 4][1]); //... assume the other neighbour. the real check for the correct pawn follows later...
-		firstDirection = lookupTable[diagonalDirection - 4][1];
-		secondDirection = lookupTable[diagonalDirection - 4][0];
-	}
-	
-	//check neighbour containing pawn
-	if (!this.cells[neighbourId].getIsOccupied()){
-		//console.log (this.cells[neighbourId].getIsOccupied() == player+1);
-		if(!isSimulation){
-			console.log ("no pawn detected at adjecent cell, no jump allowed.");
-		}
-		return false;
-	}
-	
-	//check neighbour containing other pawn
-	if (!playerContainsStartCellIdInsteadOfPlayer && this.cells[neighbourId].getIsOccupied() == player+1 ){
-		
-		//console.log (this.cells[neighbourId].getIsOccupied() == player+1);
-		if(!isSimulation){
-			console.log ("no opposite player pawn detected at adjecent cell, no jump allowed.");
-		}
-		return false;
-	}
-	
-	//get the second  neighbour id
-	var twoNeighbourdIds = this.cells[neighbourId].getNeighbourId(secondDirection);
-//	console.log("diagtest:");
-//	console.log(diagonalDirection);
-//	console.log(this.pawnCellsIds[player]);
-//	console.log(neighbourId);
-//	console.log(twoNeighbourdIds);
-	
-	
-	//check wall blocking move from cell to neighbour
-	if (!cell.isSideOpen(firstDirection)){
-		if(!isSimulation){
-			console.log ("no diagonal jump allowed, not possible to move to reach neighbour cell");
-		}
-		return false;
-	}
-	
-	//check wall blocking straight jump from neighbour to second neighbour
-	if (this.cells[neighbourId].isSideOpen(firstDirection)){
-		if(!isSimulation){
-			console.log ("no diagonal jump allowed, the forward side has to be blocked, otherwise it would be a straight jump");
-		}
-		return false;
-	}
-		
-	//check wall blocking diag jump from neighbour to second neighbour
-	if (!this.cells[neighbourId].isSideOpen(secondDirection)){
-		if(!isSimulation){
-			console.log ("no diagonal jump allowed, a side ways side is preventing the jump.");
-		}	
-		return false;
-	}
-	
-	
-	if (!isSimulation){
-		//do actual move.
-		//make the move
-		cell.releasePawn(player); //release pawn for current cell
-		
-		this.pawnCellsIds[player] = twoNeighbourdIds; 
-		
-		this.cells[this.pawnCellsIds[player]].acquirePawn(player);//acquire pawn
-	}
-	return true;
-	
-}
-
-Board.prototype.movePawnSingleCell = function(player, direction, isSimulation,playerContainsStartCellIdInsteadOfPlayer){
-	//check if neighbour cell exists
-	
-	
-	
-	//check for walls, sides and other pawn, notify event "win" 
-	
-	//side check
-	//check if neighbour cell exists 
-	if (playerContainsStartCellIdInsteadOfPlayer){
-		var cell = this.cells[player];
-	}else{
-		var cell = this.cells[this.pawnCellsIds[player]];
-	}
-	if (!cell.isThereAnExistingNeighbourOnThisSide(direction)){
-		if(!isSimulation){
-			console.log("ASSERT ERROR: no neighbour cell existing");
-		}
-		return false;
-	}
-	
-	//check if direction not blocked by wall
-	if (!cell.isSideOpen(direction)){
-		if(!isSimulation){
-			console.log("wall in the way, can't move in direction %d (N=0, E=1, S=2, W=3)", direction);
-		}
-		
-		return false;
-	}
-	
-	//check if direction not blocked by other pawn
-	var neighbour = cell.getNeighbourId(direction); //get neighbour id
-	
-	if (this.cells[neighbour].getIsOccupied()){
-		if (!isSimulation){
-			console.log("cant move, destination cell contains other pawn. Please perform a jump move.");
-		}
-		return false
-	}
-	
-	if (!isSimulation){
-		//make the move
-		cell.releasePawn(player); //release pawn
-		this.pawnCellsIds[player] = neighbour;
-		cell = this.cells[this.pawnCellsIds[player]];
-		cell.acquirePawn(player);//acquire pawn
-	}
-	return true;
-	
-}
-
-
-
-Board.prototype.rowColToCellId = function(row,col){
-	//cell id is cell index in this.cells
-	return row*9+col;
-}
-
-
-Board.prototype.getPawnCellId = function(player){
-	if (player == PLAYER1 || player == PLAYER2){
-		return this.pawnCellsIds[player];
-	}else{
-		console.log("ASSERT ERROR NO VALID PLAYER");
-		return -666;
-	}
-}
-
-Board.prototype.getPawnCoordinates = function(player){
-	//console.log("playercell: %d ", this.pawnCellsIds[player]);
-	return  this.cells[this.pawnCellsIds[player]].getRowColFromId();
-}
-
-
-
-// function Cell (bool wallNorth, bool wallEast, bool wallSouth, bool wallWest, bool pawnPlayerA, bool pawnPlayerB){
-function Cell (row, col, openToNorth, openToEast, openToSouth, openToWest){
-	this.row = row;
-	this.col = col;
-	this.id = 9*row + col; //i.e. id 10  = cell 
-	this.position = [row,col];
-	this.openSides = [openToNorth, openToEast, openToSouth, openToWest]; //will change during the game
-	this.sideHasExistingNeighbourCell = [openToNorth, openToEast, openToSouth, openToWest]; //never change this
-	this.occupiedByPawn = 0;
-	
-	//console.log(this.row);
-	
-}
-
-
-Cell.prototype.getId = function(){
-	return this.id;
-}
-Cell.prototype.getRowColFromId = function(){
-	return [parseInt(this.id/9), this.id%9];
-}
-
-Cell.prototype.getIsOccupied = function(){
-	return this.occupiedByPawn ;
-};
-Cell.prototype.printToConsole = function(){
-	console.log('----- row: %d -- col: %d -------',this.row, this.col);
-	console.log(this.occupiedByPawn);
-	console.log (this.openSides);
-	
-	
-}
-Cell.prototype.isSideOpen = function(direction){
-	//direction: 0 is North, 1 E, 2S, 3 West
-	
-	return this.openSides[direction];
-}
-
-Cell.prototype.isThereAnExistingNeighbourOnThisSide = function(direction){
-	//direction: 0 is North, 1 E, 2S, 3 West
-	////4NE, 5SE, 6, SW, 7 NW
-	
-	var directionsToCheckForDiagonals_lookUpTable = [ [0,1],[1,2],[2,3],[3,0]];
-	
-	if (direction<4){
-	
-		return this.sideHasExistingNeighbourCell[direction];
-	}else if (direction <8){
-		//both diag neighbours have to exist to return true.
-		return this.sideHasExistingNeighbourCell[directionsToCheckForDiagonals_lookUpTable [direction-4][0] ] &&
-			   this.sideHasExistingNeighbourCell[directionsToCheckForDiagonals_lookUpTable [direction-4][1] ];
-	}else if (direction < 12){
-			return this.isThereAnExistingNeighbourOnThisSide(direction - 8);
-	}else{
-		//if (PRINT_ASSERT_ERRORS){
-		console.log("ASSERT ERROR DIRECITON NOT EXISTING");
-		//}
-		return 666;
-	}
-}
-Cell.prototype.closeSide = function(direction){
-	//direction: 0 is North, 1 E, 2S, 3 West
-	this.openSides[direction] = false;
-}
-Cell.prototype.openSide = function(direction){
-	//direction: 0 is North, 1 E, 2S, 3 West
-	this.openSides[direction] = true;
-}
-Cell.prototype.acquirePawn= function(player){
-	if(this.occupiedByPawn >0){
-		//if (PRINT_ASSERT_ERRORS){
-			console.log("ASSERT ERROR: cell already contains pawn");
-		//}
-		return false;
-	}else{
-		this.occupiedByPawn = player+1;
-		return true;
-	}
-}
-Cell.prototype.releasePawn =function(player){
-	if(this.occupiedByPawn <1){
-		//if (PRINT_ASSERT_ERRORS){
-			console.log("ASSERT ERROR: cell does not contain pawn");
-		//}
-		return false;
-	}else{
-		this.occupiedByPawn = 0;
-		return true;
-	}
-}
-
-Cell.prototype.getNeighbourId= function (direction){
-	//direction: 0 is North, 1 E, 2S, 3 West
-	//4NE, 5SE, 6, SW, 7 NW , 8NN, 9 EE, 10 SS, 11, WW
-	if (!this.isThereAnExistingNeighbourOnThisSide(direction)){
-		if(PRINT_ASSERT_ERRORS){
-			console.log("ASSERT ERROR neighbour not existing");
-		}
-		return -666;
-	}
-	//assert neighbour is existing. 
-	switch (direction){
-		case NORTH:
-			//north
-			return this.id -9;
-			break;	
-		case EAST:
-			//east
-			return this.id+1;
-			break;
-		case SOUTH: //s
-			return this.id+9;
-			break;
-		case WEST://w
-			return this.id-1;
-			break;
-		case NORTHEAST: //ne
-			return this.id-8;
-			break;
-		case SOUTHEAST: //se
-			return this.id+10;
-			break;
-		case SOUTHWEST: //sw
-			return this.id+8;
-			break;
-		case NORTHWEST: //nw
-			return this.id-10;
-			break;
-		case NORTHNORTH:
-			return this.id - 18;
-			break;
-		case EASTEAST:
-			return this.id +2;
-			break;
-		case SOUTHSOUTH:
-			return this.id +18;
-			break;
-		case WESTWEST:
-			return this.id -2;
-			break;
-			
-		
-	}
-}
 
