@@ -11,7 +11,7 @@ var BOARD_HEIGHT = 1500;
 var BOARD_SCALE = 0.4;
 var BOARD_X_OFFSET = 50;
 var BOARD_Y_OFFSET = 300;
-var SOUND_ENABLED_AT_STARTUP = false;
+var SOUND_ENABLED_AT_STARTUP = true;
 
 var BOARD_X_OFFSET_SCALED = BOARD_X_OFFSET * BOARD_SCALE;
 var BOARD_Y_OFFSET_SCALED = BOARD_Y_OFFSET * BOARD_SCALE;
@@ -20,11 +20,12 @@ var BOARD_LINE_COLOR = "white";
 var BOARD_LINE_HOVER_WALL_POSSIBLE_COLOR = "grey";
 var BOARD_LINE_HOVER_WALL_NOT_POSSIBLE_COLOR = "red";
 
+var BOARD_ROTATION_90DEGREES = false;
 var BOARD_LINE_SIDE_COLOR = "grey";
 var BOARD_PAWN_RADIUS = 35;
 var BOARD_PAWN_1_COLOR = "lightskyblue";
 var BOARD_PAWN_2_COLOR = "lightsalmon";
-var BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER = "red";
+var BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER = BOARD_BACKGROUND_COLOR ; //"red"
 //var BOARD_CELL_PAWNCIRCLE_COLOR_ILLEGAL_MOVE_HOVER = "white";
 var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE = BOARD_BACKGROUND_COLOR;
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1 = "paleturquoise";
@@ -32,14 +33,18 @@ var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1 = "paleturquoise";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "paleturquoise";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2 = "peachpuff";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "peachpuff";
-var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_2=BOARD_PAWN_2_COLOR;
-var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_1=BOARD_PAWN_1_COLOR;
+var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_2= BOARD_BACKGROUND_COLOR; //BOARD_PAWN_2_COLOR   //this is the highlighting of the finish locations
+var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_1= BOARD_BACKGROUND_COLOR; //BOARD_PAWN_1_COLOR //this is the highlighting of the finish locations
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_TRANSPARENCY = 0.4;
 // BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION = "white";
 BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION = BOARD_BACKGROUND_COLOR;
 // var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "salmon";
 var BOARD_CELL_PAWNCIRCLE_COLOR_SHORTEST_PATH_INDICATION_TRANSPARENCY = 0.3;
 var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE_TRANSPARENCY = 1; //http://stackoverflow.com/questions/6042550/svg-fill-color-transparency-alpha
+var BOARD_CELL_PAWNCIRCLE_BORDER_COLOR = "grey"; //"teal";
+var BOARD_CELL_PAWNCIRCLE_BORDER_WIDTH = 2;
+
+
 
 var WALL_START_DISTANCE_FROM_BOARD_X = 80;
 var WALL_START_DISTANCE_FROM_BOARD_Y = 20	;
@@ -122,6 +127,9 @@ function initQuoridorDOM(){
 	//quoridorField.appendChild(statsDiv);
 	
 	var field = document.getElementById("quoridorFieldSvg");		
+	if (BOARD_ROTATION_90DEGREES){
+		field.setAttribute("transform", "rotate(90)");
+	}
 	
 	//movePawnToPosition(PLAYER1,NORTH);
 	//console.log( pawns[0]);
@@ -412,7 +420,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		//prepare for next move.
 		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
 		this.moveCounter++;
-		this.indicateActivePlayer();
+		//this.indicateActivePlayer(); //do this at board output
 		//console.log(this.recordingOfGameInProgress);
 		
 	}
@@ -663,9 +671,21 @@ Game.prototype.outputPawn = function(player){
 	//var x,y;
 	//x = parseInt(pawns[player].getAttribute("cx"));
 	//y = parseInt(pawns[player].getAttribute("cy"));
-	this.svgPawns[player].setAttribute("cx", (pawnCoords[1]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED);
-	this.svgPawns[player].setAttribute("cy", (pawnCoords[0]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED);
 	//console.log("x:%d", x);
+	
+	var type = getTypeOfSvgElement(this.svgPawns[player]);
+	
+	if (type == "circle"){
+		this.svgPawns[player].setAttribute("cx", (pawnCoords[1]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED);
+		this.svgPawns[player].setAttribute("cy", (pawnCoords[0]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED);
+	}else if (type == "polygon"){		
+		//set offset to center of square.
+		this.svgPawns[player].setAttribute("transform",'translate(' 
+				+((pawnCoords[1]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED)
+				+' '+ ((pawnCoords[0] + 0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED )+ ")" );
+	}else{
+		console.log ("ASSERT ERROR pawn not circle nor polygon.");
+	}
 }
 
 Game.prototype.eraseCellAsCircleElements = function(){
@@ -1085,19 +1105,46 @@ Game.prototype.buildUpBoard = function(svgElement){
 	
 	//players init --> set position to just somewhere on the board....
 	//player 1
-	//pawns.push(add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 50*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_1", BOARD_PAWN_1_COLOR));
-	this.svgPawns.push(add_circle(svgElement, 365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_1", BOARD_PAWN_1_COLOR));
+	////////pawns.push(add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 50*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_1", BOARD_PAWN_1_COLOR));
+	// this.svgPawns.push(add_circle(svgElement, 365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_1", BOARD_PAWN_1_COLOR));
 	
+	var squareSide = BOARD_SQUARE_SPACING*BOARD_SCALE;
+	squareSideScaleToPawnCircle = squareSide *(BOARD_PAWN_RADIUS*2 /BOARD_SQUARE_SPACING);
+	var halfSquareSide = squareSideScaleToPawnCircle/2;
+	
+	// var arrowCoords = ""+ squareSide /2 +"+ squareSide + " +  " + squareSide + ";
+	// var arrowCoords = ""+squareSide /2 + " 0, "+ squareSide + " " + squareSide +", 0 " + squareSide;
+	// var arrowCoords = "0 " + (-halfSquareSide) + ","+ halfSquareSide + " " + halfSquareSide + ",0 "+ halfSquareSide-10 + ", " +(-halfSquareSide) +" "  + halfSquareSide ;
+	var arrowCoords = 
+	"0 " + (-halfSquareSide) + 
+	","+ halfSquareSide + " " + halfSquareSide + 
+	",0 "+ (halfSquareSide-halfSquareSide/3)+ 
+	", " +(-halfSquareSide) +" "  + halfSquareSide ;
+	this.svgPawns.push(add_polygon(svgElement, arrowCoords,"black" ,BOARD_PAWN_1_COLOR,365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,  35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 1,"pawn_player_1"));
+	
+	
+	
+	var arrowCoordsNorthStartingPlayer = 
+	"0 "+ (-halfSquareSide+halfSquareSide/3)+ 
+	", " +(halfSquareSide) +" "  + (-halfSquareSide)+
+	",0 " + (halfSquareSide) + 
+	","+ (-halfSquareSide) + " " + (-halfSquareSide);
 	
 	//player 2
 	//pawns.push( add_circle(svgElement, 450*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 850*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_2", BOARD_PAWN_2_COLOR));
-	this.svgPawns.push( add_circle(svgElement, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_2", BOARD_PAWN_2_COLOR));
+	//this.svgPawns.push( add_circle(svgElement, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, BOARD_PAWN_RADIUS *BOARD_SCALE, "pawn_player_2", BOARD_PAWN_2_COLOR));
+	this.svgPawns.push(add_polygon(svgElement, arrowCoordsNorthStartingPlayer,"black" ,BOARD_PAWN_1_COLOR, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 1,"pawn_player_2"));
 	
-	//add mouse events to player pawns
 	for (var i = 0;i<2;i++){
 		this.svgPawns[i].addEventListener("mouseover", function (event){this.mouseHoversInPawnElement(event.target);}.bind(this)); //works, sends back line#id
 		this.svgPawns[i].addEventListener("mouseout", function (event){this.mouseHoversOutPawnElement(event.target);}.bind(this)); //works, sends back line#id
 		//this.svgPawns[i].addEventListener("click", function (event){this.mouseClickPawnElement(event.target);}.bind(this)); //works, sends back line#id
+		
+		//add border
+		this.svgPawns[i].setAttribute("stroke",BOARD_CELL_PAWNCIRCLE_BORDER_COLOR);
+		this.svgPawns[i].setAttribute("stroke-width",BOARD_CELL_PAWNCIRCLE_BORDER_WIDTH);
+		this.svgPawns[i].setAttribute("scale","2,2");
+		console.log(this.svgPawns[i]);
 	}
 	
 	//bottom walls unused placement.
