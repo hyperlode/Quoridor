@@ -406,7 +406,6 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.board.boardCellsToGraph(true);
 	if (!this.board.isCurrentBoardLegal()){
 		console.log("undo move");
-		alert("move not allowed, there must be a path to at least one of the squares on the other side of the board for both players!");
 		this.undoLastWall(this.playerAtMove);
 		return false;
 	}
@@ -830,9 +829,13 @@ Game.prototype.mouseEventPawn = function (callerElement,isHoveringInElseOut){
 				this.svgCellsAsPawnShapes[neighboursPerDirection[i]].setAttribute('fill',colours[player + 1]);
 			}else{
 				this.svgCellsAsPawnShapes[neighboursPerDirection[i	]].setAttribute('fill',colours[0]);
+				
+				
 			}
 		}
 	}
+	
+	
 }
 
 //wall lines mouse events
@@ -843,19 +846,27 @@ Game.prototype.mouseHoversInWallElement = function (callerElement){
 	this.eraseCellAsCircleElements(); //erase shortest path or other thingies
 	this.mouseWallEvent(callerElement,true, false);
 }
+
 Game.prototype.mouseHoversOutWallElement = function (callerElement){
 	this.mouseWallEvent(callerElement, false, false);
 }
+
+
+
 Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,placeWallIfAllowed){
 	var lineIndex= parseInt(callerElement.id);
+	//console.log("hover: %d",parseInt(lineIndex));
+	
 	//line segments are half cell width, so there are two of them per cell.
 	
-	var colors = [[BOARD_LINE_HOVER_WALL_NOT_POSSIBLE_COLOR, BOARD_LINE_HOVER_WALL_POSSIBLE_COLOR ],[BOARD_LINE_COLOR, BOARD_LINE_COLOR]];
+	
+	var colors = [[BOARD_LINE_HOVER_WALL_POSSIBLE_COLOR, BOARD_LINE_HOVER_WALL_NOT_POSSIBLE_COLOR],[BOARD_LINE_COLOR, BOARD_LINE_COLOR]];
 	if (isHoveringInElseOut){
 		isHoveringInElseOut = 0;
 	}else{
 		isHoveringInElseOut =1;
 	}
+	
 	
 	if (lineIndex < 144){
 		// horizontal (lines 0--> 143)
@@ -872,7 +883,7 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 				
 		if ( lineIndex %18 == 0 || lineIndex % 18 == 17){
 			//extremities have no neighbours. 
-			//neighbourCellId = 666; //illegal neighbour
+			neighbourCellId = 666; //illegal neighbour
 			startCellId  = 8; // if startcell is 0, it would allow to place a wall.... so, give it an illegal wall place startcell number. 
 		}else{
 			//define neighbourcells.
@@ -880,40 +891,57 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 				//Western neighbour
 				
 				startCellId = startCellId - 1;
-				//var neighbourCellId = startCellId + 1;
+				var neighbourCellId = startCellId + 1;
 				affectedLinesIndeces.push(lineIndex-1);
 				affectedLinesIndeces.push(lineIndex-2);
 			}else{
 				//eastern neighbour
-				//var neighbourCellId = startCellId + 1;
+				var neighbourCellId = startCellId + 1;
 				affectedLinesIndeces.push(lineIndex+1);
 				affectedLinesIndeces.push(lineIndex+2);
 			}
 		}
+		
 	}else{
+		/*
 		//is vertical
+		var isNorthSouthOriented = true;
+		var startCellId =  parseInt(lineIndex/2) - 72;
+		var neighbourCellId = startCellId + 9 ;
+		var neighbourLineIndex = neighbourCellId + 72;
+		//console.log("startCellId : vertical %d", startCellId);
+		if (startCellId > 71){
+			//console.log("aaargh id= %d", startCellId);
+			neighbourCellId = 666;
+		}
+		*/
+		
+		//is vertical
+		
 		//get same cell neighbour line 
 		var hoveredLineIndex = lineIndex;
 		if (lineIndex % 18 >= 9){
 			//south oriented line clicked in the cell...
 			lineIndex = lineIndex - 9;
 			var sameCellLineIndex = lineIndex+9;
+			
 		}else{
 			var sameCellLineIndex = lineIndex+9;
 		}
 		var affectedLinesIndeces = [lineIndex, sameCellLineIndex];
 		
+		
 		var isNorthSouthOriented = true;
-		//var neighbourCellId;
+		var neighbourCellId;
 		if ( hoveredLineIndex <=151 ){
 			//northern extremity
-			//neighbourCellId = 666; //illegal neighbour
+			neighbourCellId = 666; //illegal neighbour
 			startCellId  = 8; // if startcell is 0, it would allow to place a wall.... so, give it an illegal wall place startcell number. 
 			
 		}else if ( hoveredLineIndex >= 297){
 			//southern extremity.
 			//extremities have no neighbours. 
-			//neighbourCellId = 666; //illegal neighbour
+			neighbourCellId = 666; //illegal neighbour
 			startCellId  = 8; // if startcell is 0, it would allow to place a wall.... so, give it an illegal wall place startcell number. 
 			
 		}else{
@@ -925,32 +953,61 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 				//southern line --> neighbour south
 				affectedLinesIndeces.push(hoveredLineIndex + 9);
 				affectedLinesIndeces.push(hoveredLineIndex + 18);
-				//neighbourCellId = startCellId+9;
+				neighbourCellId = startCellId+9;
 			}else{
 				//northern line --> neighbour north
 				affectedLinesIndeces.push(hoveredLineIndex - 9);
 				affectedLinesIndeces.push(hoveredLineIndex - 18);
 				startCellId = startCellId-9;
-				//neighbourCellId = startCellId+9;
-			}	
+				neighbourCellId = startCellId+9;
+			}
+		
 		}
 	}
 	
 	if (placeWallIfAllowed){
+		//this.board.placeWall(PLAYER1,startCellId, isNorthSouthOriented, false);
+		//this.outputWalls();
+		//console.log();
+		
+		
 		if(this.board.placeWall (PLAYER1, startCellId, isNorthSouthOriented, true)){
 			var verboseNotationWallPlacement = this.wallToVerboseNotation(startCellId, isNorthSouthOriented);
 			this.playTurnByVerboseNotation(verboseNotationWallPlacement);
 		}
+		
 	}else{	
 		//colorize line
 		var placementIsPossible = this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)?1:0;
 		for (var i = 0; i<affectedLinesIndeces.length; i++){
 			this.svgLineSegments[affectedLinesIndeces[i]].setAttribute('stroke',colors[isHoveringInElseOut][placementIsPossible]);
-		}	
+			//this.svgLineSegments[affectedLinesIndeces[i]].setAttribute('stroke','red');
+		}
+		
+		
+		// //colorize neighbour line if possible
+		// if (neighbourCellId != 666){
+			// if (this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)){
+				// this.svgLineSegments[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][0]);
+			// }else{
+				// this.svgLineSegments[neighbourLineIndex].setAttribute('stroke',colors[isHoveringInElseOut][1]);
+			// }		
+		// }
+		
 	}
+
 }
 
 Game.prototype.buildUpBoard = function(svgElement){
+	
+	
+	/*
+	//add_circle(svgElement, x, y, r, id, color
+	var circleTest = add_circle(svgElement, 0,50,50,"tmp", "blue");
+	
+	circleTest.addEventListener("click", function() { this.setAttribute('fill', 'red') });
+	circleTest.addEventListener("mouseout", function() { this.setAttribute('fill', 'blue') });
+*/
 	//wall lines:
 	//all line segements go in an array, their position index corresponds with their ID.
 	//horizontal line segments: correspond with cell ID (with cell on the west)
@@ -970,6 +1027,8 @@ Game.prototype.buildUpBoard = function(svgElement){
 			(i+1)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 
 			BOARD_LINE_COLOR, 10*BOARD_SCALE, index)	//BOARD_LINE_COLOR
 			);
+			//lines[lines.length-1].addEventListener("mouseover", function() { this.setAttribute('stroke', 'red') });
+			//lines[lines.length-1].addEventListener("mouseout", function() { this.setAttribute('stroke', 'blue') });
 			
 			this.svgLineSegments[index].addEventListener("mouseover", function (event){this.mouseHoversInWallElement(event.target);}.bind(this)); //works, sends back line#id
 			this.svgLineSegments[index].addEventListener("mouseout", function (event){this.mouseHoversOutWallElement(event.target);}.bind(this)); //works, sends back line#id
@@ -979,8 +1038,10 @@ Game.prototype.buildUpBoard = function(svgElement){
 	}
 	
 	//add vertical lines (cell sized)
+	// for (var i=0; i<9;i++){
 	for (var i=0; i<18;i++){
 		// x1, y1, x2, y2
+		// for (var j=0; j<9;j++){
 		for (var j=0; j<9;j++){
 			//j<8 is sufficient, but we use the id to link it to a cell, as this is also the index in the array, we want to keep things easier. (the other EAST vertical pieces are ON the board edge)
 			
@@ -1002,6 +1063,7 @@ Game.prototype.buildUpBoard = function(svgElement){
 		}
 	}
 	
+	/**/
 	//add top and bottom horizontal lines
 	for (var i=0; i<2;i++){
 		createLine(svgElement, 
@@ -1013,6 +1075,8 @@ Game.prototype.buildUpBoard = function(svgElement){
 	}
 	//createLine(svgElement, x1, y1, x2, y2, color, width)
 	
+	
+	
 	//add left and right vertical lines
 	for (var i=0; i<2;i++){
 		createLine(svgElement, 
@@ -1022,6 +1086,8 @@ Game.prototype.buildUpBoard = function(svgElement){
 		BOARD_SQUARE_SPACING*9*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 
 		BOARD_LINE_SIDE_COLOR, 10*BOARD_SCALE);	
 	}
+	
+	
 	
 	//add pawnPositions
 	var index;
@@ -1035,6 +1101,7 @@ Game.prototype.buildUpBoard = function(svgElement){
 				this.svgCellsAsPawnShapes[index].addEventListener("mouseout", function (event){this.mouseHoversOutCellAsPawnCircleElement(event.target);}.bind(this)); //works, sends back line#id
 		}
 	}
+	
 	
 	//players init --> set position to just somewhere on the board....
 	//player 1
@@ -1054,7 +1121,9 @@ Game.prototype.buildUpBoard = function(svgElement){
 	",0 "+ (halfSquareSide-halfSquareSide/3)+ 
 	", " +(-halfSquareSide) +" "  + halfSquareSide ;
 	this.svgPawns.push(add_polygon(svgElement, arrowCoords,"black" ,BOARD_PAWN_1_COLOR,365*BOARD_SCALE + BOARD_X_OFFSET_SCALED,  35*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 1,"pawn_player_1"));
-		
+	
+	
+	
 	var arrowCoordsNorthStartingPlayer = 
 	"0 "+ (-halfSquareSide+halfSquareSide/3)+ 
 	", " +(halfSquareSide) +" "  + (-halfSquareSide)+
@@ -1067,13 +1136,22 @@ Game.prototype.buildUpBoard = function(svgElement){
 	this.svgPawns.push(add_polygon(svgElement, arrowCoordsNorthStartingPlayer,"black" ,BOARD_PAWN_1_COLOR, 666*BOARD_SCALE + BOARD_X_OFFSET_SCALED, 142*BOARD_SCALE + BOARD_Y_OFFSET_SCALED, 1,"pawn_player_2"));
 	
 	for (var i = 0;i<2;i++){
+<<<<<<< 8ba9823cb3ee5616f459bf886039180bc0769437
 		this.svgPawns[i].addEventListener("mouseover", function (event){this.mouseHoversInPawnElement(event.target);}.bind(this)); //works, sends back line#id
 		this.svgPawns[i].addEventListener("mouseout", function (event){this.mouseHoversOutPawnElement(event.target);}.bind(this)); //works, sends back line#id
 		//this.svgPawns[i].addEventListener("click", function (event){this.mouseClickPawnElement(event.target);}.bind(this)); //works, sends back line#id
+=======
+		//add mouse events to player pawns
+		this.svgPawns[i].addEventListener("mouseover", function (){this.mouseHoversInPawnElement(event.target);}.bind(this)); //works, sends back line#id
+		this.svgPawns[i].addEventListener("mouseout", function (){this.mouseHoversOutPawnElement(event.target);}.bind(this)); //works, sends back line#id
+		//this.svgPawns[i].addEventListener("click", function (){this.mouseClickPawnElement(event.target);}.bind(this)); //works, sends back line#id
 		
 		//add border
 		this.svgPawns[i].setAttribute("stroke",BOARD_CELL_PAWNCIRCLE_BORDER_COLOR);
 		this.svgPawns[i].setAttribute("stroke-width",BOARD_CELL_PAWNCIRCLE_BORDER_WIDTH);
+		this.svgPawns[i].setAttribute("scale","2,2");
+		console.log(this.svgPawns[i]);
+>>>>>>> change shape of pawn to indicate direction (got rid of other indications)
 	}
 	
 	//bottom walls unused placement.
@@ -1085,6 +1163,7 @@ Game.prototype.buildUpBoard = function(svgElement){
 			900*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + WALL_START_DISTANCE_FROM_BOARD_Y + WALL_LENGTH * BOARD_SCALE, 
 			WALL_COLOR,
 			WALL_WIDTH * BOARD_SCALE));	
+		
 	}
 	
 	//top walls unused placement.
@@ -1097,8 +1176,6 @@ Game.prototype.buildUpBoard = function(svgElement){
 			WALL_COLOR,
 			WALL_WIDTH * BOARD_SCALE));	
 	}
-	
-	//add text 
 }
 Game.prototype.beep = function() {
     var snd = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");  
@@ -1112,3 +1189,6 @@ Game.prototype.play_song = function(){
 		song.play();
 	}
 }
+
+
+
