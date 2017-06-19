@@ -43,8 +43,6 @@ Board.prototype.isCurrentBoardLegal = function (){
 	//check if each player can reach a finish field.
 	
 	for(var player =0;player<2;player++){
-		console.log(player);
-		console.log(this.boardGraph);
 		if (!this.getShortestPathToFinish(player)){
 			console.log("checked board for player %d, invalid position",player);
 			
@@ -145,9 +143,6 @@ Board.prototype.boardCellsToGraph = function (weighted){
 					//if neighbours contains the opposing pawn, "neighbouring cells" become jump cells
 					//cell contains pawns, check all jump directions. i.e. n contains pawn--> ne, nn, nw.
 					
-					if (cellId == 31){
-						console.log("tesst");
-					}
 					//first check straight jump
 					if (this.movePawnStraightJump(cellId, extendedDirectionsLookUpTable[direction][0], true,true)){
 						neighbours.push(this.cells[cellId].getNeighbourId(extendedDirectionsLookUpTable[direction][0]));
@@ -155,16 +150,12 @@ Board.prototype.boardCellsToGraph = function (weighted){
 					}else {
 						//check diagonal jump (both sides)
 						for (var n=1;n<3;n++){
-							console.log("cellId:", cellId, "n: ", n);
-							// if (cellId == 31){
-								// console.log(this.movePawnDiagonalJump(cellId,extendedDirectionsLookUpTable[direction][n],true,true));
-							// }
+							// console.log("cellId:", cellId, "n: ", n);
 							
 							//console.log (this.movePawnDiagonalJump(cellId,extendedDirectionsLookUpTable[direction][n],true,true));
 							if (this.movePawnDiagonalJump(cellId,extendedDirectionsLookUpTable[direction][n],true,true)){
 								neighbours.push(this.cells[cellId].getNeighbourId(extendedDirectionsLookUpTable[direction][n]));
-								// console.log("cell: ", cellId ", direction: ",extendedDirectionsLookUpTable[direction][n], "targetCell:" ,getNeighbourId(extendedDirectionsLookUpTable[direction][n]));
-								console.log("diagonal jump. cell: ", cellId, "direction: ",extendedDirectionsLookUpTable[direction][n], "targetCell:" ,this.cells[cellId].getNeighbourId(extendedDirectionsLookUpTable[direction][n]) );
+								// console.log("diagonal jump. cell: ", cellId, "direction: ",extendedDirectionsLookUpTable[direction][n], "targetCell:" ,this.cells[cellId].getNeighbourId(extendedDirectionsLookUpTable[direction][n]) );
 							}
 						}	
 					}
@@ -680,19 +671,13 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 	while (pathNumber < numberOfPathsToCheck && !overalValidDiagonalMove ){ //&& validDiagonalMove == false
 		var validDiagonalMove = true;
 		pathNumber++;
-		if (pathNumber == 2){
-			console.log("efahfeiaje;ifja;iejf;ijij;");
-			console.log("pathNumber: ", pathNumber, "numberOfPathsToCheck:",numberOfPathsToCheck);
-			//debugger;
-		}
+		
 		if (!this.cells[neighbourId].getIsOccupied() || ( pathNumber==2) ){   //	
 			
 			//console.log("other neighbour");
 			neighbourId = cell.getNeighbourId(lookupTable[diagonalDirection - 4][1]); //... assume the other neighbour. the real check for the correct pawn follows later...
 			firstDirection = lookupTable[diagonalDirection - 4][1];
 			secondDirection = lookupTable[diagonalDirection - 4][0];
-			
-			console.log("directions: first: ", firstDirection, "second:",secondDirection, "pathnumber:",pathNumber);
 		}
 		
 		//check neighbour containing pawn
@@ -700,9 +685,6 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 			//console.log (this.cells[neighbourId].getIsOccupied() == player+1);
 			if(!isSimulation){
 				console.log ("no pawn detected at adjecent cell, no jump allowed.");
-			}
-			if (player == 31){
-				console.log("llloodee 5 ");
 			}
 			validDiagonalMove = false;
 		}
@@ -713,9 +695,6 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 			//console.log (this.cells[neighbourId].getIsOccupied() == player+1);
 			if(!isSimulation){
 				console.log ("no opposite player pawn detected at adjecent cell, no jump allowed.");
-			}
-			if (player == 31){
-				console.log("llloodee 1 ");
 			}
 			validDiagonalMove = false;
 		}
@@ -734,9 +713,6 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 			if(!isSimulation){
 				console.log ("no diagonal jump allowed, not possible to move to reach neighbour cell");
 			}
-			if (player == 31){
-				console.log("llloodee 2 ");
-			}
 			validDiagonalMove = false;
 		}
 		
@@ -744,10 +720,6 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 		if (this.cells[neighbourId].isSideOpen(firstDirection)){
 			if(!isSimulation){
 				console.log ("no diagonal jump allowed, the forward side has to be blocked, otherwise it would be a straight jump");
-			}
-			if (player == 31){
-				console.log("llloodee 3 ");
-				console.log(firstDirection);
 			}
 			validDiagonalMove = false;
 		}
@@ -757,12 +729,6 @@ Board.prototype.movePawnDiagonalJump = function(player, diagonalDirection, isSim
 			if(!isSimulation){
 				console.log ("no diagonal jump allowed, a side ways side is preventing the jump.");
 			}	
-			if (player == 31){
-				
-				console.log("llloodee 4 ");
-				console.log(neighbourId);
-				console.log(secondDirection);
-			}
 			validDiagonalMove = false;
 		}
 		
