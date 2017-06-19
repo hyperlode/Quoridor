@@ -150,9 +150,49 @@ function initQuoridorDOM(){
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	var aGame = new Game(field);
+
 	
-	
-	
+	aGame.playTurnByVerboseNotation("n");
+aGame.playTurnByVerboseNotation("s");
+aGame.playTurnByVerboseNotation("n");
+aGame.playTurnByVerboseNotation("s");
+aGame.playTurnByVerboseNotation("n");
+aGame.playTurnByVerboseNotation("s");
+aGame.playTurnByVerboseNotation("3d");
+aGame.playTurnByVerboseNotation("3g");
+aGame.playTurnByVerboseNotation("e3");
+aGame.playTurnByVerboseNotation("6d");
+aGame.playTurnByVerboseNotation("3b");
+aGame.playTurnByVerboseNotation("6f");
+aGame.playTurnByVerboseNotation("b6");
+aGame.playTurnByVerboseNotation("c6");
+aGame.playTurnByVerboseNotation("4f");
+aGame.playTurnByVerboseNotation("6h");
+
+aGame.playTurnByVerboseNotation("e1");
+aGame.playTurnByVerboseNotation("5b");
+aGame.playTurnByVerboseNotation("a8");
+aGame.playTurnByVerboseNotation("d4");
+aGame.playTurnByVerboseNotation("f5");
+aGame.playTurnByVerboseNotation("a2");
+aGame.playTurnByVerboseNotation("a6");
+aGame.playTurnByVerboseNotation("w");
+//aGame.playTurnByVerboseNotation("n");
+// aGame.playTurnByVerboseNotation("s");
+// aGame.playTurnByVerboseNotation("w");
+// aGame.playTurnByVerboseNotation("w");
+// aGame.playTurnByVerboseNotation("s");
+// aGame.playTurnByVerboseNotation("w");
+// aGame.playTurnByVerboseNotation("w");
+// aGame.playTurnByVerboseNotation("w");
+// aGame.playTurnByVerboseNotation("w");
+// aGame.playTurnByVerboseNotation("s");
+// aGame.playTurnByVerboseNotation("w");
+// aGame.playTurnByVerboseNotation("s");
+// aGame.playTurnByVerboseNotation("n");
+// aGame.playTurnByVerboseNotation("s");
+// aGame.playTurnByVerboseNotation("n");
+// aGame.playTurnByVerboseNotation("s");
 	
 	/*
 	1. n s
@@ -176,6 +216,11 @@ illegal move when wall is placed at c8...
 	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
 //	aGame.testPlaceWall(PLAYER1, "h1");
 	/*
+	
+
+
+
+
 aGame.playTurnByVerboseNotation("n");
 aGame.playTurnByVerboseNotation("s");
 aGame.playTurnByVerboseNotation("n");
@@ -383,6 +428,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	//try if verbose notation is for moving the pawn, 
 	//console.log("Move of player %d, move: %s", player, verboseNotation);
 	var validMove = false;
+	var undoWallValid= false; //check if the move can be undone.
 	//console.log("-------------------------------------");
 	if (verboseNotation == "x" || verboseNotation == "X"){
 		console.log ("player %d gave up... (not implemented yet...) (%s)", this.playerAtMove, verboseNotation);
@@ -394,7 +440,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		this.placeWallByVerboseNotation(this.playerAtMove,verboseNotation);
 		console.log("player %d placed wall (%s)", this.playerAtMove, verboseNotation);
 		validMove = true;
-	
+		undoWallValid  = true;
 	}else {
 		console.log("wrong notation? invalid move? --> please correct this move: %s", verboseNotation);
 		validMove = false;
@@ -410,7 +456,11 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	if (!this.board.isCurrentBoardLegal()){
 		console.log("undo move");
 		alert("move not allowed, there must be a path to at least one of the squares on the other side of the board for both players!");
-		this.undoLastWall(this.playerAtMove);
+		if (undoWallValid){
+			this.undoLastWall(this.playerAtMove);
+		}else{
+			console.log("ASSERT ERROR: we have an illegal board situation without having placed a wall. This is not yet covered. Not undone, board corrupted.");
+		}
 		return false;
 	}
 	
