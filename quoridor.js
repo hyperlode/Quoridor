@@ -50,6 +50,7 @@ var BOARD_CELL_PAWNCIRCLE_COLOR_INACTIVE_TRANSPARENCY = 1; //http://stackoverflo
 var BOARD_CELL_PAWNCIRCLE_BORDER_COLOR = "grey"; //"teal";
 var BOARD_CELL_PAWNCIRCLE_BORDER_WIDTH = 2;
 
+var NOTATION_ENABLED_AT_STARTUP = true;
 var WALL_START_DISTANCE_FROM_BOARD_X = 80;
 var WALL_START_DISTANCE_FROM_BOARD_Y = 20	;
 var WALL_START_DISTANCE_FROM_EACH_OTHER = 93;
@@ -89,6 +90,24 @@ document.onkeypress = function(evt) {
     alert(charStr);
 };
 
+
+function toggleNotation(){
+	NOTATION_ENABLED_AT_STARTUP = !NOTATION_ENABLED_AT_STARTUP;
+	// this.outputGameStats();
+	var div = document.getElementById('notation');
+	
+	if (NOTATION_ENABLED_AT_STARTUP){
+		div.removeAttribute("hidden"); 
+		
+	}else{
+		
+		var att = document.createAttribute("hidden");       
+		//att.value = "democlass";                           // Set the value of the class attribute
+		div.setAttributeNode(att); 
+	}
+}
+
+
 document.addEventListener("DOMContentLoaded", function() {
 
    //var map = {a:{b:3,c:1,d:3},b:{a:2,c:1,d:1},c:{a:4,b:1},d:{a:8,b:1}};
@@ -111,7 +130,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-
 function initQuoridorDOM(){
 	var quoridorField = document.getElementById("board");
 	//console.log(quoridorField);
@@ -130,6 +148,8 @@ function initQuoridorDOM(){
 		field.setAttribute("transform", "rotate(90)");
 	}
 	
+	//var notationEnabled = NOTATION_ENABLED_AT_STARTUP;
+	
 	//movePawnToPosition(PLAYER1,NORTH);
 	//console.log( pawns[0]);
 	//movePawn(PLAYER1);
@@ -145,6 +165,7 @@ function initQuoridorDOM(){
 	//recordedGame = [EAST];
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+	//debugger;
 	var aGame = new Game(field);
 
 	
@@ -383,7 +404,6 @@ function Game(svgField){
 
 
 
-
 Game.prototype.wallToVerboseNotation = function(cellId, directionIsNorthToSouth){
 	var row = 8 - Math.floor(cellId/9);
 	var rowString = String.fromCharCode(48 + row);
@@ -575,7 +595,9 @@ Game.prototype.outputGameStats= function(){
 		htmlString += '<br><br>'+ playerColors[this.playerAtMove] + ' player playing.';
 	}
 	
-	htmlString += '<br><br>Stats:';
+	document.getElementById('stats').innerHTML = htmlString;
+	
+	htmlString = '<br><br>Stats:';
 	for (var i =0; i<this.recordingOfGameInProgress.length;i++){
 		if (i%2 == 0){
 			htmlString += ('<br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);		
@@ -583,8 +605,12 @@ Game.prototype.outputGameStats= function(){
 			htmlString += (' ' + this.recordingOfGameInProgress[i]);		
 		}
 	}
-	
-	document.getElementById('stats').innerHTML = htmlString;
+	// if (this.notationEnabled ){
+	//if (NOTATION_ENABLED_AT_STARTUP ){
+		document.getElementById('notation').innerHTML = htmlString;
+	//}else{
+		//document.getElementById('notation').innerHTML = "";
+	//}
 }
 
 Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
