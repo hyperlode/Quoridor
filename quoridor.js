@@ -91,6 +91,9 @@ document.onkeypress = function(evt) {
 };
 
 
+
+
+
 function toggleNotation(){
 	NOTATION_ENABLED_AT_STARTUP = !NOTATION_ENABLED_AT_STARTUP;
 	// this.outputGameStats();
@@ -143,7 +146,8 @@ function initQuoridorDOM(){
 	//statsDiv.innerHTML += '<br>TestGame';
 	//quoridorField.appendChild(statsDiv);
 	
-	var field = document.getElementById("quoridorFieldSvg");		
+	var field = document.getElementById("quoridorFieldSvg");	
+	var statsDiv = document.getElementById("options");
 	if (BOARD_ROTATION_90DEGREES){
 		field.setAttribute("transform", "rotate(90)");
 	}
@@ -166,9 +170,9 @@ function initQuoridorDOM(){
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	//debugger;
-	var aGame = new Game(field);
+	var aGame = new Game(field,statsDiv);
 
-	
+	/*
 	aGame.playTurnByVerboseNotation("n");
 aGame.playTurnByVerboseNotation("s");
 aGame.playTurnByVerboseNotation("n");
@@ -210,7 +214,7 @@ aGame.playTurnByVerboseNotation("w");
 // aGame.playTurnByVerboseNotation("s");
 // aGame.playTurnByVerboseNotation("n");
 // aGame.playTurnByVerboseNotation("s");
-	
+	*/
 	/*
 	1. n s
 3. n s
@@ -359,13 +363,15 @@ function callback(player, direction){
 */
 
 
-function Game(svgField){
+function Game(svgField, statsDiv){
 	
 	this.walls_1 = [];
 	this.walls_2 = [];
 	this.svgPawns = [];
 	this.svgLineSegments = [];
 	this.svgCellsAsPawnShapes = []
+	this.buildUpOptions(statsDiv);
+	
 	
 	//this.board;
 	this.board = new Board();
@@ -426,6 +432,7 @@ Game.prototype.pawnDirectionToVerboseNotation = function(direction){
 	return DIRECTIONS_VERBOSE[direction];
 	
 }
+
 
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
@@ -1023,6 +1030,22 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 			this.svgLineSegments[affectedLinesIndeces[i]].setAttribute('stroke',colors[isHoveringInElseOut][placementIsPossible]);
 		}	
 	}
+}
+
+Game.prototype.clickTest = function(){
+	console.log("yeeee");
+}
+
+//Game.prototype.undoButtonClicked = function (){
+Game.prototype.undoButtonClicked = function(){
+	console.log("undo button clicked.");
+	//this.undoLastWall(this.playerAtMove);
+}
+
+Game.prototype.buildUpOptions = function(domElement){
+	// addButtonToExecuteGeneralFunction(elementToAttachTo,caption,name, id, func,arg){
+	// addButtonToExecuteGeneralFunction(domElement,"undooo","lode", "lloodd", this.clickTest,"arg");
+	addButtonToExecuteGeneralFunction(domElement,"undooo","lode", "lloodd", this.undoButtonClicked(),"arg");
 }
 
 Game.prototype.buildUpBoard = function(svgElement){

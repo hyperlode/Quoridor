@@ -9,6 +9,7 @@
     <script src="board.js"></script>
     <script src="cell.js"></script>
     <script src="svgOperations.js"></script>
+    <script src="domFunctions.js"></script>
     <!-- <script src="dijkstra.js"></script> -->
     <script src="graph.js"></script>
 	
@@ -58,7 +59,11 @@
 
 			<div id="options" class = "col-lg-12 col-md-12">
 				<button type="button" onclick="toggleNotation()" class="btn btn-primary">Display notation</button>
+				<button type="button" onclick="undoButtonClicked()" class="btn btn-primary">Undo</button>
+			
 			</div>
+			
+			
 
 			
 			<div id="notation" class = "col-lg-12 col-md-12">

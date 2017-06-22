@@ -336,6 +336,12 @@ Board.prototype.placeWallByVerboseCoordinate= function (player,verboseCoordinate
 	return this.placeWall(player, wallCoords[0],wallCoords[1],false );
 }
 Board.prototype.removeLastWall = function(player){
+
+	if (this.getWalls()[player].length == 0){
+		console.log("no walls to undo");
+		return false;
+	}
+	
 	var lastWall = this.getWalls()[player].pop();//remove last wall fromlist.
 	// console.log(lastWall);
 	var lastWallCoords = this.getStartCellIdAndOrientationFromWallCenterPointWithOrientation(lastWall[0],lastWall[1],lastWall[2]);
