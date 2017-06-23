@@ -76,12 +76,19 @@ var WESTWEST = 11;
 var PLAYER1 = 0;
 var PLAYER2 = 1;
 
+var PLAYER_NAMES = ["BLUE", "RED"];
+
 //game status
 var SETUP =0;
 var PLAYING=1;
 var FINISHED=2;
 
 var FINISH_CELLS_LOOKUP_TABLE = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
+
+var WALL_MOVE = 0;
+var PAWN_MOVE = 1;
+var GAVEUP_MOVE = 2;
+var ILLEGAL_MOVE = 3;
 
 document.onkeypress = function(evt) {
     evt = evt || window.event;
@@ -433,6 +440,28 @@ Game.prototype.pawnDirectionToVerboseNotation = function(direction){
 	
 }
 
+Game.prototype.interpreteVerboseNotation = function (verboseNotation){
+	//sends back an array.[type of move, argument1, argument 2] (arguments depending on type of move.)
+	
+	//check gave up
+	if (verboseNotation == "x" || verboseNotation == "X"){
+		return [GAVEUP_MOVE,false]
+	}
+	
+	//check pawnmove
+	moveTranslated = this.pawnVerboseNotationToDirection(verboseNotation);
+	if (moveTranslated != 666){
+		return [PAWN_MOVE,moveTranslated,false];
+	}
+	
+	//check wallmove.
+	var moveTranslated = this.board.wallNotationToCellAndOrientation(verboseNotation);
+	if (moveTranslated != false){
+		return [WALL_MOVE,moveTranslated[0],moveTranslated[1]];
+	}
+	console.log("ASSERT ERROR no valid notation found");
+	return [ILLEGAL_MOVE,false,false];
+}
 
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
@@ -450,18 +479,29 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	//var undoBoard = this.board;
 	//try if verbose notation is for moving the pawn, 
 	//console.log("Move of player %d, move: %s", player, verboseNotation);
+	
+	moveData = this.interpreteVerboseNotation(verboseNotation);
+	if (moveData[0] == ILLEGAL_MOVE){
+		console.log("ASSERT ERROR : ILLEGAL MOVE");
+		return false;
+	}
+	
 	var validMove = false;
 	var undoWallValid= false; //check if the move can be undone.
 	//console.log("-------------------------------------");
-	if (verboseNotation == "x" || verboseNotation == "X"){
-		console.log ("player %d gave up... (not implemented yet...) (%s)", this.playerAtMove, verboseNotation);
+	if (moveData[0] == GAVEUP_MOVE){
+		console.log ("player %s gave up... (not implemented yet...) (%s)", PLAYER_NAMES[this.playerAtMove], verboseNotation);
 		validMove = false;
-	}else if (this.movePawnByVerboseNotation(this.playerAtMove,verboseNotation)){
-		console.log("player %d moved pawn (%s)", this.playerAtMove, verboseNotation);
+	}else if (moveData[0] == PAWN_MOVE){
+		var success = this.movePawnByVerboseNotation(this.playerAtMove,verboseNotation);
+		if (!success){
+			console.log("ASSERT ERROR pawn move failed...");
+		}
+		console.log("player %s moved pawn (%s)", PLAYER_NAMES[this.playerAtMove], verboseNotation);
 		validMove= true;
-	}else if (this.board.wallNotationToCellAndOrientation(verboseNotation)){
+	}else if (moveData[0] == WALL_MOVE){
 		this.placeWallByVerboseNotation(this.playerAtMove,verboseNotation);
-		console.log("player %d placed wall (%s)", this.playerAtMove, verboseNotation);
+		console.log("player %s placed wall (%s)", PLAYER_NAMES[this.playerAtMove], verboseNotation);
 		validMove = true;
 		undoWallValid  = true;
 	}else {
@@ -504,6 +544,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		
 	//administration	
 	this.recordingOfGameInProgress.push(verboseNotation);
+	console.log(this.recordingOfGameInProgress);
 	this.outputGameStats();
 	this.outputBoard();
 
@@ -579,6 +620,23 @@ Game.prototype.undoLastWall= function(player){
 	//
 	//console.log(lastWall);
 }
+Game.prototype.undoLastMove =function(){
+	
+	
+	if (this.recordingOfGameInProgress.length <= 0){
+		console.log ("Nothing to undo yet...");
+		return false;
+	}
+	var lastMoveVerbose = this.recordingOfGameInProgress[this.recordingOfGameInProgress.length - 1];
+	var lastMovedPlayer = this.recordingOfGameInProgress.length %2 == 0;
+	var lastMoveData = this.interpreteVerboseNotation(lastMoveVerbose);
+	
+	console.log("player " + BOARD_PAWN_2_COLOR + "moved last?:"+ lastMovedPlayer);
+	console.log("total number of moves before undo:"+ (this.recordingOfGameInProgress.length));
+	console.log("lastMoveData: "+ lastMoveData);
+	// debugger;
+
+}
 
 Game.prototype.outputGameStats= function(){
 	
@@ -635,7 +693,12 @@ Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
 
 Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 	
+
 	var direction = this.pawnVerboseNotationToDirection(verboseCoordinate);
+	if (direction == 666){
+		console.log("ASSERT ERROR non valid verbose coordinate.");
+	}
+	
 	var isValidMove = this.board.movePawn(player, direction,true); //simulate first
 	
 	
@@ -657,7 +720,7 @@ Game.prototype.pawnVerboseNotationToDirection = function ( verboseCoordinate ){
 	
 	var direction = DIRECTIONS_VERBOSE.indexOf(verboseLowerCase);
 	if (direction == -1){
-		return false;
+		return 666;
 	}else{
 		return direction;
 	}
@@ -1037,15 +1100,25 @@ Game.prototype.clickTest = function(){
 }
 
 //Game.prototype.undoButtonClicked = function (){
-Game.prototype.undoButtonClicked = function(){
+Game.prototype.undoButtonClicked = function(GameInstance){
 	console.log("undo button clicked.");
 	//this.undoLastWall(this.playerAtMove);
+	
+	//this.undoLastWall(this.);
+	//console.log(GameInstance.recordingOfGameInProgress);
+	
+	//GameInstance.undoLastWall(GameInstance.playerAtMove);
+	GameInstance.undoLastMove();
 }
+
+
 
 Game.prototype.buildUpOptions = function(domElement){
 	// addButtonToExecuteGeneralFunction(elementToAttachTo,caption,name, id, func,arg){
-	// addButtonToExecuteGeneralFunction(domElement,"undooo","lode", "lloodd", this.clickTest,"arg");
-	addButtonToExecuteGeneralFunction(domElement,"undooo","lode", "lloodd", this.undoButtonClicked(),"arg");
+	//addButtonToExecuteGeneralFunction(domElement,"undooo","lode", "lloodd", this.clickTest,"arg");
+	
+	//https://stackoverflow.com/questions/2190850/create-a-custom-callback-in-javascript
+	addButtonToExecuteGeneralFunction(domElement,"undooo","lode", "lloodd", this.undoButtonClicked,this);
 }
 
 Game.prototype.buildUpBoard = function(svgElement){
@@ -1211,7 +1284,7 @@ Game.prototype.buildUpBoard = function(svgElement){
 				BOARD_X_OFFSET_SCALED - (BOARD_SCALE * BOARD_TEXT_NOTATION_SIZE), 
 				((7-i)+1)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + (BOARD_SCALE*BOARD_TEXT_NOTATION_SIZE/4), 
 				"Verdana");
-			console.log(String.fromCharCode(i+97));
+				//console.log(String.fromCharCode(i+97));
 		}
 	}
 }
