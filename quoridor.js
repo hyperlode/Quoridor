@@ -60,6 +60,7 @@ var WALL_COLOR = "teal"; //"steelblue";
 
 //symbols
 var DIRECTIONS_VERBOSE = ["n","e","s","w","ne","se","sw","nw","nn","ee","ss","ww"];
+//var COUNTER_MOVES_FOR_UNDO = [];
 var NORTH = 0;
 var EAST = 1
 var SOUTH = 2;
@@ -372,6 +373,9 @@ function callback(player, direction){
 
 function Game(svgField, statsDiv){
 	
+	this.svgField = svgField;
+	this.statsDiv = statsDiv;
+	
 	this.walls_1 = [];
 	this.walls_2 = [];
 	this.svgPawns = [];
@@ -544,7 +548,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		
 	//administration	
 	this.recordingOfGameInProgress.push(verboseNotation);
-	console.log(this.recordingOfGameInProgress);
+//	console.log(this.recordingOfGameInProgress);
 	this.outputGameStats();
 	this.outputBoard();
 
@@ -636,6 +640,7 @@ Game.prototype.undoLastMove =function(){
 	console.log("lastMoveData: "+ lastMoveData);
 	// debugger;
 
+	
 }
 
 Game.prototype.outputGameStats= function(){
@@ -1108,9 +1113,59 @@ Game.prototype.undoButtonClicked = function(GameInstance){
 	//console.log(GameInstance.recordingOfGameInProgress);
 	
 	//GameInstance.undoLastWall(GameInstance.playerAtMove);
-	GameInstance.undoLastMove();
+	//GameInstance.undoLastMove();
+	
+	GameInstance.undoNumberOfSteps(1);
 }
 
+Game.prototype.undoNumberOfSteps= function(numberOfSteps){
+	//redo the moves like in the previous game.
+	
+	//var saveGame = this.recordingOfGameInProgress;
+	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
+	//console.log(this.recordingOfGameInProgress);
+	this.eraseBoard();
+	
+	for (var moveNumber = 0; moveNumber< saveGame.length  - numberOfSteps; moveNumber++){
+		
+		this.playTurnByVerboseNotation(saveGame[moveNumber]);
+	}	
+}
+
+Game.prototype.eraseBoard = function(){
+	//erases everything from the board, and basically resets the game within the game. 
+	//created for use in undo. 
+	
+	
+	this.walls_1 = [];
+	this.walls_2 = [];
+	this.svgPawns = [];
+	this.svgLineSegments = [];
+	this.svgCellsAsPawnShapes = []
+	//this.statsDiv.innerHTML = "";
+	//this.buildUpOptions(this.statsDiv);
+	
+	//this.board;
+	this.board = new Board();
+	this.svgField.innerHTML = "";
+	this.buildUpBoard(this.svgField);
+	this.outputPawns();
+		
+	//administration
+	this.playerAtMove = PLAYER1;
+	this.recordingOfGameInProgress = [];
+	this.moveCounter = 0;
+	this.gameStatus = SETUP;
+	
+	this.outputGameStats();
+	
+	//prepare game:
+	this.board.boardCellsToGraph(true);
+	this.board.isCurrentBoardLegal();
+	this.shortestPathPerPlayer;
+	this.outputBoard();
+	this.gameStatus = PLAYING;
+}
 
 
 Game.prototype.buildUpOptions = function(domElement){
@@ -1118,7 +1173,7 @@ Game.prototype.buildUpOptions = function(domElement){
 	//addButtonToExecuteGeneralFunction(domElement,"undooo","lode", "lloodd", this.clickTest,"arg");
 	
 	//https://stackoverflow.com/questions/2190850/create-a-custom-callback-in-javascript
-	addButtonToExecuteGeneralFunction(domElement,"undooo","lode", "lloodd", this.undoButtonClicked,this);
+	addButtonToExecuteGeneralFunction(domElement,"Undo","lode", "lloodd", this.undoButtonClicked,this);
 }
 
 Game.prototype.buildUpBoard = function(svgElement){
