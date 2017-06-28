@@ -77,7 +77,8 @@ var WESTWEST = 11;
 var PLAYER1 = 0;
 var PLAYER2 = 1;
 
-var PLAYER_NAMES = ["BLUE", "RED"];
+
+var PLAYER_NAMES = ["Blue" , "Red" ];
 
 //game status
 var SETUP =0;
@@ -121,18 +122,9 @@ function toggleNotation(){
 
 document.addEventListener("DOMContentLoaded", function() {
 
-   //var map = {a:{b:3,c:1,d:3},b:{a:2,c:1,d:1},c:{a:4,b:1},d:{a:8,b:1}};
-   
-  // var test = {};
-   
-  // test[0]=[1,2,3];
-  // test[1]=[3,4,2];
-//test[1].push(5);
-  // 
-	//console.log(test);
-	//graph = new Graph(map);
-	//console.log(graph.findShortestPath('a', 'b'));
-	//console.log(graph.findPaths('a'));
+	var divTest = document.getElementById("test");
+	//addTextWithClick(divTest, "yow<br>yeee" ,"namelode", "bla", test, "ijiee" );
+	// test("ijij");
 	
 	
 	
@@ -277,6 +269,8 @@ aGame.playTurnByVerboseNotation("w");
 
 aGame.playTurnByVerboseNotation("c8");
 aGame.playTurnByVerboseNotation("c2");
+ // aGame.rewindGameToPosition(2);
+
 //aGame.playTurnByVerboseNotation("b8");
 // aGame.playTurnByVerboseNotation("b1");
 // aGame.playTurnByVerboseNotation("w");
@@ -329,6 +323,10 @@ aGame.playTurnByVerboseNotation("4h");
 }
 
 
+function test(instance){
+	alert("ijij");
+
+}
 
 function GameReplay (game, recordedMoves){
 	//this.replayGame = new Game(); //init board
@@ -645,13 +643,14 @@ Game.prototype.undoLastMove =function(){
 
 Game.prototype.outputGameStats= function(){
 	
+	
 	var htmlString = "";
-	var playerColors = ["Blue" , "Red" ]
+	
 	
 	if (this.gameStatus == SETUP){
 		htmlString += 'Blue Player starts the game.'
 	} else if (this.gameStatus == FINISHED){
-		htmlString += ''+ playerColors[this.playerAtMove] + ' player won!';
+		htmlString += ''+ PLAYER_NAMES[this.playerAtMove] + ' player won!';
 		
 	}else if (this.gameStatus == PLAYING){
 	
@@ -662,25 +661,52 @@ Game.prototype.outputGameStats= function(){
 		htmlString += '<br>'+ blueMovesToFinish + ' for blue player.';
 		htmlString += '<br>'+ redMovesToFinish + ' for red player.';
 		
-		htmlString += '<br><br>'+ playerColors[this.playerAtMove] + ' player playing.';
+		htmlString += '<br><br>'+ PLAYER_NAMES[this.playerAtMove] + ' player playing.';
 	}
 	
+	//notation field
+	notationDiv = document.getElementById('notation');
 	document.getElementById('stats').innerHTML = htmlString;
-	
 	htmlString = '<br><br>Stats:';
+	notationDiv.innerHTML = htmlString;
 	for (var i =0; i<this.recordingOfGameInProgress.length;i++){
+		
+		
 		if (i%2 == 0){
-			htmlString += ('<br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);		
+			// htmlString += ('<p onClick="rewindGameToPosition = function(moveEndNumber);" ><br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);	
+			//addTextWithClick(notationDiv, (i+1)+ " " this.recordingOfGameInProgress[i]+"<br>", this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
+			addDiv(notationDiv, i+"stat", "moveStat").innerHTML = "<br>"+(i+1)+". ";
 		}else{
-			htmlString += (' ' + this.recordingOfGameInProgress[i]);		
+			addDiv(notationDiv, i+"stat", "moveStat").innerHTML = " ";
+			// htmlString += (' ' + this.recordingOfGameInProgress[i]);		
 		}
+		addTextWithClick(notationDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
+	
+	
+		// if (i%2 == 0){
+			// roundDiv = addDiv(notationDiv, i+"stat", "moveStat");
+			// // htmlString += ('<p onClick="rewindGameToPosition = function(moveEndNumber);" ><br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);	
+			// //addTextWithClick(notationDiv, (i+1)+ " " this.recordingOfGameInProgress[i]+"<br>", this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
+			// addText(roundDiv,  "<br>"+(i+1)+". " , i+"player1", i+"turn");
+			// addTextWithClick(roundDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
+
+		// }else{
+			// addText(roundDiv,   " " , i+"player1", i+"turn");
+			// addTextWithClick(roundDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
+		
+			// notationDiv.appendChild(roundDiv);
+			// //addDiv(notationDiv, i+"stat", "moveStat").innerHTML = " ";
+			
+		// }
 	}
-	// if (this.notationEnabled ){
-	//if (NOTATION_ENABLED_AT_STARTUP ){
-		document.getElementById('notation').innerHTML = htmlString;
-	//}else{
-		//document.getElementById('notation').innerHTML = "";
-	//}
+	
+	
+	// // if (this.notationEnabled ){
+	// //if (NOTATION_ENABLED_AT_STARTUP ){
+		// notationDiv.innerHTML = htmlString;
+	// //}else{
+		// //document.getElementById('notation').innerHTML = "";
+	// //}
 }
 
 Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
@@ -1095,16 +1121,12 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 		//colorize line
 		var placementIsPossible = this.board.isPositionAvailableForWallPlacement(startCellId, isNorthSouthOriented)?1:0;
 		for (var i = 0; i<affectedLinesIndeces.length; i++){
+		
 			this.svgLineSegments[affectedLinesIndeces[i]].setAttribute('stroke',colors[isHoveringInElseOut][placementIsPossible]);
 		}	
 	}
 }
 
-Game.prototype.clickTest = function(){
-	console.log("yeeee");
-}
-
-//Game.prototype.undoButtonClicked = function (){
 Game.prototype.undoButtonClicked = function(GameInstance){
 	console.log("undo button clicked.");
 	//this.undoLastWall(this.playerAtMove);
@@ -1114,28 +1136,40 @@ Game.prototype.undoButtonClicked = function(GameInstance){
 	
 	//GameInstance.undoLastWall(GameInstance.playerAtMove);
 	//GameInstance.undoLastMove();
-	
+	console.log(GameInstance);
+	// debugger;
 	GameInstance.undoNumberOfSteps(1);
+	//GameInstance.rewindGametoPosition(1);
+}
+
+Game.prototype.rewindGameTextClicked = function(GameInstance, moveEndNumber){
+	console.log("rewind text clicked.");
+	console.log(GameInstance);
+	// debugger;
+	GameInstance.rewindGameToPosition(moveEndNumber);
+}
+
+Game.prototype.rewindGameToPosition = function(moveEndNumber){
+	//will rewind game to indicated position
+	//moveNumber 1 is first move
+	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
+	this.eraseBoard();
+	
+	for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
+		this.playTurnByVerboseNotation(saveGame[moveNumber]);
+	}	
 }
 
 Game.prototype.undoNumberOfSteps= function(numberOfSteps){
 	//redo the moves like in the previous game.
-	
+	console.log(this.recordingOfGameInProgress.length - numberOfSteps);
 	//var saveGame = this.recordingOfGameInProgress;
-	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
-	//console.log(this.recordingOfGameInProgress);
-	this.eraseBoard();
-	
-	for (var moveNumber = 0; moveNumber< saveGame.length  - numberOfSteps; moveNumber++){
-		
-		this.playTurnByVerboseNotation(saveGame[moveNumber]);
-	}	
+	this.rewindGameToPosition(this.recordingOfGameInProgress.length - numberOfSteps);
 }
 
 Game.prototype.eraseBoard = function(){
 	//erases everything from the board, and basically resets the game within the game. 
 	//created for use in undo. 
-	
 	
 	this.walls_1 = [];
 	this.walls_2 = [];

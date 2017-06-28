@@ -89,6 +89,59 @@ function addDiv(elementToAttachTo, id, className){
 	return div;
 }
 
+
+
+function addText(elementToAttachTo, text ,name, id ){
+    var textElement = document.createElement("P");
+	var p = document.createTextNode(text);
+	textElement.name = name;
+	textElement.id = id;
+	textElement.appendChild(p);  
+	elementToAttachTo.appendChild(textElement);  
+
+}
+
+// function addTextWithClick(elementToAttachTo, text ,name, id, func, arg ){
+    // var textElement = document.createElement("P");
+	// var p = document.createTextNode("paragraph<br>ijijd");
+	
+	
+	
+	// //p.type = "button";
+  
+	// textElement.name = name;
+	// textElement.id = id;
+    // // p.addEventListener('click', function(){
+		// // func(arg); 
+	// // });
+	// textElement.addEventListener('click', function(){
+		// alert("iejijfief");
+	// });
+	// textElement.appendChild(p);  
+	// elementToAttachTo.appendChild(textElement);  
+
+// }
+function addTextWithClick(elementToAttachTo, htmlString ,name, id, func, arg1,arg2 ){
+    var textElement = document.createElement("div");
+	//var p = document.createTextNode("paragraph<br>ijijd");
+	
+	textElement.innerHTML = htmlString;
+	
+	
+	//p.type = "button";
+  
+	textElement.name = name;
+	textElement.id = id;	
+    textElement.addEventListener('click', function(){
+			
+		func(arg1,arg2); 
+	});
+	
+	//textElement.appendChild(p);  
+	elementToAttachTo.appendChild(textElement);  
+
+}
+
 function addTextBox(elementToAttachTo,text,name,id, size){
 
 	
