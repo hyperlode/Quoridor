@@ -675,13 +675,18 @@ Game.prototype.outputGameStats= function(){
 		if (i%2 == 0){
 			// htmlString += ('<p onClick="rewindGameToPosition = function(moveEndNumber);" ><br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);	
 			//addTextWithClick(notationDiv, (i+1)+ " " this.recordingOfGameInProgress[i]+"<br>", this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
-			addDiv(notationDiv, i+"stat", "moveStat").innerHTML = "<br>"+(i+1)+". ";
+			//addLinkWithClick(notationDiv, (i+1)+ " " this.recordingOfGameInProgress[i]+"<br>", this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
+			addBr(notationDiv);
+			addText(notationDiv,(i+1)+". ", i+"stat", i+"stat" );
+			
 		}else{
-			addDiv(notationDiv, i+"stat", "moveStat").innerHTML = " ";
-			// htmlString += (' ' + this.recordingOfGameInProgress[i]);		
+			// addTextWithClick(roundDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
+			 addText(notationDiv, " ", i+"stat",i+"stat" );
+			// htmlString += (' ' + this.recordingOfGameInProgress[i]);	
+			//notationDiv.innerHTML += " ";			
 		}
-		addTextWithClick(notationDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
-	
+		//addLinkWithClick(notationDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
+		addButtonToExecuteGeneralFunction(notationDiv,this.recordingOfGameInProgress[i],"step"+i ,"step"+i , this.rewindGameTextClicked, [this, i+1]  );
 	
 		// if (i%2 == 0){
 			// roundDiv = addDiv(notationDiv, i+"stat", "moveStat");
@@ -1144,7 +1149,7 @@ Game.prototype.undoButtonClicked = function(GameInstance){
 
 Game.prototype.rewindGameTextClicked = function(GameInstance, moveEndNumber){
 	console.log("rewind text clicked.");
-	console.log(GameInstance);
+	
 	// debugger;
 	GameInstance.rewindGameToPosition(moveEndNumber);
 }

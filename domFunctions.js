@@ -1,3 +1,6 @@
+//NEVER USE .innerhtml, it fucks up events that were added!!! Go javascript all the way!
+
+
 Element.prototype.remove = function() {
     this.parentElement.removeChild(this);
 }
@@ -90,15 +93,24 @@ function addDiv(elementToAttachTo, id, className){
 }
 
 
+function addParagraph(elementToAttachTo, text, name, id ){
+	var paraElement = document.createElement("P");
+	var p = document.createTextNode(text);
+	paraElement.name = name;
+	paraElement.id = id;
+	paraElement.appendChild(p);  
+	elementToAttachTo.appendChild(paraElement);  
+	return paraElement;
+}
+
+function addBr(elementToAttachTo){
+	var br = document.createElement("br");
+	elementToAttachTo.appendChild(br);  
+}
 
 function addText(elementToAttachTo, text ,name, id ){
-    var textElement = document.createElement("P");
-	var p = document.createTextNode(text);
-	textElement.name = name;
-	textElement.id = id;
-	textElement.appendChild(p);  
-	elementToAttachTo.appendChild(textElement);  
-
+   var p = document.createTextNode(text);
+	elementToAttachTo.appendChild(p);  
 }
 
 // function addTextWithClick(elementToAttachTo, text ,name, id, func, arg ){
@@ -121,7 +133,34 @@ function addText(elementToAttachTo, text ,name, id ){
 	// elementToAttachTo.appendChild(textElement);  
 
 // }
-function addTextWithClick(elementToAttachTo, htmlString ,name, id, func, arg1,arg2 ){
+function addLinkWithClick(elementToAttachTo, text,name, id, func, arg1,arg2 ){
+    var emptyLink = document.createElement('span');
+	// var linkText = document.createTextNode("fijeije");
+	// emptyLink.appendChild(linkText);
+	//emptyLink.innerHTML = text;
+	
+	emptyLink.text = text;
+	
+	//p.type = "button";
+	//emptyLink.href = "#";
+	emptyLink.name = name;
+	emptyLink.id = id;	
+    emptyLink.addEventListener('click', function(){
+		alert("lode");
+		//func(arg1,arg2); 
+	});
+	//emptyLink.onClick = function(){alert("lode");};
+	
+	
+	//textElement.appendChild(p);  
+	console.log(emptyLink);
+	elementToAttachTo.appendChild(emptyLink);  
+
+}
+
+
+
+function addDivWithClick(elementToAttachTo, htmlString ,name, id, func, arg1,arg2 ){
     var textElement = document.createElement("div");
 	//var p = document.createTextNode("paragraph<br>ijijd");
 	
@@ -179,8 +218,20 @@ function addButtonToExecuteGeneralFunction(elementToAttachTo,caption,name, id, f
     button.value = caption;
 	button.name = name;
 	button.id = id;
-    button.addEventListener('click', function(){
-    func(arg); });
+	
+	if (arg.constructor === Array){
+		if (arg.length == 2){
+		//debugger;
+				button.addEventListener('click', function(){
+				func(arg[0],arg[1]); 
+				//alert("dokeof");
+				});
+		}
+	}else{
+	
+		button.addEventListener('click', function(){
+		func(arg); });
+	}
     elementToAttachTo.appendChild(button);
 	
 }
