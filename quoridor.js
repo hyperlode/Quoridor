@@ -80,6 +80,8 @@ var PLAYER2 = 1;
 
 var PLAYER_NAMES = ["Blue" , "Red" ];
 
+var BUTTON_STATS_MOVE_WIDTH_PIXELS = "40px";
+
 //game status
 var SETUP =0;
 var PLAYING=1;
@@ -91,6 +93,9 @@ var WALL_MOVE = 0;
 var PAWN_MOVE = 1;
 var GAVEUP_MOVE = 2;
 var ILLEGAL_MOVE = 3;
+
+
+
 
 document.onkeypress = function(evt) {
     evt = evt || window.event;
@@ -667,8 +672,10 @@ Game.prototype.outputGameStats= function(){
 	//notation field
 	notationDiv = document.getElementById('notation');
 	document.getElementById('stats').innerHTML = htmlString;
-	htmlString = '<br><br>Stats:';
+	// htmlString = '<br><br>Move history: <table class="table table-striped">';
+	htmlString = '<br><br>Move history: ';
 	notationDiv.innerHTML = htmlString;
+	// var table = document.getElementById("myTable"); //create table
 	for (var i =0; i<this.recordingOfGameInProgress.length;i++){
 		
 		
@@ -677,7 +684,10 @@ Game.prototype.outputGameStats= function(){
 			//addTextWithClick(notationDiv, (i+1)+ " " this.recordingOfGameInProgress[i]+"<br>", this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
 			//addLinkWithClick(notationDiv, (i+1)+ " " this.recordingOfGameInProgress[i]+"<br>", this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
 			addBr(notationDiv);
-			addText(notationDiv,(i+1)+". ", i+"stat", i+"stat" );
+			var text = addText(notationDiv,(i+1)+". ", i+"stat", i+"stat" );
+			console.log(text);
+			// text.style.width = 100px;
+			
 			
 		}else{
 			// addTextWithClick(roundDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
@@ -686,7 +696,8 @@ Game.prototype.outputGameStats= function(){
 			//notationDiv.innerHTML += " ";			
 		}
 		//addLinkWithClick(notationDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
-		addButtonToExecuteGeneralFunction(notationDiv,this.recordingOfGameInProgress[i],"step"+i ,"step"+i , this.rewindGameTextClicked, [this, i+1]  );
+		var button = addButtonToExecuteGeneralFunction(notationDiv,this.recordingOfGameInProgress[i],"step"+i ,"step"+i , this.rewindGameTextClicked, [this, i+1]  );
+		button.style.width = BUTTON_STATS_MOVE_WIDTH_PIXELS;
 	
 		// if (i%2 == 0){
 			// roundDiv = addDiv(notationDiv, i+"stat", "moveStat");

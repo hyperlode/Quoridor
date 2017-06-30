@@ -111,6 +111,7 @@ function addBr(elementToAttachTo){
 function addText(elementToAttachTo, text ,name, id ){
    var p = document.createTextNode(text);
 	elementToAttachTo.appendChild(p);  
+	return p;
 }
 
 // function addTextWithClick(elementToAttachTo, text ,name, id, func, arg ){
@@ -191,6 +192,7 @@ function addTextBox(elementToAttachTo,text,name,id, size){
 	input.value  = text;
 	input.size  = size;
 	elementToAttachTo.appendChild(input);
+	
 }
 
 function addCheckBox(elementToAttachTo,id, name, checked, caption){
@@ -233,7 +235,7 @@ function addButtonToExecuteGeneralFunction(elementToAttachTo,caption,name, id, f
 		func(arg); });
 	}
     elementToAttachTo.appendChild(button);
-	
+	return button;
 }
 	
 //http://stackoverflow.com/questions/9899372/pure-javascript-equivalent-to-jquerys-ready-how-to-call-a-function-when-the
