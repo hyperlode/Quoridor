@@ -171,6 +171,11 @@ function initQuoridorDOM(){
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	//debugger;
 	var aGame = new Game(field,statsDiv);
+aGame.playTurnByVerboseNotation("1a");
+aGame.playTurnByVerboseNotation("1c");
+aGame.playTurnByVerboseNotation("1f");
+aGame.playTurnByVerboseNotation("1h");
+aGame.playTurnByVerboseNotation("d1");
 
 	/*
 	aGame.playTurnByVerboseNotation("n");
@@ -503,7 +508,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		validMove= true;
 	}else if (moveData[0] == WALL_MOVE){
 		this.placeWallByVerboseNotation(this.playerAtMove,verboseNotation);
-		console.log("player %s placed wall (%s)", PLAYER_NAMES[this.playerAtMove], verboseNotation);
+		console.log("player %s placed wall (%s)  (player %s)", PLAYER_NAMES[this.playerAtMove], verboseNotation, this.playerAtMove);
 		validMove = true;
 		undoWallValid  = true;
 	}else {
