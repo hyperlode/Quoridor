@@ -6,7 +6,7 @@ function Board(){
 	
 	this.init();
 	this.boardGraph= {};
-	this.boardGraphtmp= {};
+	this.boardGraphWithoutOpponent= {};
 	this.boardGraph = this.boardCellsToGraph(true);
 	this.shortestPathPerPlayer = [[]];
 }
@@ -60,11 +60,8 @@ Board.prototype.getShortestPathToFinish = function (player){
 	//var finishCellsLookupTable = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 	
 	
-	var shortestPath = this.getShortestPathToFinishRaw(player);
+	var shortestPath = this.getShortestPathToFinishRaw(player, this.boardGraph);
 	
-	
-	//console.log("shortseijfeijf");
-	//console.log(shortestPath);
 	if (shortestPath.length == 0){
 		// in some odd situations, there is a shortest path to the other side, but the other players pawn is blocking the way.
 		// as a matter of fact, the rules are unclear here, a nitpicky person might indeed complain that this is an "illegal" move, as there 
@@ -74,24 +71,21 @@ Board.prototype.getShortestPathToFinish = function (player){
 		//temporarily remove opponent pawn
 		var opponent = (player - 1) * -1;
 		var opponentPlayerCell = this.getPawnCellId(opponent);
-		console.log(player);
-		console.log(opponent);
-		//this.boardGraphtmp = this.boardCellsToGraph(true);
-		
 		var celltest = this.cells[this.pawnCellsIds[0]];
 		var cell = this.cells[this.pawnCellsIds[opponent]];
 				   //this.cells[this.pawnCellsIds[player]];
+
 		cell.releasePawn(opponent); //release pawn
 		
-		//check shortest route
-		var shortestPathWithoutOpponent = this.getShortestPathToFinishRaw2(player);	
+		this.boardGraphWithoutOpponent = this.boardCellsToGraph(true); //create a new graph without the opponent
 		
+		//check shortest route
+		var shortestPathWithoutOpponent = this.getShortestPathToFinishRaw(player, this.boardGraphWithoutOpponent);	
 		
 		//place opponent pawn back. 
-		//this.pawnCellsIds[player] = neighbour;
-		//cell = this.cells[this.pawnCellsIds[player]];
 		cell.acquirePawn(opponent);//acquire pawn
-		console.log(this.cells);
+		
+		//check if a shortest path is found now.
 		if (shortestPathWithoutOpponent.length == 0){
 			console.log("real issue here!");
 			return false;
@@ -117,70 +111,22 @@ Board.prototype.getShortestPathToFinish = function (player){
 	//console.log(searchGraph.findPaths(playerCell));
 }
 
-Board.prototype.getShortestPathToFinishRaw2 = function(player){
+Board.prototype.getShortestPathToFinishRaw = function(player, boardGraph){
 	
 	
 	var playerCell = this.getPawnCellId(player);
 	// console.log(player);
 	
 	
-	// var searchGraph = new Graph(this.boardGraphtmp );
-	var searchGraph = new Graph(this.boardGraph );
-	console.log(searchGraph);
-	
-	//console.log(graph.findShortestPath(4,80));	
+	var searchGraph = new Graph(boardGraph );
 	var shortestPath = [];
-	//console.log("playerCell %d",playerCell);
-//	console.log(finishCellsLookupTable[player][0]);
 	
 	var pathToFinish = [];
-	//console.log(this.boardGraph);
-	//console.log("player %d paths to finish: ", player);
-	/**/
-	//console.log("beforeshortseijfeijf");
-	//console.log(shortestPath);
 	
 	for (var finishCell=0;finishCell<9;finishCell++){
 		
 		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+FINISH_CELLS_LOOKUP_TABLE[player][finishCell]);
 		//check if player is on finish cell of other party FINISH_CELLS_LOOKUP_TABLE
-		// console.log("poyeee");
-		// console.log(pathToFinish);
-		if (pathToFinish != null){
-			if (pathToFinish.length < shortestPath.length || shortestPath.length == 0){ //if shorter or no shortest path yet existing, save as shortest path
-				shortestPath = pathToFinish ;
-				
-				console.log(shortestPath);
-			}
-		}
-	}	
-	return shortestPath
-}
-
-Board.prototype.getShortestPathToFinishRaw = function(player){
-	
-	var playerCell = this.getPawnCellId(player);
-	
-	var searchGraph = new Graph(this.boardGraph);
-	
-	//console.log(graph.findShortestPath(4,80));	
-	var shortestPath = [];
-	//console.log("playerCell %d",playerCell);
-//	console.log(finishCellsLookupTable[player][0]);
-	
-	var pathToFinish = [];
-	//console.log(this.boardGraph);
-	//console.log("player %d paths to finish: ", player);
-	/**/
-	//console.log("beforeshortseijfeijf");
-	//console.log(shortestPath);
-	
-	for (var finishCell=0;finishCell<9;finishCell++){
-		
-		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+FINISH_CELLS_LOOKUP_TABLE[player][finishCell]);
-		//check if player is on finish cell of other party FINISH_CELLS_LOOKUP_TABLE
-		// console.log("poyeee");
-		// console.log(pathToFinish);
 		if (pathToFinish != null){
 			if (pathToFinish.length < shortestPath.length || shortestPath.length == 0){ //if shorter or no shortest path yet existing, save as shortest path
 				shortestPath = pathToFinish ;

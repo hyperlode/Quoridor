@@ -171,11 +171,7 @@ function initQuoridorDOM(){
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	//debugger;
 	var aGame = new Game(field,statsDiv);
-aGame.playTurnByVerboseNotation("1a");
-aGame.playTurnByVerboseNotation("1c");
-aGame.playTurnByVerboseNotation("1f");
-aGame.playTurnByVerboseNotation("1h");
-aGame.playTurnByVerboseNotation("d1");
+
 
 	/*
 	aGame.playTurnByVerboseNotation("n");
@@ -412,7 +408,6 @@ function Game(svgField, statsDiv){
 	
 	
 	//prepare game:
-	this.board.boardCellsToGraph(true);
 	this.board.isCurrentBoardLegal();
 	this.shortestPathPerPlayer;
 	this.outputBoard();
@@ -520,9 +515,6 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		return false;
 	}
 	
-	
-	
-	this.board.boardCellsToGraph(true);
 	if (!this.board.isCurrentBoardLegal()){
 		console.log("undo move");
 		alert("move not allowed, there must be a path to at least one of the squares on the other side of the board for both players!");
@@ -1204,7 +1196,6 @@ Game.prototype.eraseBoard = function(){
 	this.outputGameStats();
 	
 	//prepare game:
-	this.board.boardCellsToGraph(true);
 	this.board.isCurrentBoardLegal();
 	this.shortestPathPerPlayer;
 	this.outputBoard();
