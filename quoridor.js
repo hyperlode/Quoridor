@@ -1245,7 +1245,7 @@ Game.prototype.testPhp =  function(GameInstance)
 		 
 		 // //http://www.webdeveloper.com/forum/showthread.php?252811-run-php-script-in-background-with-js
 		// var str = "something=dog";
-		var url = "http://lode.ameije.com/sandbox.php";// No question mark needed
+		//var url = "http://lode.ameije.com/sandbox.php?q=666";// No question mark needed
 		
 		// xmlReq=new XMLHttpRequest();
 		
@@ -1257,14 +1257,17 @@ Game.prototype.testPhp =  function(GameInstance)
 		// console.log(xmlReq);
 		// console.log("done");
 
-   // var exec_php = function () {
-      var xhttp = new XMLHttpRequest();
-      xhttp.open("GET", url, true);
-      xhttp.send();
-    //}
-
-    //setInterval(exec_php, 5000);
+	// var url = "http://lode.ameije.com/sandbox.php?q=666&action=test";// No question mark needed
+	var url = "http://lode.ameije.com/sandbox.php?q=666&action=read";// No question mark needed
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			document.getElementById("testAJAX").innerHTML = this.responseText;
+		}
+	};
 	
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
 		
  }
 
