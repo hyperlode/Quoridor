@@ -6,7 +6,8 @@ function Board(){
 	
 	this.init();
 	this.boardGraph= {};
-	this.boardCellsToGraph(true);
+	this.boardGraphWithoutOpponent= {};
+	this.boardGraph = this.boardCellsToGraph(true);
 	this.shortestPathPerPlayer = [[]];
 }
 
@@ -41,6 +42,7 @@ Board.prototype.isThereAWinner = function(){
 
 Board.prototype.isCurrentBoardLegal = function (){
 	//check if each player can reach a finish field.
+	this.boardGraph = this.boardCellsToGraph(true);
 	
 	for(var player =0;player<2;player++){
 		if (!this.getShortestPathToFinish(player)){
@@ -57,45 +59,40 @@ Board.prototype.getShortestPathToFinish = function (player){
 	//var finishCellsLookupTable = [["0","1","2","3","4","5","6","7","8"],["72","73","74","75","76","77","78","79","80"]]; //valid finish cellIDs for player 1 and player 2
 	//var finishCellsLookupTable = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 	
-	var playerCell = this.getPawnCellId(player);
-	var searchGraph = new Graph(this.boardGraph);
 	
-	//console.log(graph.findShortestPath(4,80));	
-	var shortestPath = [];
-	//console.log("playerCell %d",playerCell);
-//	console.log(finishCellsLookupTable[player][0]);
+	var shortestPath = this.getShortestPathToFinishRaw(player, this.boardGraph);
 	
-	var pathToFinish = [];
-	//console.log(this.boardGraph);
-	//console.log("player %d paths to finish: ", player);
-	/**/
-	//console.log("beforeshortseijfeijf");
-	//console.log(shortestPath);
-	
-	for (var finishCell=0;finishCell<9;finishCell++){
-		
-		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+FINISH_CELLS_LOOKUP_TABLE[player][finishCell]);
-		
-		//check if player is on finish cell of other party FINISH_CELLS_LOOKUP_TABLE
-		//
-		
-		
-		//console.log(pathToFinish);
-		if (pathToFinish != null){
-			if (pathToFinish.length < shortestPath.length || shortestPath.length == 0){ //if shorter of not yet existing, save as shortest path
-				shortestPath = pathToFinish ;
-				//console.log("poyeee");
-				//console.log(shortestPath);
-			}
-		}
-		
-		
-	}
-	//console.log("shortseijfeijf");
-	//console.log(shortestPath);
 	if (shortestPath.length == 0){
-		//console.log("oioii");
-		return false;
+		// in some odd situations, there is a shortest path to the other side, but the other players pawn is blocking the way.
+		// as a matter of fact, the rules are unclear here, a nitpicky person might indeed complain that this is an "illegal" move, as there 
+		// is temporarily no route for the pawn to the other side (as long as the opponent doesn't move), well, smartasses aside, we better 
+		// check if there is a valid move if the opponent was not in the way (and how long the valid route is. 
+		
+		//temporarily remove opponent pawn
+		var opponent = (player - 1) * -1;
+		var opponentPlayerCell = this.getPawnCellId(opponent);
+		var celltest = this.cells[this.pawnCellsIds[0]];
+		var cell = this.cells[this.pawnCellsIds[opponent]];
+				   //this.cells[this.pawnCellsIds[player]];
+
+		cell.releasePawn(opponent); //release pawn
+		
+		this.boardGraphWithoutOpponent = this.boardCellsToGraph(true); //create a new graph without the opponent
+		
+		//check shortest route
+		var shortestPathWithoutOpponent = this.getShortestPathToFinishRaw(player, this.boardGraphWithoutOpponent);	
+		
+		//place opponent pawn back. 
+		cell.acquirePawn(opponent);//acquire pawn
+		
+		//check if a shortest path is found now.
+		if (shortestPathWithoutOpponent.length == 0){
+			console.log("real issue here!");
+			return false;
+		}else{
+			console.log ("exceptional situation where opponent is actually blocking the route if it doesnt move!")
+			return true;
+		}
 	}
 	var shortestPathToInt=[];
 	for (var i=0;i<shortestPath.length;i++){
@@ -113,6 +110,34 @@ Board.prototype.getShortestPathToFinish = function (player){
 	
 	//console.log(searchGraph.findPaths(playerCell));
 }
+
+Board.prototype.getShortestPathToFinishRaw = function(player, boardGraph){
+	
+	
+	var playerCell = this.getPawnCellId(player);
+	// console.log(player);
+	
+	
+	var searchGraph = new Graph(boardGraph );
+	var shortestPath = [];
+	
+	var pathToFinish = [];
+	
+	for (var finishCell=0;finishCell<9;finishCell++){
+		
+		pathToFinish = searchGraph.findShortestPath(""+playerCell, ""+FINISH_CELLS_LOOKUP_TABLE[player][finishCell]);
+		//check if player is on finish cell of other party FINISH_CELLS_LOOKUP_TABLE
+		if (pathToFinish != null){
+			if (pathToFinish.length < shortestPath.length || shortestPath.length == 0){ //if shorter or no shortest path yet existing, save as shortest path
+				shortestPath = pathToFinish ;
+				
+				// console.log(shortestPath);
+			}
+		}
+	}	
+	return shortestPath
+}
+
 Board.prototype.boardCellsToGraph = function (weighted){
 	
 	//create graph with cellIds as vertexes and edges are accessible nieghbours.
@@ -197,10 +222,10 @@ Board.prototype.boardCellsToGraph = function (weighted){
 		}
 		//console.log("weightedGraph");
 		//console.log(weightedGraph);
-		this.boardGraph = weightedGraph;
+		return weightedGraph;
 	}else{
 	
-		this.boardGraph = graph;
+		return graph;
 	}
 	//return graph;
 }
