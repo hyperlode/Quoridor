@@ -1224,7 +1224,49 @@ Game.prototype.buildUpOptions = function(domElement){
 	
 	//https://stackoverflow.com/questions/2190850/create-a-custom-callback-in-javascript
 	addButtonToExecuteGeneralFunction(domElement,"Undo","lode", "lloodd", this.undoButtonClicked,this);
+	
+	addButtonToExecuteGeneralFunction(domElement,"cutie pie","fefe", "wwww", this.testPhp,this);
+	
 }
+Game.prototype.testPhp =  function(GameInstance)
+ {
+      // var r=confirm("Do You Really want to Refund money! Press ok to Continue ");
+      // if (r==true)
+        // {
+        // // window.location="yourphppage.php";
+        // window.location="http://lode.ameije.com/sandbox.php";
+        // return true;
+        // }
+           // else
+        // {
+        // alert("You pressed Cancel!");
+        // }
+		 
+		 
+		 // //http://www.webdeveloper.com/forum/showthread.php?252811-run-php-script-in-background-with-js
+		// var str = "something=dog";
+		var url = "http://lode.ameije.com/sandbox.php";// No question mark needed
+		
+		// xmlReq=new XMLHttpRequest();
+		
+		// xmlReq.open("POST",url,true);
+		// xmlReq.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		// xmlReq.setRequestHeader("Content-length", str.length);
+		// xmlReq.setRequestHeader("Connection", "close");
+		// xmlReq.send(str);
+		// console.log(xmlReq);
+		// console.log("done");
+
+   // var exec_php = function () {
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", url, true);
+      xhttp.send();
+    //}
+
+    //setInterval(exec_php, 5000);
+	
+		
+ }
 
 Game.prototype.buildUpBoard = function(svgElement){
 	//wall lines:
