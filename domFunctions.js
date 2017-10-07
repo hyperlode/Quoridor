@@ -28,7 +28,7 @@ function addButton(elementToAttachTo,caption,name, id, func){
 	button.id = id;
     button.onclick = func;
     elementToAttachTo.appendChild(button);
-	
+	return button;
 }
 
 function addSelectList(elementToAttachTo, id, name, values ,func){
