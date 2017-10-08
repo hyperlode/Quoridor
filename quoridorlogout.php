@@ -15,5 +15,5 @@
 	// This simply logs out the current user
 	$SimpleUsers->logoutUser();
 	// header("Location: index.php");
-	echo "logged out.<br>"
+	echo "Logged out."
 ?>

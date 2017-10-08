@@ -21,13 +21,13 @@
 		// Attempt to login the user - if credentials are valid, it returns the users id, otherwise (bool)false.
 		$res = $SimpleUsers->loginUser($_GET["username"], $_GET["password"]);
 		if(!$res){
-			$error = "You supplied the wrong credentials.";
+			$error = "Wrong username-password combination.";
 			echo $error;
 		}
 		else
 		{
 				//header("Location: users.php");
-				echo "logged in successfully!";
+				echo "Logged in successfully!";
 				// $userNumber = $res;
 				
 				exit;

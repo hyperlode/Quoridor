@@ -40,150 +40,91 @@ Account.prototype.setupLoginField= function(){
 	elementToAttachTo = document.getElementById(ACCOUNT_DIV);
 	
 	this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"logout","logoutbutton", "logoutbutton", this.userLogout, this);
-	this.logoutButton.style.visibility = 'hidden';
-	
-	
-	
 	this.usernameTextBox = addTextBox(elementToAttachTo, "u","usernameTextBox", "usernameTextBox", 20);
-	this.usernameTextBox.style.visibility = 'hidden';
-
 	this.pwdTextBox = addTextBox(elementToAttachTo, "p","pwdTextBox", "pwdTextBox", 20);
-	this.pwdTextBox.style.visibility = 'hidden';
-	
 	this.loginButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"login","loginbutton", "loginbutton", this.userLogin, this);
-	this.loginButton.style.visibility = 'hidden';
-	
 	this.loginName = "";
 	this.password = "";
 	
-	
-	// link.style.display = 'none'; //or
-	
-	var url = "quoridorisloggedin.php";
-	this.loadDoc(url, this.loginStatusCallBack);
-	// var url = "quoridorlogin.php?username=poendi&password=pandi";
-	// console.log("bleefep");
-	// var xmlhttp = new XMLHttpRequest();
-	// xmlhttp.onreadystatechange = function() {
-		// if (this.readyState == 4 && this.status == 200) {
-			 // document.getElementById("loginArea").innerHTML = this.responseText;
-		// }
-	// };	
+	this.loginStatus(this);
+
 }
 
-Account.prototype.loginStatusCallBack = function (instance, xmlhttp){
-	console.log(xmlhttp.responseText);
-	if (xmlhttp.responseText == "0"){
-		//display login info
-		// console.log("user not logged in ");
-		instance.loginAreaStatusUpdateText("Please log in.");
-		instance.loginButton.style.visibility = 'visible';
-		instance.pwdTextBox.style.visibility = 'visible';
-		instance.usernameTextBox.style.visibility = 'visible';
-		instance.logoutButton.style.visibility = 'hidden';
+Account.prototype.loginFieldElementsVisibility = function (instance, loginVisibleElseLogout){
+	if (loginVisibleElseLogout){
 		
-		
-	}else{
-		//display "logged in" and logout button.
-		// console.log("user logged in ");
-		instance.loginAreaStatusUpdateText(xmlhttp.responseText + "logged in.");
-
 		instance.loginButton.style.visibility = 'hidden';
 		instance.pwdTextBox.style.visibility = 'hidden';
 		instance.usernameTextBox.style.visibility = 'hidden';
 		instance.logoutButton.style.visibility = 'visible';
-		//userLogoutInfo();
-		
-	}	
+	}else{
+		instance.loginButton.style.visibility = 'visible';
+		instance.pwdTextBox.style.visibility = 'visible';
+		instance.usernameTextBox.style.visibility = 'visible';
+		instance.logoutButton.style.visibility = 'hidden';
+	}
 }
-Account.prototype.userLogout = function(instance){
-	var url = "quoridorlogout.php";
-	instance.logoutButton.style.visibility = 'hidden';
 	
-	instance.loadDoc(url,instance.loginAreaStatusUpdate ) ;
-	
-	
-	instance.loginButton.style.visibility = 'visible';
-	instance.pwdTextBox.style.visibility = 'visible';
-	instance.usernameTextBox.style.visibility = 'visible';
-	instance.logoutButton.style.visibility = 'hidden';
-	
-	
-	// display login information
-	// loadUrl(url,userLoginInfo);
-}
-
-Account.prototype.userLogin = function(instance){
-	
-	
-	
-	var url = "quoridorlogin.php?username="+ instance.usernameTextBox.value + "&password="+ instance.pwdTextBox.value + "";
-	
-	console.log("user login button clicked");
-	console.log(url);
-	instance.loadDoc(url,instance.loginAreaStatusUpdate);
-	// instance.log
-	
-}
-
-
-
-
-// Account.prototype.userLoginCallback = function(instance, xlmhttp){
-	// console.log("login callback");
-	// instance.loginAreaStatusUpdate( xlmhttp.responseText);
-// }
-
-Account.prototype.loginAreaStatusUpdate= function(instance, xlmhttp){
-	
-	console.log(xlmhttp.responseText);
-	instance.loginAreaStatusUpdateText(xlmhttp.responseText);
-}
-
 Account.prototype.loginAreaStatusUpdateText= function(text){
-
 	document.getElementById(ACCOUNT_DIV_STATUS).innerHTML = text;
 }
 
-Account.prototype.getUrlAndResponseToDiv = function(url, responseDivName){
-	var xmlhttp = new XMLHttpRequest();
-	xmlhttp.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) {
-			document.getElementById(responseDivName).innerHTML = this.responseText;
-		}
-	};
-	
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+Account.prototype.loginStatus = function (instance){
+		var url = "quoridorisloggedin.php";
+	instance.loadDoc(url, instance.loginStatusCallBack);
 }
 
-// Account.prototype.getAllUsers= function(){
-	// var url = "../SimpleUsers/users.php";// No question mark needed
-	// var xmlhttp = new XMLHttpRequest();
-	// xmlhttp.onreadystatechange = function() {
-		// if (this.readyState == 4 && this.status == 200) {
-			// document.getElementById("displayAllUsers").innerHTML = this.responseText;
-		// }
-		// console.log("donehere");
-	// };
+Account.prototype.loginStatusCallBack = function (instance, xmlhttp){
+	console.log(xmlhttp.responseText);
+	var loggedIn = true;
+	if (xmlhttp.responseText == "0"){
+		loggedIn = false;
+	}
 	
-	// xmlhttp.open("GET", url, true);
-	// xmlhttp.send();
-// }
+	//set visibility
+	instance.loginFieldElementsVisibility(instance, loggedIn);
+	
+	if (!loggedIn){
+		// console.log("user not logged in ");
+		instance.loginAreaStatusUpdateText("Please log in.");
+		
+	}else{
+		// console.log("user logged in ");
+		instance.loginAreaStatusUpdateText(xmlhttp.responseText + "logged in.");
+	}	
+}
+Account.prototype.userLogoutCallBack = function(instance,xlmhttp){
+	instance.loginFieldElementsVisibility(instance, false);
+	instance.loginAreaStatusUpdateText(xlmhttp.responseText);
+}
+
+Account.prototype.userLogout = function(instance){
+	var url = "quoridorlogout.php";
+	instance.loadDoc(url,instance.userLogoutCallBack ) ;
+
+}
+
+Account.prototype.userLogin = function(instance){
+	var url = "quoridorlogin.php?username="+ instance.usernameTextBox.value + "&password="+ instance.pwdTextBox.value + "";
+	// console.log("user login button clicked");
+	instance.loadDoc(url,instance.userLoginCallBack);
+}
+
+Account.prototype.userLoginCallBack= function(instance, xlmhttp){
+	
+	var loggedIn = false;
+	if (xlmhttp.responseText == "Logged in successfully!"){
+		loggedIn = true;
+	}
+	instance.loginFieldElementsVisibility(instance, loggedIn);
+	instance.loginAreaStatusUpdateText(xlmhttp.responseText);
+}
 
 document.addEventListener("DOMContentLoaded", function() {
 
 	account = new Account();
 	console.log(logonText);
 	
-	
-	
-	// getAllUsers();
-	
-	 // $('#buttonSaveAsPng').click(function(){
-      // saveSvgAsPng(document.getElementById(SVG_ID), "diagram.png", 3);
-    // });
-	
-	
+	// getAllUsers();	
 });
 
