@@ -192,7 +192,7 @@ function addTextBox(elementToAttachTo,text,name,id, size){
 	input.value  = text;
 	input.size  = size;
 	elementToAttachTo.appendChild(input);
-	
+	return input
 }
 
 function addCheckBox(elementToAttachTo,id, name, checked, caption){
