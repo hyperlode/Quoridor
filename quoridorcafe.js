@@ -3,6 +3,7 @@ var logonText = "ifjefffff";
 
 var ACCOUNT_DIV = "loginArea";
 var ACCOUNT_DIV_STATUS = "loginAreaStatus";
+var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
 
 
 function Account(){
@@ -32,6 +33,11 @@ Account.prototype.loadDoc= function (url, cFunction) {
 	};
 	xmlhttp.open("GET", url, true);  //don't use false as third argument, apparently, synchronous is going to freeze stuff...
 	xmlhttp.send();
+	
+	
+	//this.listOfLoggedInUsers();
+	
+	
 }
 
 Account.prototype.setupLoginField= function(){
@@ -39,10 +45,14 @@ Account.prototype.setupLoginField= function(){
 	//create html elements (
 	elementToAttachTo = document.getElementById(ACCOUNT_DIV);
 	
+	
+	//addBr(elementToAttachTo);
 	this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"logout","logoutbutton", "logoutbutton", this.userLogout, this);
 	this.usernameTextBox = addTextBox(elementToAttachTo, "u","usernameTextBox", "usernameTextBox", 20);
 	this.pwdTextBox = addTextBox(elementToAttachTo, "p","pwdTextBox", "pwdTextBox", 20);
+	
 	this.loginButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"login","loginbutton", "loginbutton", this.userLogin, this);
+	this.registerButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"register","registerbutton", "registerbutton", this.userRegister, this);
 	this.loginName = "";
 	this.password = "";
 	
@@ -56,9 +66,11 @@ Account.prototype.loginFieldElementsVisibility = function (instance, loginVisibl
 		instance.loginButton.style.visibility = 'hidden';
 		instance.pwdTextBox.style.visibility = 'hidden';
 		instance.usernameTextBox.style.visibility = 'hidden';
+		instance.registerButton.style.visibility = 'hidden';
 		instance.logoutButton.style.visibility = 'visible';
 	}else{
 		instance.loginButton.style.visibility = 'visible';
+		instance.registerButton.style.visibility = 'visible';
 		instance.pwdTextBox.style.visibility = 'visible';
 		instance.usernameTextBox.style.visibility = 'visible';
 		instance.logoutButton.style.visibility = 'hidden';
@@ -66,7 +78,7 @@ Account.prototype.loginFieldElementsVisibility = function (instance, loginVisibl
 }
 	
 Account.prototype.loginAreaStatusUpdateText= function(text){
-	document.getElementById(ACCOUNT_DIV_STATUS).innerHTML = text;
+	document.getElementById(ACCOUNT_DIV_STATUS).innerHTML = "<p>" + text + "</p>";
 }
 
 Account.prototype.loginStatus = function (instance){
@@ -90,12 +102,8 @@ Account.prototype.loginStatusCallBack = function (instance, xmlhttp){
 		
 	}else{
 		// console.log("user logged in ");
-		instance.loginAreaStatusUpdateText(xmlhttp.responseText + "logged in.");
+		instance.loginAreaStatusUpdateText(xmlhttp.responseText + " logged in.");
 	}	
-}
-Account.prototype.userLogoutCallBack = function(instance,xlmhttp){
-	instance.loginFieldElementsVisibility(instance, false);
-	instance.loginAreaStatusUpdateText(xlmhttp.responseText);
 }
 
 Account.prototype.userLogout = function(instance){
@@ -103,6 +111,24 @@ Account.prototype.userLogout = function(instance){
 	instance.loadDoc(url,instance.userLogoutCallBack ) ;
 
 }
+
+Account.prototype.userLogoutCallBack = function(instance,xlmhttp){
+	instance.loginFieldElementsVisibility(instance, false);
+	instance.loginAreaStatusUpdateText(xlmhttp.responseText);
+}
+
+Account.prototype.listOfLoggedInUsers = function(){
+	var url = "quoridorloggedinusers.php";
+	this.loadDoc(url,this.listOfLoggedInUsersCallBack ) ;
+	console.log("tiehey");
+}
+
+Account.prototype.listOfLoggedInUsersCallBack = function(instance,xlmhttp){
+	document.getElementById(LOGGEDINUSERS_DIV_LIST).innerHTML= xlmhttp.responseText;
+	// console.log("iejijfjejfjef");
+}
+
+
 
 Account.prototype.userLogin = function(instance){
 	var url = "quoridorlogin.php?username="+ instance.usernameTextBox.value + "&password="+ instance.pwdTextBox.value + "";
@@ -120,10 +146,29 @@ Account.prototype.userLoginCallBack= function(instance, xlmhttp){
 	instance.loginAreaStatusUpdateText(xlmhttp.responseText);
 }
 
+Account.prototype.userRegister = function(instance){
+	var url = "quoridornewuser.php?username="+ instance.usernameTextBox.value + "&password="+ instance.pwdTextBox.value + "";
+	// console.log("user login button clicked");
+	instance.loadDoc(url,instance.userRegisterCallBack);
+}
+
+Account.prototype.userRegisterCallBack= function(instance, xlmhttp){
+	var loggedIn = false;
+	if (xlmhttp.responseText == "Registered successfully!"){
+		loggedIn = true;
+	}
+	instance.loginFieldElementsVisibility(instance, loggedIn);
+	instance.loginAreaStatusUpdateText(xlmhttp.responseText);
+}
+
+
 document.addEventListener("DOMContentLoaded", function() {
 
 	account = new Account();
 	console.log(logonText);
+	
+	account.listOfLoggedInUsers();
+	
 	
 	// getAllUsers();	
 });
