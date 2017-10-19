@@ -127,15 +127,30 @@ function toggleNotation(){
 
 document.addEventListener("DOMContentLoaded", function() {
 
-	var divTest = document.getElementById("test");
+	// var divTest = document.getElementById("test");
 	//addTextWithClick(divTest, "yow<br>yeee" ,"namelode", "bla", test, "ijiee" );
 	// test("ijij");
 	
+	var quoridorManager = new Manager();
 	
-	
-	initQuoridorDOM();
+	quoridorManager.loadAndContinueGame();
+
 });
 
+function Manager(){
+	this.domElements  = initQuoridorDOM();
+	// this.startNewGame();
+}
+
+Manager.prototype.loadAndContinueGame = function (){	
+	var qGame = new Game(this.domElements["field"],  this.domElements ["stats"] );
+	
+	qGame.moveHistoryStringToArray("n,s,n,s");
+}
+
+Manager.prototype.startNewGame = function (){
+	var aGame = new Game(this.domElements["field"],  this.domElements ["stats"] );
+}
 
 
 function initQuoridorDOM(){
@@ -175,9 +190,12 @@ function initQuoridorDOM(){
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	//debugger;
-	var aGame = new Game(field,statsDiv);
+	
+	
+	return {"field":field, "stats":statsDiv} ;
+//	
 
-
+	//return aGame;
 	/*
 	aGame.playTurnByVerboseNotation("n");
 aGame.playTurnByVerboseNotation("s");
@@ -377,20 +395,23 @@ function callback(player, direction){
 
 function Game(svgField, statsDiv){
 	
+	// this.svgField = domElements["field"];
+	// this.statsDiv = domElements ["stats"];
 	this.svgField = svgField;
 	this.statsDiv = statsDiv;
+	
 	
 	this.walls_1 = [];
 	this.walls_2 = [];
 	this.svgPawns = [];
 	this.svgLineSegments = [];
 	this.svgCellsAsPawnShapes = []
-	this.buildUpOptions(statsDiv);
+	this.buildUpOptions(this.statsDiv);
 	
 	
 	//this.board;
 	this.board = new Board();
-	this.buildUpBoard(svgField);
+	this.buildUpBoard(this.svgField);
 	this.outputPawns();
 	
 	this.play_song();
@@ -419,9 +440,32 @@ function Game(svgField, statsDiv){
 	this.gameStatus = PLAYING;
 }
 
-//Game.prototype.playTurn
 
 
+// Game.prototype.outputSavedGame = function(){
+	// var aGame = new Game();
+// }
+
+
+Game.prototype.moveHistoryToString= function(){
+	var gameString = ""
+	// for(var moveNumber =0; moveNumber<this.recordingOfGameInProgress.length;moveNumber++){
+		// gameString += "#" + moveNumber + "#" +(this.recordingOfGameInProgress[moveNumber]);
+		
+	// }
+	console.log(this.recordingOfGameInProgress.toString());
+	
+}
+
+
+
+Game.prototype.moveHistoryStringToArray = function(gameString){
+	var movesHistoryFromString = gameString.split(",");
+	
+	for (var i =0; i<movesHistoryFromString.length;i++){
+		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
+	}
+}
 
 
 Game.prototype.wallToVerboseNotation = function(cellId, directionIsNorthToSouth){
@@ -435,16 +479,14 @@ Game.prototype.wallToVerboseNotation = function(cellId, directionIsNorthToSouth)
 	}else{
 		return rowString + colLetter;
 	}
-	
-
 }
+
 Game.prototype.pawnDirectionToVerboseNotation = function(direction){
 	if (direction<0 ||direction >12){
 		console.log("ASSERT ERROR: direction oustide limits...");
 		return false;
 	}
 	return DIRECTIONS_VERBOSE[direction];
-	
 }
 
 Game.prototype.interpreteVerboseNotation = function (verboseNotation){
@@ -478,14 +520,6 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		console.log("game finished, restart to replay.  status: %d", this.gameStatus	);
 		return false;
 	}
-	//var undo_walls_1 = (JSON.parse(JSON.stringify(this.board.walls_1)));
-	//var undo_walls_2 = (JSON.parse(JSON.stringify(this.board.walls_2)));
-	//var undo_cells = cloneObject(this.board.cells);
-	// clone(this.board.cells,undo_cells);
-	
-	//var undoBoard = this.board;
-	//try if verbose notation is for moving the pawn, 
-	//console.log("Move of player %d, move: %s", player, verboseNotation);
 	
 	moveData = this.interpreteVerboseNotation(verboseNotation);
 	if (moveData[0] == ILLEGAL_MOVE){
@@ -495,7 +529,6 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	
 	var validMove = false;
 	var undoWallValid= false; //check if the move can be undone.
-	//console.log("-------------------------------------");
 	if (moveData[0] == GAVEUP_MOVE){
 		console.log ("player %s gave up... (not implemented yet...) (%s)", PLAYER_NAMES[this.playerAtMove], verboseNotation);
 		validMove = false;
@@ -542,64 +575,61 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
 		this.moveCounter++;
 		//this.indicateActivePlayer(); //do this at board output
-		//console.log(this.recordingOfGameInProgress);
-		
 	}
 		
 	//administration	
 	this.recordingOfGameInProgress.push(verboseNotation);
-//	console.log(this.recordingOfGameInProgress);
 	this.outputGameStats();
 	this.outputBoard();
+	
+	this.moveHistoryToString();
 
 	return true;
 }
 
+// function cloneObject(obj) 
+// {
+	// //http://stackoverflow.com/questions/10151216/javascript-cloned-object-looses-its-prototype-functions
+   // obj = obj && obj instanceof Object ? obj : '';
+
+   // // Handle Date (return new Date object with old value)
+   // if (obj instanceof Date) {
+     // return new Date(obj); 
+   // }
+
+   // // Handle Array (return a full slice of the array)
+   // if (obj instanceof Array) {
+     // return obj.slice();
+   // }
+
+   // // Handle Object
+   // if (obj instanceof Object) {
+     // var copy = new obj.constructor();
+     // for (var attr in obj) {
+         // if (obj.hasOwnProperty(attr)){
+             // if (obj[attr] instanceof Object){
+                 // copy[attr] = cloneObject(obj[attr]);
+             // } else {
+                 // copy[attr] = obj[attr];
+             // }
+         // }
+     // }
+     // return copy;
+   // }
+
+   // throw new Error("Unable to copy obj! Its type isn't supported.");
+// }
 
 
-function cloneObject(obj) 
-{
-	//http://stackoverflow.com/questions/10151216/javascript-cloned-object-looses-its-prototype-functions
-   obj = obj && obj instanceof Object ? obj : '';
-
-   // Handle Date (return new Date object with old value)
-   if (obj instanceof Date) {
-     return new Date(obj); 
-   }
-
-   // Handle Array (return a full slice of the array)
-   if (obj instanceof Array) {
-     return obj.slice();
-   }
-
-   // Handle Object
-   if (obj instanceof Object) {
-     var copy = new obj.constructor();
-     for (var attr in obj) {
-         if (obj.hasOwnProperty(attr)){
-             if (obj[attr] instanceof Object){
-                 copy[attr] = cloneObject(obj[attr]);
-             } else {
-                 copy[attr] = obj[attr];
-             }
-         }
-     }
-     return copy;
-   }
-
-   throw new Error("Unable to copy obj! Its type isn't supported.");
-}
-
-
-function clone(destination, source) {
-        for (var property in source) {
-            if (typeof source[property] === "object" && source[property] !== null && destination[property]) { 
-                clone(destination[property], source[property]);
-            } else {
-                destination[property] = source[property];
-            }
-        }
-    };
+// function clone(destination, source) {
+	// for (var property in source) {
+		// if (typeof source[property] === "object" && source[property] !== null && destination[property]) { 
+			// clone(destination[property], source[property]);
+		// } else {
+			// destination[property] = source[property];
+		// }
+	// }
+// };
 
 Game.prototype.undoLastWall= function(player){
 	//walls in game are the svg elements
@@ -626,7 +656,6 @@ Game.prototype.undoLastWall= function(player){
 }
 Game.prototype.undoLastMove =function(){
 	
-	
 	if (this.recordingOfGameInProgress.length <= 0){
 		console.log ("Nothing to undo yet...");
 		return false;
@@ -639,15 +668,10 @@ Game.prototype.undoLastMove =function(){
 	console.log("total number of moves before undo:"+ (this.recordingOfGameInProgress.length));
 	console.log("lastMoveData: "+ lastMoveData);
 	// debugger;
-
-	
 }
 
 Game.prototype.outputGameStats= function(){
-	
-	
 	var htmlString = "";
-	
 	
 	if (this.gameStatus == SETUP){
 		htmlString += 'Blue Player starts the game.'
@@ -655,8 +679,6 @@ Game.prototype.outputGameStats= function(){
 		htmlString += ''+ PLAYER_NAMES[this.playerAtMove] + ' player won!';
 		
 	}else if (this.gameStatus == PLAYING){
-	
-		
 		var redMovesToFinish = this.board.shortestPathPerPlayer[1].length-1;
 		var blueMovesToFinish = this.board.shortestPathPerPlayer[0].length-1;
 		htmlString += 'Estimated number of moves to finish:';
@@ -669,83 +691,38 @@ Game.prototype.outputGameStats= function(){
 	//notation field
 	notationDiv = document.getElementById('notation');
 	document.getElementById('stats').innerHTML = htmlString;
-	// htmlString = '<br><br>Move history: <table class="table table-striped">';
 	htmlString = '<br><br>Move history: ';
 	notationDiv.innerHTML = htmlString;
-	// var table = document.getElementById("myTable"); //create table
+
 	for (var i =0; i<this.recordingOfGameInProgress.length;i++){
 		
 		
 		if (i%2 == 0){
-			// htmlString += ('<p onClick="rewindGameToPosition = function(moveEndNumber);" ><br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);	
-			//addTextWithClick(notationDiv, (i+1)+ " " this.recordingOfGameInProgress[i]+"<br>", this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
-			//addLinkWithClick(notationDiv, (i+1)+ " " this.recordingOfGameInProgress[i]+"<br>", this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
 			addBr(notationDiv);
 			var text = addText(notationDiv,(i+1)+". ", i+"stat", i+"stat" );
-			console.log(text);
-			// text.style.width = 100px;
-			
-			
 		}else{
-			// addTextWithClick(roundDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
 			 addText(notationDiv, " ", i+"stat",i+"stat" );
-			// htmlString += (' ' + this.recordingOfGameInProgress[i]);	
-			//notationDiv.innerHTML += " ";			
 		}
-		//addLinkWithClick(notationDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
 		var button = addButtonToExecuteGeneralFunction(notationDiv,this.recordingOfGameInProgress[i],"step"+i ,"step"+i , this.rewindGameTextClicked, [this, i+1]  );
 		button.style.width = BUTTON_STATS_MOVE_WIDTH_PIXELS;
-	
-		// if (i%2 == 0){
-			// roundDiv = addDiv(notationDiv, i+"stat", "moveStat");
-			// // htmlString += ('<p onClick="rewindGameToPosition = function(moveEndNumber);" ><br>'+ (i+1) +'. ' + this.recordingOfGameInProgress[i]);	
-			// //addTextWithClick(notationDiv, (i+1)+ " " this.recordingOfGameInProgress[i]+"<br>", this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
-			// addText(roundDiv,  "<br>"+(i+1)+". " , i+"player1", i+"turn");
-			// addTextWithClick(roundDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
-
-		// }else{
-			// addText(roundDiv,   " " , i+"player1", i+"turn");
-			// addTextWithClick(roundDiv, this.recordingOfGameInProgress[i], this.recordingOfGameInProgress[i] ,"step"+i , this.rewindGameTextClicked, this, i+1  );
-		
-			// notationDiv.appendChild(roundDiv);
-			// //addDiv(notationDiv, i+"stat", "moveStat").innerHTML = " ";
-			
-		// }
-	}
-	
-	
-	// // if (this.notationEnabled ){
-	// //if (NOTATION_ENABLED_AT_STARTUP ){
-		// notationDiv.innerHTML = htmlString;
-	// //}else{
-		// //document.getElementById('notation').innerHTML = "";
-	// //}
+	}	
 }
 
 Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
-	
-	//console.log(wallPosNotation);
-	
 	//check if notation is correct.
 	var isValidMove  = this.board.placeWallByVerboseCoordinate(player,wallPosNotation);
 	this.outputWalls();
-	return isValidMove;
-	
+	return isValidMove;	
 }
 
-
-
 Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
-	
-
 	var direction = this.pawnVerboseNotationToDirection(verboseCoordinate);
 	if (direction == 666){
 		console.log("ASSERT ERROR non valid verbose coordinate.");
 	}
 	
 	var isValidMove = this.board.movePawn(player, direction,true); //simulate first
-	
-	
+		
 	if (!isValidMove){
 		return false;
 	}else{
@@ -753,8 +730,6 @@ Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 		this.outputPawn(player);
 		return true;
 	}
-	
-	
 }
 	
 Game.prototype.pawnVerboseNotationToDirection = function ( verboseCoordinate ){	
@@ -1189,10 +1164,7 @@ Game.prototype.eraseBoard = function(){
 	this.svgPawns = [];
 	this.svgLineSegments = [];
 	this.svgCellsAsPawnShapes = []
-	//this.statsDiv.innerHTML = "";
-	//this.buildUpOptions(this.statsDiv);
 	
-	//this.board;
 	this.board = new Board();
 	this.svgField.innerHTML = "";
 	this.buildUpBoard(this.svgField);
@@ -1222,9 +1194,23 @@ Game.prototype.buildUpOptions = function(domElement){
 	addButtonToExecuteGeneralFunction(domElement,"Undo","lode", "lloodd", this.undoButtonClicked,this);
 	
 	addButtonToExecuteGeneralFunction(domElement,"cutie pie","fefe", "wwww", this.testPhp,this);
+	addButtonToExecuteGeneralFunction(domElement,"replay","replayMoves", "replyMoves", this.replay,this);
 	
 }
-Game.prototype.testPhp =  function(GameInstance)
+Game.prototype.replay=  function(gameInstance){
+	var replayButton = document.getElementById("replayMoves");
+	button.removeEventListener('click', function(){
+				func(arg[0],arg[1]); 
+				//alert("dokeof");
+				});
+	
+}
+
+Game.prototype.stopReplay = function(gameInstance){
+	
+}
+
+Game.prototype.testPhp =  function(gameInstance)
  {
       // var r=confirm("Do You Really want to Refund money! Press ok to Continue ");
       // if (r==true)
