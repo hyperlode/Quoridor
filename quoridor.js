@@ -86,6 +86,7 @@ var BUTTON_STATS_MOVE_WIDTH_PIXELS = "40px";
 var SETUP =0;
 var PLAYING=1;
 var FINISHED=2;
+var MULTIPLAYER_PLAYING = 3;
 
 var FINISH_CELLS_LOOKUP_TABLE = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 
@@ -103,9 +104,6 @@ document.onkeypress = function(evt) {
     var charStr = String.fromCharCode(charCode);
     alert(charStr);
 };
-
-
-
 
 
 function toggleNotation(){
@@ -145,7 +143,7 @@ function Manager(){
 Manager.prototype.loadAndContinueGame = function (){	
 	var qGame = new Game(this.domElements["field"],  this.domElements ["stats"] );
 	
-	qGame.moveHistoryStringToArray("n,s,n,s");
+	qGame.multiplayerLoadBoard("n,s,n,s");
 }
 
 Manager.prototype.startNewGame = function (){
@@ -422,7 +420,6 @@ function Game(svgField, statsDiv){
 	this.moveCounter = 0;
 	this.gameStatus = SETUP;
 	
-	
 	this.outputGameStats();
 	
 	//testing:
@@ -455,16 +452,26 @@ Game.prototype.moveHistoryToString= function(){
 	// }
 	console.log(this.recordingOfGameInProgress.toString());
 	
+	
 }
 
 
 
-Game.prototype.moveHistoryStringToArray = function(gameString){
+Game.prototype.multiplayerLoadBoard = function(gameString){
 	var movesHistoryFromString = gameString.split(",");
+	
+	
 	
 	for (var i =0; i<movesHistoryFromString.length;i++){
 		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
 	}
+	
+	//only one move is allowed to be made.
+	this.moveCounterAtGameLoad = this.moveCounter;
+	
+	
+	this.gameStatus = MULTIPLAYER_PLAYING
+	
 }
 
 
@@ -515,11 +522,19 @@ Game.prototype.interpreteVerboseNotation = function (verboseNotation){
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	
-	if (this.gameStatus != PLAYING){
+	if (this.gameStatus ==MULTIPLAYER_PLAYING){
+		console.log("multiplayer move.");
+		if ( this.moveCounter > this.moveCounterAtGameLoad){
+			// console.log()
+			alert("Only one move allowed in multiplayer mode, please undo or submit.");
+			return false;
+		};
+	}else if (this.gameStatus != PLAYING){
 		
 		console.log("game finished, restart to replay.  status: %d", this.gameStatus	);
 		return false;
 	}
+	
 	
 	moveData = this.interpreteVerboseNotation(verboseNotation);
 	if (moveData[0] == ILLEGAL_MOVE){
@@ -655,6 +670,9 @@ Game.prototype.undoLastWall= function(player){
 	//console.log(lastWall);
 }
 Game.prototype.undoLastMove =function(){
+	
+	
+	
 	
 	if (this.recordingOfGameInProgress.length <= 0){
 		console.log ("Nothing to undo yet...");
@@ -1140,8 +1158,31 @@ Game.prototype.rewindGameTextClicked = function(GameInstance, moveEndNumber){
 Game.prototype.rewindGameToPosition = function(moveEndNumber){
 	//will rewind game to indicated position
 	//moveNumber 1 is first move
+	
+	
+	// if (this.gameStatus == MULTIPLAYER_PLAYING && this.moveCounter <= this.moveCounterAtGameLoad){
+	if (this.gameStatus == MULTIPLAYER_PLAYING && moveEndNumber < this.moveCounterAtGameLoad){
+		console.log("not allowed to go back further than game load in multiplayer,");
+		alert("not allowed to go back further than game load in multiplayer");
+		return;
+	}
+	
 	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
-	this.eraseBoard();
+	
+	if (this.gameStatus == MULTIPLAYER_PLAYING ){
+		
+		var tmp = this.moveCounterAtGameLoad;
+		console.log(this.moveCounterAtGameLoad);
+		this.eraseBoard();
+		this.moveCounterAtGameLoad = tmp;
+		console.log(this.moveCounterAtGameLoad);
+		this.gameStatus = MULTIPLAYER_PLAYING;
+	}else{
+	
+		this.eraseBoard();
+	}
+	
+	
 	
 	for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
 		this.playTurnByVerboseNotation(saveGame[moveNumber]);
@@ -1149,8 +1190,10 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 }
 
 Game.prototype.undoNumberOfSteps= function(numberOfSteps){
+	
+	
 	//redo the moves like in the previous game.
-	console.log(this.recordingOfGameInProgress.length - numberOfSteps);
+	//console.log(this.recordingOfGameInProgress.length - numberOfSteps);
 	//var saveGame = this.recordingOfGameInProgress;
 	this.rewindGameToPosition(this.recordingOfGameInProgress.length - numberOfSteps);
 }
