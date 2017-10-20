@@ -138,7 +138,16 @@ document.addEventListener("DOMContentLoaded", function() {
 function Manager(){
 	this.domElements  = initQuoridorDOM();
 	// this.startNewGame();
+	this.multiPlayerDiv = this.domElements["multiplayerDiv"];
+	
+	addButtonToExecuteGeneralFunction(this.multiPlayerDiv,"Submit Move","submitToServer", "submitToServer", this.submitMove,this);
 }
+
+
+Manager.prototype.submitMove = function (instance){	
+	alert("submit move (todo)");
+}
+
 
 Manager.prototype.loadAndContinueGame = function (){	
 	var qGame = new Game(this.domElements["field"],  this.domElements ["stats"] );
@@ -166,6 +175,7 @@ function initQuoridorDOM(){
 	
 	var field = document.getElementById("quoridorFieldSvg");	
 	var statsDiv = document.getElementById("options");
+	var multiplayerDiv = document.getElementById("multiPlayerControls");
 	if (BOARD_ROTATION_90DEGREES){
 		field.setAttribute("transform", "rotate(90)");
 	}
@@ -190,7 +200,7 @@ function initQuoridorDOM(){
 	//debugger;
 	
 	
-	return {"field":field, "stats":statsDiv} ;
+	return {"field":field, "stats":statsDiv, "multiplayerDiv":multiplayerDiv} ;
 //	
 
 	//return aGame;
@@ -1238,6 +1248,7 @@ Game.prototype.buildUpOptions = function(domElement){
 	
 	addButtonToExecuteGeneralFunction(domElement,"cutie pie","fefe", "wwww", this.testPhp,this);
 	addButtonToExecuteGeneralFunction(domElement,"replay","replayMoves", "replyMoves", this.replay,this);
+	
 	
 }
 Game.prototype.replay=  function(gameInstance){
