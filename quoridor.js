@@ -130,9 +130,8 @@ document.addEventListener("DOMContentLoaded", function() {
 	// test("ijij");
 	
 	var quoridorManager = new Manager();
+	//quoridorManager.loadAndContinueGame();
 	
-	quoridorManager.loadAndContinueGame();
-
 });
 
 function Manager(){
@@ -140,40 +139,36 @@ function Manager(){
 	// this.startNewGame();
 	this.multiPlayerDiv = this.domElements["multiplayerDiv"];
 	
-	addButtonToExecuteGeneralFunction(this.multiPlayerDiv,"Submit Move","submitToServer", "submitToServer", this.submitMove,this);
+	//addButtonToExecuteGeneralFunction(this.multiPlayerDiv,"Submit Move","submitToServer", "submitToServer", this.submitMove,this);
 }
 
 
 Manager.prototype.submitMove = function (instance){	
-	alert("submit move (todo)");
+	// alert("submit move (todo)");
 }
 
 
 Manager.prototype.loadAndContinueGame = function (){	
-	var qGame = new Game(this.domElements["field"],  this.domElements ["stats"] );
+	var qGame = new Game(this.domElements["board"],  this.domElements ["stats"] );
 	
 	qGame.multiplayerLoadBoard("n,s,n,s");
 }
 
 Manager.prototype.startNewGame = function (){
-	var aGame = new Game(this.domElements["field"],  this.domElements ["stats"] );
+	this.localGame = new Game(this.domElements["board"],  this.domElements ["stats"] );
 }
 
+Manager.prototype.restartGame = function (){
+	this.localGame.eraseBoard();	
+}
+Manager.prototype.stopAndDeleteGame = function (){
+	this.localGame.deleteGame();	
+}
 
 function initQuoridorDOM(){
 	var quoridorField = document.getElementById("board");
 	//console.log(quoridorField);
 	//addDiv(setShowField, "card");
-	addSvg(quoridorField, "quoridorFieldSvg",BOARD_WIDTH*BOARD_SCALE, BOARD_HEIGHT*BOARD_SCALE,BOARD_BACKGROUND_COLOR,"black");
-	//var statsDiv = document.createElement('div');
-	//statsDiv.id = 'statsDiv';
-	//statsDiv.className = 'stats';
-	//document.getElementById('statsDiv').innerHTML += '<br>Some new content!';
-	
-	//statsDiv.innerHTML += '<br>TestGame';
-	//quoridorField.appendChild(statsDiv);
-	
-	var field = document.getElementById("quoridorFieldSvg");	
 	var statsDiv = document.getElementById("options");
 	var multiplayerDiv = document.getElementById("multiPlayerControls");
 	if (BOARD_ROTATION_90DEGREES){
@@ -182,149 +177,14 @@ function initQuoridorDOM(){
 	
 	//var notationEnabled = NOTATION_ENABLED_AT_STARTUP;
 	
-	//movePawnToPosition(PLAYER1,NORTH);
-	//console.log( pawns[0]);
-	//movePawn(PLAYER1);
-	
-	
-	// movePawn(PLAYER1, EAST);
-	// movePawn(PLAYER2, EAST);
-	// movePawn(PLAYER1, EAST);
-	
-	//window.setTimeout(movePawn(PLAYER2, EAST),2000);
-	
-	
 	//recordedGame = [EAST];
 	moveCounter = 0;
 	//window.setTimeout(callback(PLAYER1, EAST),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 	//debugger;
 	
 	
-	return {"field":field, "stats":statsDiv, "multiplayerDiv":multiplayerDiv} ;
-//	
+	return {"board":quoridorField, "stats":statsDiv, "multiplayerDiv":multiplayerDiv} ;
 
-	//return aGame;
-	/*
-	aGame.playTurnByVerboseNotation("n");
-aGame.playTurnByVerboseNotation("s");
-aGame.playTurnByVerboseNotation("n");
-aGame.playTurnByVerboseNotation("s");
-aGame.playTurnByVerboseNotation("n");
-aGame.playTurnByVerboseNotation("s");
-aGame.playTurnByVerboseNotation("3d");
-aGame.playTurnByVerboseNotation("3g");
-aGame.playTurnByVerboseNotation("e3");
-aGame.playTurnByVerboseNotation("6d");
-aGame.playTurnByVerboseNotation("3b");
-aGame.playTurnByVerboseNotation("6f");
-aGame.playTurnByVerboseNotation("b6");
-aGame.playTurnByVerboseNotation("c6");
-aGame.playTurnByVerboseNotation("4f");
-aGame.playTurnByVerboseNotation("6h");
-
-aGame.playTurnByVerboseNotation("e1");
-aGame.playTurnByVerboseNotation("5b");
-aGame.playTurnByVerboseNotation("a8");
-aGame.playTurnByVerboseNotation("d4");
-aGame.playTurnByVerboseNotation("f5");
-aGame.playTurnByVerboseNotation("a2");
-aGame.playTurnByVerboseNotation("a6");
-aGame.playTurnByVerboseNotation("w");
-//aGame.playTurnByVerboseNotation("n");
-// aGame.playTurnByVerboseNotation("s");
-// aGame.playTurnByVerboseNotation("w");
-// aGame.playTurnByVerboseNotation("w");
-// aGame.playTurnByVerboseNotation("s");
-// aGame.playTurnByVerboseNotation("w");
-// aGame.playTurnByVerboseNotation("w");
-// aGame.playTurnByVerboseNotation("w");
-// aGame.playTurnByVerboseNotation("w");
-// aGame.playTurnByVerboseNotation("s");
-// aGame.playTurnByVerboseNotation("w");
-// aGame.playTurnByVerboseNotation("s");
-// aGame.playTurnByVerboseNotation("n");
-// aGame.playTurnByVerboseNotation("s");
-// aGame.playTurnByVerboseNotation("n");
-// aGame.playTurnByVerboseNotation("s");
-	*/
-	/*
-	1. n s
-3. n s
-5. n s
-7. 3d 6d
-9. 3f 6f
-11. 3b s
-13. nn c6
-15. a4 6h
-17. 3h 6b
-19. e5 7a
-21. 2a w
-
-illegal move when wall is placed at c8...
-*/
-
-
-	
-	
-	//aGame.placeWallByVerboseNotation(PLAYER1, "1h");
-//	aGame.testPlaceWall(PLAYER1, "h1");
-	/*
-	
-
-
-
-
-aGame.playTurnByVerboseNotation("n");
-aGame.playTurnByVerboseNotation("s");
-aGame.playTurnByVerboseNotation("n");
-aGame.playTurnByVerboseNotation("s");
-aGame.playTurnByVerboseNotation("n");
-aGame.playTurnByVerboseNotation("s");
-aGame.playTurnByVerboseNotation("3d");
-aGame.playTurnByVerboseNotation("6d");
-aGame.playTurnByVerboseNotation("3f");
-aGame.playTurnByVerboseNotation("6f");
-aGame.playTurnByVerboseNotation("3b");
-aGame.playTurnByVerboseNotation("s");
-aGame.playTurnByVerboseNotation("nn");
-aGame.playTurnByVerboseNotation("c6");
-aGame.playTurnByVerboseNotation("a4");
-aGame.playTurnByVerboseNotation("6h");
-aGame.playTurnByVerboseNotation("3h");
-aGame.playTurnByVerboseNotation("6b");
-aGame.playTurnByVerboseNotation("e5");
-aGame.playTurnByVerboseNotation("7a");
-aGame.playTurnByVerboseNotation("2a");
-aGame.playTurnByVerboseNotation("w");
-
-
-
-aGame.playTurnByVerboseNotation("c8");
-aGame.playTurnByVerboseNotation("c2");
- // aGame.rewindGameToPosition(2);
-
-//aGame.playTurnByVerboseNotation("b8");
-// aGame.playTurnByVerboseNotation("b1");
-// aGame.playTurnByVerboseNotation("w");
-// aGame.playTurnByVerboseNotation("5c");
-// aGame.playTurnByVerboseNotation("b5");
-
- // w
-// e s
-// s w
-// w n
-// s n
-// w w
-// w n
-// n s
-// n s
-// w s
-// n s
-// e e
-// e e
-// n s
-// n
-	
 	/**/
 	//aGame.outputWalls();
 	/*
@@ -332,25 +192,26 @@ aGame.playTurnByVerboseNotation("c2");
 	var replay = new GameReplay(aGame, movesHistory);
 	replay.replay();
 	/**/
+	// 20171022 bug: 
+	// quoridor.js:339 d8,e8,7f,7c,n,7a,7h,e6,d6,d4,e4,d2,e2,1c,1e	
 	
-	
-/*	
-aGame.playTurnByVerboseNotation("n");
-aGame.playTurnByVerboseNotation("s");
-aGame.playTurnByVerboseNotation("n");
-aGame.playTurnByVerboseNotation("3d");
-aGame.playTurnByVerboseNotation("e");
-aGame.playTurnByVerboseNotation("3f");
-aGame.playTurnByVerboseNotation("c2");
-aGame.playTurnByVerboseNotation("s");
-aGame.playTurnByVerboseNotation("e");
-aGame.playTurnByVerboseNotation("3h");
-aGame.playTurnByVerboseNotation("4b");
-aGame.playTurnByVerboseNotation("4d");
-aGame.playTurnByVerboseNotation("a5");
-aGame.playTurnByVerboseNotation("6a");
-aGame.playTurnByVerboseNotation("4f");
-aGame.playTurnByVerboseNotation("4h");
+	/*	
+	aGame.playTurnByVerboseNotation("n");
+	aGame.playTurnByVerboseNotation("s");
+	aGame.playTurnByVerboseNotation("n");
+	aGame.playTurnByVerboseNotation("3d");
+	aGame.playTurnByVerboseNotation("e");
+	aGame.playTurnByVerboseNotation("3f");
+	aGame.playTurnByVerboseNotation("c2");
+	aGame.playTurnByVerboseNotation("s");
+	aGame.playTurnByVerboseNotation("e");
+	aGame.playTurnByVerboseNotation("3h");
+	aGame.playTurnByVerboseNotation("4b");
+	aGame.playTurnByVerboseNotation("4d");
+	aGame.playTurnByVerboseNotation("a5");
+	aGame.playTurnByVerboseNotation("6a");
+	aGame.playTurnByVerboseNotation("4f");
+	aGame.playTurnByVerboseNotation("4h");
 	*/
 }
 
@@ -401,11 +262,11 @@ function callback(player, direction){
 */
 
 
-function Game(svgField, statsDiv){
+function Game(boardDiv, statsDiv){
 	
 	// this.svgField = domElements["field"];
 	// this.statsDiv = domElements ["stats"];
-	this.svgField = svgField;
+	this.boardDiv = boardDiv;
 	this.statsDiv = statsDiv;
 	
 	
@@ -419,7 +280,7 @@ function Game(svgField, statsDiv){
 	
 	//this.board;
 	this.board = new Board();
-	this.buildUpBoard(this.svgField);
+	this.buildUpBoard(this.boardDiv);
 	this.outputPawns();
 	
 	this.play_song();
@@ -452,6 +313,22 @@ function Game(svgField, statsDiv){
 // Game.prototype.outputSavedGame = function(){
 	// var aGame = new Game();
 // }
+
+Game.prototype.deleteGame = function (){
+	this.walls_1 = [];
+	this.walls_2 = [];
+	this.svgPawns = [];
+	this.svgLineSegments = [];
+	this.svgCellsAsPawnShapes = []
+	this.boardDiv.innerHTML = "";
+	
+	this.statsDiv.innerHTML = "";	
+	//infoDiv = document.getElementById('info');
+	
+	document.getElementById('notation').innerHTML = "";
+	document.getElementById('stats').innerHTML = "";
+	
+}
 
 
 Game.prototype.moveHistoryToString= function(){
@@ -1208,6 +1085,7 @@ Game.prototype.undoNumberOfSteps= function(numberOfSteps){
 	this.rewindGameToPosition(this.recordingOfGameInProgress.length - numberOfSteps);
 }
 
+
 Game.prototype.eraseBoard = function(){
 	//erases everything from the board, and basically resets the game within the game. 
 	//created for use in undo. 
@@ -1219,8 +1097,8 @@ Game.prototype.eraseBoard = function(){
 	this.svgCellsAsPawnShapes = []
 	
 	this.board = new Board();
-	this.svgField.innerHTML = "";
-	this.buildUpBoard(this.svgField);
+	this.boardDiv.innerHTML = "";
+	this.buildUpBoard(this.boardDiv);
 	this.outputPawns();
 		
 	//administration
@@ -1307,11 +1185,23 @@ Game.prototype.testPhp =  function(gameInstance)
 		
  }
 
-Game.prototype.buildUpBoard = function(svgElement){
+Game.prototype.buildUpBoard = function(boardDiv){
 	//wall lines:
 	//all line segements go in an array, their position index corresponds with their ID.
 	//horizontal line segments: correspond with cell ID (with cell on the west)
 	//vertical line segments, after subtracting by 72 (=number of horizontal line segments) correspond with cell ID(with cell on the north)
+	
+	var svgElement = addSvg(boardDiv, "quoridorFieldSvg",BOARD_WIDTH*BOARD_SCALE, BOARD_HEIGHT*BOARD_SCALE,BOARD_BACKGROUND_COLOR,"black");
+	//var statsDiv = document.createElement('div');
+	//statsDiv.id = 'statsDiv';
+	//statsDiv.className = 'stats';
+	//document.getElementById('statsDiv').innerHTML += '<br>Some new content!';
+	
+	//statsDiv.innerHTML += '<br>TestGame';
+	//quoridorField.appendChild(statsDiv);
+	
+	//var field = document.getElementById("quoridorFieldSvgsvgElement");	
+	
 	
 	var index = 0;
 	//horizontal lines

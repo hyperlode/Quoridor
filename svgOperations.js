@@ -12,6 +12,8 @@ function addSvg(elementToAppendTo, name,width, height,color_background,border_co
 	svg.setAttribute('height', height);
 	svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
 	elementToAppendTo.appendChild(svg);
+	
+	return svg;
 };
 
 

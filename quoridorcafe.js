@@ -6,6 +6,54 @@ var ACCOUNT_DIV_STATUS = "loginAreaStatus";
 var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
 
 
+
+
+document.addEventListener("DOMContentLoaded", function() {
+
+	cafe = new Cafe();
+	
+	
+	// getAllUsers();	
+});
+
+
+function Cafe(){
+	//create html elements (
+	
+	account = new Account();
+	console.log(logonText);
+	account.listOfLoggedInUsers();
+	
+	this.setupButtonField();
+}
+
+
+Cafe.prototype.localGameStart= function (instance) {
+	console.log("start local game");
+	instance.quoridorManager = new Manager();
+	instance.quoridorManager.startNewGame()
+}
+Cafe.prototype.localGameStop= function (instance) {
+	console.log("stop local game");
+	instance.quoridorManager.stopAndDeleteGame();
+}
+
+Cafe.prototype.localGameRestart= function (instance) {
+	console.log("reatart local game");
+	instance.quoridorManager.restartGame();
+}
+
+
+
+Cafe.prototype.setupButtonField= function () {
+	
+	elementToAttachTo = document.getElementById("cafeControls");
+	this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Start local game","localGameStart", "localGameStart", this.localGameStart, this);
+	this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Stop local game","localGameStop", "localGameStart", this.localGameStop, this);
+	this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Restart local game","localGameRestart", "localGameStart", this.localGameRestart, this);
+
+}
+
 function Account(){
 	// var xmlhttp;
 	//this.xmlhttp=new XMLHttpRequest();	
@@ -161,15 +209,4 @@ Account.prototype.userRegisterCallBack= function(instance, xlmhttp){
 	instance.loginAreaStatusUpdateText(xlmhttp.responseText);
 }
 
-
-document.addEventListener("DOMContentLoaded", function() {
-
-	account = new Account();
-	console.log(logonText);
-	
-	account.listOfLoggedInUsers();
-	
-	
-	// getAllUsers();	
-});
 

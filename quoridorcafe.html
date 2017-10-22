@@ -4,10 +4,19 @@
   
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Quoridor</title>
+    <title>Quoridor Cafe</title>
 	
+	<!-- cafe scripts -->
 	<script src="quoridorcafe.js"></script>
 	<script src="domFunctions.js"></script>
+	
+	<!-- game scripts -->
+	<script src="quoridor.js"></script>
+    <script src="board.js"></script>
+    <script src="cell.js"></script>
+    <script src="svgOperations.js"></script>
+    <script src="graph.js"></script>
+	
 	
 	
 	<link href="quoridorcafe.css" rel="stylesheet">		
@@ -112,8 +121,68 @@
 	<div class="row" id="displayAllUsers">
 	</div>
 		
-	</body>
+	
+	<div class="row">
+		<div class="col-lg-1 col-md-0">
+		</div>
+		<div class="" id = "cafeControls">
+			<!-- user<input type="text" name="username"><br>	 -->
+			<!-- pwd <input type="text" name="pwd"><br -->
+			<!-- <button type="button">Log in </button> -->
+			<!-- <button type="button">Simple Register </button> -->
+			
+		</div>
+		<div class="col-lg-1 col-md-0">
+		</div>
+		
+	</div>
+	
+	<div class="row">
+		<div class="col-lg-1 col-md-0">
+		</div>
+		
+		<div id="multiPlayerControls" class = "col-lg-4 stats col-md-10">
+		</div>
+		
+		<div class="col-lg-1 col-md-0" >
+		</div>
 
+		
+	</div>
+	
+	<div class="row">
+		<div class="col-lg-4 col-md-1">
+		</div>
+		<!-- <div id="quoridor-field" align = "center" class = ".col-lg-10 quoridor-field"> -->
+		
+		
+		<div id="board" class = "col-lg-4 col-md-8">
+		</div>
+		
+		<div id="info" class = "col-lg-3 col-md-8">
+			<div id="stats" class = "col-lg-12  col-md-12">
+			</div>
+
+			<div id="options" class = "col-lg-12 col-md-12">
+				<button type="button" onclick="toggleNotation()" class="btn btn-primary">Display notation</button>
+			</div>
+			
+			<div id="notation" class = "col-lg-12 col-md-12">
+			</div>
+
+			<!-- <div id="testAJAX"><b>php mysql feedback</b></div> -->
+
+		</div>
+			
+		<!-- </div> -->
+		<div class="col-lg-1 col-md-1" >
+		</div>
+		<!-- <div id = svgTest> -->
+		<!-- </div> -->
+	</div>
+	
+	
+	</body>
 	
 </html>
 
