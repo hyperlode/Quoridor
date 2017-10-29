@@ -106,21 +106,7 @@ document.onkeypress = function(evt) {
 };
 
 
-function toggleNotation(){
-	NOTATION_ENABLED_AT_STARTUP = !NOTATION_ENABLED_AT_STARTUP;
-	// this.outputGameStats();
-	var div = document.getElementById('notation');
-	
-	if (NOTATION_ENABLED_AT_STARTUP){
-		div.removeAttribute("hidden"); 
-		
-	}else{
-		
-		var att = document.createAttribute("hidden");       
-		//att.value = "democlass";                           // Set the value of the class attribute
-		div.setAttributeNode(att); 
-	}
-}
+
 
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -142,7 +128,6 @@ function Manager(){
 	//addButtonToExecuteGeneralFunction(this.multiPlayerDiv,"Submit Move","submitToServer", "submitToServer", this.submitMove,this);
 }
 
-
 Manager.prototype.submitMove = function (instance){	
 	// alert("submit move (todo)");
 }
@@ -152,6 +137,11 @@ Manager.prototype.loadAndContinueGame = function (){
 	var qGame = new Game(this.domElements["board"],  this.domElements ["stats"] );
 	
 	qGame.multiplayerLoadBoard("n,s,n,s");
+}
+
+Manager.prototype.loadAndContinueLocalGame = function (gameString){	
+	var qGame = new Game(this.domElements["board"],  this.domElements ["stats"] );
+	qGame.loadBoard(gameString);
 }
 
 Manager.prototype.startNewGame = function (){
@@ -164,12 +154,23 @@ Manager.prototype.restartGame = function (){
 Manager.prototype.stopAndDeleteGame = function (){
 	this.localGame.deleteGame();	
 }
+// Manager.prototype.replayGameString = function (gameString){
+	// this.startNewGame();
+	// this.replayGame = new GameReplay (this.localGame, gameString);
+	
+// }
+
+
 
 function initQuoridorDOM(){
 	var quoridorField = document.getElementById("board");
 	//console.log(quoridorField);
 	//addDiv(setShowField, "card");
 	var statsDiv = document.getElementById("options");
+	
+	//addButtonToExecuteGeneralFunction(statsDiv,"Display Notation","displayNotation", "displayNotation", this.displayNotation,this);
+	//<button type="button" onclick="toggleNotation()" class="btn btn-primary">Display notation</button>
+	
 	var multiplayerDiv = document.getElementById("multiPlayerControls");
 	if (BOARD_ROTATION_90DEGREES){
 		field.setAttribute("transform", "rotate(90)");
@@ -215,10 +216,8 @@ function initQuoridorDOM(){
 	*/
 }
 
-
 function test(instance){
 	alert("ijij");
-
 }
 
 function GameReplay (game, recordedMoves){
@@ -342,16 +341,17 @@ Game.prototype.moveHistoryToString= function(){
 	
 }
 
-
-
-Game.prototype.multiplayerLoadBoard = function(gameString){
+Game.prototype.loadBoard = function(gameString){
 	var movesHistoryFromString = gameString.split(",");
-	
-	
-	
 	for (var i =0; i<movesHistoryFromString.length;i++){
 		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
 	}
+	
+}
+
+
+Game.prototype.multiplayerLoadBoard = function(gameString){
+	this.loadBoard(gameString)
 	
 	//only one move is allowed to be made.
 	this.moveCounterAtGameLoad = this.moveCounter;
@@ -1070,7 +1070,6 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 	}
 	
 	
-	
 	for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
 		this.playTurnByVerboseNotation(saveGame[moveNumber]);
 	}	
@@ -1123,24 +1122,84 @@ Game.prototype.buildUpOptions = function(domElement){
 	
 	//https://stackoverflow.com/questions/2190850/create-a-custom-callback-in-javascript
 	addButtonToExecuteGeneralFunction(domElement,"Undo","lode", "lloodd", this.undoButtonClicked,this);
+	addButtonToExecuteGeneralFunction(domElement,"Display Notation","displayNotation", "displayNotation", this.toggleNotation,this);
+	addButtonToExecuteGeneralFunction(domElement,"Replay","replayGame", "replayGame", this.replay,this);
 	
-	addButtonToExecuteGeneralFunction(domElement,"cutie pie","fefe", "wwww", this.testPhp,this);
-	addButtonToExecuteGeneralFunction(domElement,"replay","replayMoves", "replyMoves", this.replay,this);
+	//addButtonToExecuteGeneralFunction(domElement,"cutie pie","fefe", "wwww", this.testPhp,this);
+	//addButtonToExecuteGeneralFunction(domElement,"replay","replayMoves", "replyMoves", this.replay,this);
 	
-	
-}
-Game.prototype.replay=  function(gameInstance){
-	var replayButton = document.getElementById("replayMoves");
-	button.removeEventListener('click', function(){
-				func(arg[0],arg[1]); 
-				//alert("dokeof");
-				});
 	
 }
 
-Game.prototype.stopReplay = function(gameInstance){
+
+Game.prototype.replay = function (instance){
+	// Manager.prototype.replayGameString = function (gameString){
+	// this.startNewGame();
+	// this.replayGame = new GameReplay (this.localGame, gameString);
 	
+// }
+	
+	console.log(instance.recordingOfGameInProgress);
+	
+	instance.replayCounter = 0;
+	instance.replayTest(instance);
 }
+
+Game.prototype.replayTest = function (instance){
+
+	if (instance.replayCounter < 10){
+		//console.log("player moving: %d",moveCounter%2 );
+		// window.setTimeout(this.callback(moveCounter%2, this.recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+		window.setTimeout(function (){instance.callbackTest( "e3" )}.bind(instance),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+		
+	}
+}
+
+Game.prototype.callbackTest = function( verboseMove ){
+	// return function(){
+			
+       // this.qgame.movePawn(player, direction);
+	   // this.moveCounter += 1;
+	   
+	   // this.replay(this.moveCounter);
+    // }
+	//this.replayGame.playTurnByVerboseNotation( verboseMove);
+	//this.moveCounter += 1;
+	console.log(verboseMove);
+	this.replayTest(this);
+}
+
+
+
+// Game.prototype.replay=  function(gameInstance){
+	// var replayButton = document.getElementById("replayMoves");
+	// button.removeEventListener('click', function(){
+				// func(arg[0],arg[1]); 
+				// //alert("dokeof");
+				// });
+	
+// }
+
+// Game.prototype.stopReplay = function(gameInstance){
+	
+// }
+
+Game.prototype.toggleNotation = function (instance){
+	NOTATION_ENABLED_AT_STARTUP = !NOTATION_ENABLED_AT_STARTUP;
+	// this.outputGameStats();
+	var div = document.getElementById('notation');
+	
+	if (NOTATION_ENABLED_AT_STARTUP){
+		div.removeAttribute("hidden"); 
+		
+	}else{
+		
+		var att = document.createAttribute("hidden");       
+		//att.value = "democlass";                           // Set the value of the class attribute
+		div.setAttributeNode(att); 
+	}
+}
+
 
 Game.prototype.testPhp =  function(gameInstance)
  {

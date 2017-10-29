@@ -32,10 +32,16 @@ Cafe.prototype.localGameStart= function (instance) {
 	console.log("start local game");
 	instance.quoridorManager = new Manager();
 	instance.quoridorManager.startNewGame()
+	instance.startLocalGameButton.style.visibility = 'hidden';
+	instance.stopLocalGameButton.style.visibility = 'visible';
+	instance.restartLocalGameButton.style.visibility = 'visible';
 }
 Cafe.prototype.localGameStop= function (instance) {
 	console.log("stop local game");
 	instance.quoridorManager.stopAndDeleteGame();
+	instance.startLocalGameButton.style.visibility = 'visible';
+	instance.stopLocalGameButton.style.visibility = 'hidden';
+	instance.restartLocalGameButton.style.visibility = 'hidden';
 }
 
 Cafe.prototype.localGameRestart= function (instance) {
@@ -48,10 +54,13 @@ Cafe.prototype.localGameRestart= function (instance) {
 Cafe.prototype.setupButtonField= function () {
 	
 	elementToAttachTo = document.getElementById("cafeControls");
-	this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Start local game","localGameStart", "localGameStart", this.localGameStart, this);
-	this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Stop local game","localGameStop", "localGameStart", this.localGameStop, this);
-	this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Restart local game","localGameRestart", "localGameStart", this.localGameRestart, this);
-
+	this.startLocalGameButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Start local game","localGameStart", "localGameStart", this.localGameStart, this);
+	this.startLocalGameButton.style.visibility = 'visible';
+	console.log(this.startLocalGameButton);
+	this.stopLocalGameButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Stop local game","localGameStop", "localGameStart", this.localGameStop, this);
+	this.stopLocalGameButton.style.visibility = 'hidden';
+	this.restartLocalGameButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Restart local game","localGameRestart", "localGameStart", this.localGameRestart, this);
+	this.restartLocalGameButton.style.visibility = 'hidden';
 }
 
 function Account(){

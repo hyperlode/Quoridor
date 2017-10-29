@@ -51,7 +51,7 @@
 		</div>
 		
 		<div id="multiPlayerControls" class = "col-lg-4 stats col-md-10">
-		<div>
+		</div>
 		
 		<div class="col-lg-4 col-md-1">
 		</div>
@@ -71,7 +71,8 @@
 			</div>
 
 			<div id="options" class = "col-lg-12 col-md-12">
-				<button type="button" onclick="toggleNotation()" class="btn btn-primary">Display notation</button>
+				<!-- <button type="button" onclick="toggleNotation()" class="btn btn-primary">Display notation</button> -->
+				
 			</div>
 			
 			<div id="notation" class = "col-lg-12 col-md-12">
@@ -90,7 +91,17 @@
 		
 		
 	</body>
-
+	
+	
+	<script>
+		//start a game.
+		document.addEventListener("DOMContentLoaded", function() {
+		var quoridorManager = new Manager();
+		quoridorManager.startNewGame();
+		
+		//quoridorManager.loadAndContinueLocalGame ("d8,e8,7f,7c,n,7a,7h,e6,d6,d4,e4,d2,e2,1c,1e");	
+	});
+	</script>
 	
 </html>
 
