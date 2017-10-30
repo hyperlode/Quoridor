@@ -87,6 +87,7 @@ var SETUP =0;
 var PLAYING=1;
 var FINISHED=2;
 var MULTIPLAYER_PLAYING = 3;
+var REPLAY = 4;
 
 var FINISH_CELLS_LOOKUP_TABLE = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 
@@ -346,7 +347,6 @@ Game.prototype.loadBoard = function(gameString){
 	for (var i =0; i<movesHistoryFromString.length;i++){
 		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
 	}
-	
 }
 
 
@@ -416,6 +416,9 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 			alert("Only one move allowed in multiplayer mode, please undo or submit.");
 			return false;
 		};
+	}else if (this.gameStatus == REPLAY){
+		console.log("replay mode. automatic.");
+		
 	}else if (this.gameStatus != PLAYING){
 		
 		console.log("game finished, restart to replay.  status: %d", this.gameStatus	);
@@ -1055,24 +1058,52 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 	}
 	
 	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
-	
+	var saveGameForReplay = JSON.parse(JSON.stringify(this.replaySaveMoves));
+	console.log(saveGame);
 	if (this.gameStatus == MULTIPLAYER_PLAYING ){
 		
 		var tmp = this.moveCounterAtGameLoad;
-		console.log(this.moveCounterAtGameLoad);
+		// console.log(this.moveCounterAtGameLoad);
 		this.eraseBoard();
 		this.moveCounterAtGameLoad = tmp;
-		console.log(this.moveCounterAtGameLoad);
+		// console.log(this.moveCounterAtGameLoad);
 		this.gameStatus = MULTIPLAYER_PLAYING;
-	}else{
-	
+		
+		
+		for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
+			this.playTurnByVerboseNotation(saveGame[moveNumber]);
+		}
+		
+	}else if (this.gameStatus == REPLAY){
+		console.log("replayeyeyye  ");
+		var tmp = this.moveCounterAtGameLoad;
+		//this.replay_moves = this.recordingOfGameInProgress.slice(0,this.moveEndNumber);
+		
+		// console.log(this.moveCounterAtGameLoad);
 		this.eraseBoard();
+		
+		this.moveCounterAtGameLoad = tmp;
+		//this.recordingOfGameInProgress = moves;
+		// console.log(this.moveCounterAtGameLoad);
+		
+		this.gameStatus = REPLAY;
+		 // return;
+		 
+		
+		for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
+			this.playTurnByVerboseNotation( saveGameForReplay[moveNumber]);
+		} 
+		 
+	}else{
+		this.eraseBoard();
+		
+		
+		for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
+			this.playTurnByVerboseNotation(saveGame[moveNumber]);
+		}
 	}
 	
-	
-	for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
-		this.playTurnByVerboseNotation(saveGame[moveNumber]);
-	}	
+		
 }
 
 Game.prototype.undoNumberOfSteps= function(numberOfSteps){
@@ -1138,6 +1169,10 @@ Game.prototype.replay = function (instance){
 	// this.replayGame = new GameReplay (this.localGame, gameString);
 	
 // }
+	instance.gameStatusMemory = instance.gameStatus
+	instance.gameStatus = REPLAY;
+	
+	instance.replaySaveMoves  = instance.recordingOfGameInProgress;
 	
 	console.log(instance.recordingOfGameInProgress);
 	
@@ -1145,17 +1180,33 @@ Game.prototype.replay = function (instance){
 	instance.replayTest(instance);
 }
 
-Game.prototype.replayTest = function (instance){
+Game.prototype.stopReplay = function (instance){
+	// Manager.prototype.replayGameString = function (gameString){
+	// this.startNewGame();
+	// this.replayGame = new GameReplay (this.localGame, gameString);
+	
+// }
+	instancegameStatus= instance.gameStatusMemory ;
+	rewindGameToPosition(this.recordingOfGameInProgress.length-1)
+	
+}
 
-	if (instance.replayCounter < 10){
+Game.prototype.replayTest = function (instance){
+	console.log(" steps to do?");
+	console.log(instance.replayCounter < instance.replaySaveMoves.length);
+	if (instance.replayCounter < instance.replaySaveMoves.length){
+		console.log("-----------efefe");
 		//console.log("player moving: %d",moveCounter%2 );
 		// window.setTimeout(this.callback(moveCounter%2, this.recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
-		window.setTimeout(function (){instance.callbackTest( "e3" )}.bind(instance),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 		
+		window.setTimeout(function (){instance.callbackTest(instance.replayCounter )}.bind(instance),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+		instance.replayCounter += 1;
+		console.log(instance.replayCounter);
+		console.log(instance.replaySaveMoves);
 	}
 }
 
-Game.prototype.callbackTest = function( verboseMove ){
+Game.prototype.callbackTest = function( endPositionStep ){
 	// return function(){
 			
        // this.qgame.movePawn(player, direction);
@@ -1165,7 +1216,9 @@ Game.prototype.callbackTest = function( verboseMove ){
     // }
 	//this.replayGame.playTurnByVerboseNotation( verboseMove);
 	//this.moveCounter += 1;
-	console.log(verboseMove);
+	
+	//console.log(verboseMove);
+	this.rewindGameToPosition(endPositionStep);
 	this.replayTest(this);
 }
 
