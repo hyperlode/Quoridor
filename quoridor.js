@@ -1034,15 +1034,25 @@ Game.prototype.undoButtonClicked = function(GameInstance){
 	//GameInstance.undoLastMove();
 	console.log(GameInstance);
 	// debugger;
+
 	GameInstance.undoNumberOfSteps(1);
 	//GameInstance.rewindGametoPosition(1);
 }
 
 Game.prototype.rewindGameTextClicked = function(GameInstance, moveEndNumber){
+	
+	
+	
 	console.log("rewind text clicked.");
 	
+
+	var userHasConfirmed = confirm("warning: All game moves from the clicked step will be lost. Continue?");
 	// debugger;
-	GameInstance.rewindGameToPosition(moveEndNumber);
+
+	if (userHasConfirmed){
+		GameInstance.rewindGameToPosition(moveEndNumber);
+	}
+	
 }
 
 Game.prototype.rewindGameToPosition = function(moveEndNumber){
@@ -1058,8 +1068,6 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 	}
 	
 	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
-	var saveGameForReplay = JSON.parse(JSON.stringify(this.replaySaveMoves));
-	console.log(saveGame);
 	if (this.gameStatus == MULTIPLAYER_PLAYING ){
 		
 		var tmp = this.moveCounterAtGameLoad;
@@ -1075,23 +1083,18 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 		}
 		
 	}else if (this.gameStatus == REPLAY){
-		console.log("replayeyeyye  ");
+		var saveGameForReplay = JSON.parse(JSON.stringify(this.replaySaveMoves));
 		var tmp = this.moveCounterAtGameLoad;
-		//this.replay_moves = this.recordingOfGameInProgress.slice(0,this.moveEndNumber);
-		
-		// console.log(this.moveCounterAtGameLoad);
 		this.eraseBoard();
 		
 		this.moveCounterAtGameLoad = tmp;
-		//this.recordingOfGameInProgress = moves;
-		// console.log(this.moveCounterAtGameLoad);
-		
 		this.gameStatus = REPLAY;
-		 // return;
-		 
 		
 		for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
-			this.playTurnByVerboseNotation( saveGameForReplay[moveNumber]);
+			//all moves shift one, so we start with a blank board.
+			if (moveNumber>0){
+				this.playTurnByVerboseNotation( saveGameForReplay[moveNumber-1]);	
+			}
 		} 
 		 
 	}else{
@@ -1177,7 +1180,9 @@ Game.prototype.replay = function (instance){
 	console.log(instance.recordingOfGameInProgress);
 	
 	instance.replayCounter = 0;
-	instance.replayTest(instance);
+	
+	
+	instance.replayLoop(instance);
 }
 
 Game.prototype.stopReplay = function (instance){
@@ -1191,22 +1196,22 @@ Game.prototype.stopReplay = function (instance){
 	
 }
 
-Game.prototype.replayTest = function (instance){
+Game.prototype.replayLoop = function (instance){
 	console.log(" steps to do?");
 	console.log(instance.replayCounter < instance.replaySaveMoves.length);
-	if (instance.replayCounter < instance.replaySaveMoves.length){
+	if (instance.replayCounter < instance.replaySaveMoves.length +1 ){
 		console.log("-----------efefe");
 		//console.log("player moving: %d",moveCounter%2 );
 		// window.setTimeout(this.callback(moveCounter%2, this.recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 		
-		window.setTimeout(function (){instance.callbackTest(instance.replayCounter )}.bind(instance),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+		window.setTimeout(function (){instance.callbackReplay(instance.replayCounter )}.bind(instance),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 		instance.replayCounter += 1;
 		console.log(instance.replayCounter);
 		console.log(instance.replaySaveMoves);
 	}
 }
 
-Game.prototype.callbackTest = function( endPositionStep ){
+Game.prototype.callbackReplay = function( endPositionStep ){
 	// return function(){
 			
        // this.qgame.movePawn(player, direction);
@@ -1219,7 +1224,7 @@ Game.prototype.callbackTest = function( endPositionStep ){
 	
 	//console.log(verboseMove);
 	this.rewindGameToPosition(endPositionStep);
-	this.replayTest(this);
+	this.replayLoop(this);
 }
 
 
