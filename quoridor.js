@@ -1,5 +1,6 @@
 
-//Quoridor game app
+//Quoridor game broweser web app
+//2017 by Lode aaaaand Willem
 
 //All Game Settings
 
@@ -7,7 +8,6 @@ var SOUND_ENABLED_AT_STARTUP = false;
 var BOARD_ROTATION_90DEGREES = false;
 var PRINT_ASSERT_ERRORS = false;
 var GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
-
 
 var BOARD_WIDTH = 1000;
 var BOARD_HEIGHT = 1500;
@@ -82,8 +82,9 @@ var BUTTON_STATS_MOVE_WIDTH_PIXELS = "40px";
 var SETUP =0;
 var PLAYING=1;
 var FINISHED=2;
-var MULTIPLAYER_PLAYING = 3;
-var REPLAY = 4;
+var MULTIPLAYER_LOCAL_PLAYING = 4;
+var MULTIPLAYER_REMOTE_PLAYING = 5;
+var REPLAY = 3;
 
 var FINISH_CELLS_LOOKUP_TABLE = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 
@@ -93,63 +94,19 @@ var GAVEUP_MOVE = 2;
 var ILLEGAL_MOVE = 3;
 
 
-
+/*
 //global functionality 
 document.onkeypress = function(evt) {
     evt = evt || window.event;
     var charCode = evt.keyCode || evt.which;
     var charStr = String.fromCharCode(charCode);
-    alert(charStr);
+    console.log(charStr);
 };
 
-document.addEventListener("DOMContentLoaded", function() {
-
-	// var divTest = document.getElementById("test");
-	//addTextWithClick(divTest, "yow<br>yeee" ,"namelode", "bla", test, "ijiee" );
-	// test("ijij");
-	
-	var quoridorManager = new Manager();
-	//quoridorManager.loadAndContinueGame();
-	
-});
+*/
 
 
 
-
-function Manager(){
-	this.domElements  = initQuoridorDOM();
-	this.multiPlayerDiv = this.domElements["multiplayerDiv"];
-}
-
-Manager.prototype.submitMove = function (instance){	
-	// alert("submit move (todo)");
-}
-
-Manager.prototype.loadAndContinueGame = function (){	
-	var qGame = new Game(this.domElements["board"],  this.domElements ["stats"] );
-	
-	qGame.multiplayerLoadBoard("n,s,n,s");
-}
-
-Manager.prototype.loadAndContinueLocalGame = function (gameString){	
-	var qGame = new Game(this.domElements["board"],  this.domElements ["stats"] );
-	qGame.loadBoard(gameString);
-}
-
-Manager.prototype.startNewGame = function (){
-	this.localGame = new Game(this.domElements["board"],  this.domElements ["stats"] );
-}
-
-Manager.prototype.restartGame = function (){
-	this.localGame.eraseBoard();	
-}
-Manager.prototype.stopAndDeleteGame = function (){
-	this.localGame.deleteGame();	
-}
-// Manager.prototype.replayGameString = function (gameString){
-	// this.startNewGame();
-	// this.replayGame = new GameReplay (this.localGame, gameString);
-// }
 
 function initQuoridorDOM(){
 	var quoridorField = document.getElementById("board");
@@ -270,26 +227,70 @@ Game.prototype.deleteGame = function (){
 }
 
 Game.prototype.moveHistoryToString= function(){
-	var gameString = ""
-	//console.log(this.recordingOfGameInProgress.toString());
-	
-	
+	//var gameString = ""
+	return this.recordingOfGameInProgress.toString();
 }
 
 Game.prototype.loadBoard = function(gameString){
+	this.eraseBoard();
+		
 	var movesHistoryFromString = gameString.split(",");
 	for (var i =0; i<movesHistoryFromString.length;i++){
 		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
 	}
 }
 
-Game.prototype.multiplayerLoadBoard = function(gameString){
-	this.loadBoard(gameString)
+Game.prototype.multiPlayerSubmitLocalMove = function(){
+	if (this.gameStatus != MULTIPLAYER_LOCAL_PLAYING){
+		alert("submit only when it is your turn.");
+		return "errorfefefefe";
+	}
+	//change game status.
+	this.gameStatus = MULTIPLAYER_REMOTE_PLAYING;
+	return this.moveHistoryToString();
+}
+
+Game.prototype.multiPlayerStartGame = function(startingPlayer){
+	//two thing to consider: which player is the local/remote player,
+	//for now: assume player1 is local.
+	//which player is starting?
 	
+	if (startingPlayer == this.playerAtMove){
+		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING
+		console.log("local player starts");
+	}else{
+		this.gameStatus = MULTIPLAYER_REMOTE_PLAYING
+		console.log("remote player starts");
+	}
+	this.moveCounterAtGameLoad = 0;
+	
+}
+
+Game.prototype.multiPlayerRemoteMove = function(gameString){
+	//gamestring is always the total game like it was + the extra move of the remote player. 
+	
+	//1.check moveshistory for correctness.
+	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
+		console.log("ASSERT ERROR: remote players turn, local tries to move.")
+	}
+	
+	
+	//compare this game's move history with send gameString
+	
+	
+	//2.execute extra move.
+	this.loadBoard(gameString) //this just executes all moves.
+	
+	//3.prepare game so local player can make his move.
 	//only one move is allowed to be made.
 	this.moveCounterAtGameLoad = this.moveCounter;
+
+	//change the player to local
+	this.gameStatus = MULTIPLAYER_LOCAL_PLAYING
 	
-	this.gameStatus = MULTIPLAYER_PLAYING
+	//4.send feedback.
+	return true;
+	
 }
 
 
@@ -339,13 +340,19 @@ Game.prototype.interpreteVerboseNotation = function (verboseNotation){
 }
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
-	
-	if (this.gameStatus ==MULTIPLAYER_PLAYING){
-		console.log("multiplayer move.");
+	console.log("verbose Move:" + verboseNotation);
+	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
+		console.log("multiplayer move. local");
 		if ( this.moveCounter > this.moveCounterAtGameLoad){
 			alert("Only one move allowed in multiplayer mode, please undo or submit.");
 			return false;
-		};
+		}
+	}else if (this.gameStatus ==MULTIPLAYER_REMOTE_PLAYING){
+		console.log("multiplayer move. remote");
+		//if ( this.moveCounter > this.moveCounterAtGameLoad){
+		//	alert("Only one move allowed in multiplayer mode, please undo or submit.");
+		//	return false;
+		//}
 	}else if (this.gameStatus == REPLAY){
 		console.log("replay mode. automatic.");
 		
@@ -353,6 +360,8 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		
 		console.log("game finished, restart to replay.  status: %d", this.gameStatus	);
 		return false;
+	}else{
+		console.log("assert errorffe.");
 	}
 	
 	moveData = this.interpreteVerboseNotation(verboseNotation);
@@ -369,7 +378,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	}else if (moveData[0] == PAWN_MOVE){
 		var success = this.movePawnByVerboseNotation(this.playerAtMove,verboseNotation);
 		if (!success){
-			console.log("ASSERT ERROR pawn move failed...");
+			console.log("ASSERT ERROR pawn move failed... player: " + this.playerAtMove + "  notation: "+ verboseNotation );
 		}
 		console.log("player %s moved pawn (%s)", PLAYER_NAMES[this.playerAtMove], verboseNotation);
 		validMove= true;
@@ -867,19 +876,36 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 	
 	
 	// if (this.gameStatus == MULTIPLAYER_PLAYING && this.moveCounter <= this.moveCounterAtGameLoad){
-	if (this.gameStatus == MULTIPLAYER_PLAYING && moveEndNumber < this.moveCounterAtGameLoad){
+		
+		
+	if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
+		alert("remote player is busy playing. no fiddling around!");
+		return;
+	}
+	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING && moveEndNumber < this.moveCounterAtGameLoad){
 		console.log("not allowed to go back further than game load in multiplayer,");
 		alert("not allowed to go back further than game load in multiplayer");
 		return;
 	}
 	
 	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
-	if (this.gameStatus == MULTIPLAYER_PLAYING ){
+	
+	if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
+		console.log("remote palyeing");
+		// var tmp = this.moveCounterAtGameLoad;
+		// this.eraseBoard();
+		// this.moveCounterAtGameLoad = tmp;
+		// this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
 		
+		// for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
+			// this.playTurnByVerboseNotation(saveGame[moveNumber]);
+		// }
+	}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING ){
+		console.log("local palyeing");
 		var tmp = this.moveCounterAtGameLoad;
 		this.eraseBoard();
 		this.moveCounterAtGameLoad = tmp;
-		this.gameStatus = MULTIPLAYER_PLAYING;
+		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
 		
 		for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
 			this.playTurnByVerboseNotation(saveGame[moveNumber]);

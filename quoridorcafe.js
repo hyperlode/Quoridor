@@ -17,51 +17,107 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+
 function Cafe(){
-	//create html elements (
+	//create html elements
 	
-	account = new Account();
-	console.log(logonText);
-	account.listOfLoggedInUsers();
+	//account = new Account();
+	//console.log(logonText);
+	//account.listOfLoggedInUsers();
 	
 	this.setupButtonField();
 }
 
 
-Cafe.prototype.localGameStart= function (instance) {
-	console.log("start local game");
+Cafe.prototype.remoteGameStart= function (instance) {
+	console.log("start remote game");
 	instance.quoridorManager = new Manager();
-	instance.quoridorManager.startNewGame()
+	instance.quoridorManager.startMultiPlayerGame();
 	instance.startLocalGameButton.style.visibility = 'hidden';
-	instance.stopLocalGameButton.style.visibility = 'visible';
-	instance.restartLocalGameButton.style.visibility = 'visible';
+	instance.stopLocalGameButton.style.visibility = 'hidden';
+	instance.restartLocalGameButton.style.visibility = 'hidden';
+	instance.startRemoteGameButton.style.visibility = 'hidden';
+	instance.stopRemoteGameButton.style.visibility = 'visible';
+
+
 }
-Cafe.prototype.localGameStop= function (instance) {
-	console.log("stop local game");
-	instance.quoridorManager.stopAndDeleteGame();
+Cafe.prototype.remoteGameStop= function (instance) {
+	console.log("stop remote game");
+	instance.quoridorManager.stopMultiPlayerGame();
 	instance.startLocalGameButton.style.visibility = 'visible';
 	instance.stopLocalGameButton.style.visibility = 'hidden';
 	instance.restartLocalGameButton.style.visibility = 'hidden';
+	instance.startRemoteGameButton.style.visibility = 'visible';
+	instance.stopRemoteGameButton.style.visibility = 'hidden';
+
+
+}
+
+Cafe.prototype.debugSubmitMove= function (instance) {
+	//the local player presses this button when he wants to submit his move.
+	instance.debugCommandTextBox.value = instance.quoridorManager.submitLocalMove();
+}
+Cafe.prototype.debugNewCommand= function (instance) {
+	instance.quoridorManager.submitRemoteMove(instance.debugCommandTextBox.value);
+}	
+	
+Cafe.prototype.localGameStart= function (instance) {
+	console.log("start local game");
+	instance.quoridorManager = new Manager();
+	instance.quoridorManager.startNewLocalGame()
+	instance.startLocalGameButton.style.visibility = 'hidden';
+	instance.stopLocalGameButton.style.visibility = 'visible';
+	instance.restartLocalGameButton.style.visibility = 'visible';
+	instance.startRemoteGameButton.style.visibility = 'visible';
+	instance.startRemoteGameButton.style.visibility = 'hidden';
+	//instance.stopRemoteGameButton.style.visibility = 'visible';
+
+}
+Cafe.prototype.localGameStop= function (instance) {
+	console.log("stop local game");
+	instance.quoridorManager.stopAndDeleteLocalGame();
+	instance.startLocalGameButton.style.visibility = 'visible';
+	instance.stopLocalGameButton.style.visibility = 'hidden';
+	instance.restartLocalGameButton.style.visibility = 'hidden';
+	instance.startRemoteGameButton.style.visibility = 'visible';
 }
 
 Cafe.prototype.localGameRestart= function (instance) {
-	console.log("reatart local game");
-	instance.quoridorManager.restartGame();
+	console.log("restart local game");
+	instance.quoridorManager.restartLocalGame();
 }
 
 
 
 Cafe.prototype.setupButtonField= function () {
 	
-	elementToAttachTo = document.getElementById("cafeControls");
-	this.startLocalGameButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Start local game","localGameStart", "localGameStart", this.localGameStart, this);
+	//cafe controls (start stop game etc.)
+	cafeControlsDiv = document.getElementById("cafeControls");
+	this.startLocalGameButton = addButtonToExecuteGeneralFunction(cafeControlsDiv,"Start local game","localGameStart", "localGameStart", this.localGameStart, this);
 	this.startLocalGameButton.style.visibility = 'visible';
-	console.log(this.startLocalGameButton);
-	this.stopLocalGameButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Stop local game","localGameStop", "localGameStart", this.localGameStop, this);
+	this.stopLocalGameButton = addButtonToExecuteGeneralFunction(cafeControlsDiv,"Stop local game","localGameStop", "localGameStart", this.localGameStop, this);
 	this.stopLocalGameButton.style.visibility = 'hidden';
-	this.restartLocalGameButton = addButtonToExecuteGeneralFunction(elementToAttachTo,"Restart local game","localGameRestart", "localGameStart", this.localGameRestart, this);
+	this.restartLocalGameButton = addButtonToExecuteGeneralFunction(cafeControlsDiv,"Restart local game","localGameRestart", "localGameStart", this.localGameRestart, this);
 	this.restartLocalGameButton.style.visibility = 'hidden';
+	this.startRemoteGameButton = addButtonToExecuteGeneralFunction(cafeControlsDiv,"Start remote game","remoteGameStart", "remoteGameStart", this.remoteGameStart, this);
+	this.startRemoteGameButton.style.visibility = 'visible';
+	this.stopRemoteGameButton = addButtonToExecuteGeneralFunction(cafeControlsDiv,"Stop remote game","remoteGameStop", "remoteGameStop", this.remoteGameStop, this);
+	this.stopRemoteGameButton.style.visibility = 'hidden';
+	
+	
+	//debug field
+	debugControlsDiv = document.getElementById("debugControls");
+	this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv,"Inputbox As received remote command","sendDebug", "sendDebug", this.debugNewCommand, this);
+	this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
+	
+	this.debugSendMove = addButtonToExecuteGeneralFunction(debugControlsDiv,"SubmitLocalMove","submitMoveDebug", "submitMoveDebug", this.debugSubmitMove, this);
+	
+	
+	this.debugCommandTextBox = addTextBox (debugControlsDiv,"de willem gaataddierallemaaloplossenzeg","debugCmdText","debugCmdText",20);
+	
 }
+
+
 
 function Account(){
 	// var xmlhttp;
