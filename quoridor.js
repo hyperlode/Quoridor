@@ -5,7 +5,7 @@
 // });
 //http://www.javascripter.net/faq/colornam.htm
 
-var SOUND_ENABLED_AT_STARTUP = true;
+var SOUND_ENABLED_AT_STARTUP = false;
 var BOARD_ROTATION_90DEGREES = false;
 var PRINT_ASSERT_ERRORS = false;
 var GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
