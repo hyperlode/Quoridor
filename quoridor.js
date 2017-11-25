@@ -4,6 +4,8 @@
 
 //All Game Settings
 
+import utilities from generalUtilities.js;
+
 var SOUND_ENABLED_AT_STARTUP = false;
 var BOARD_ROTATION_90DEGREES = false;
 var PRINT_ASSERT_ERRORS = false;
@@ -270,8 +272,17 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	//gamestring is always the total game like it was + the extra move of the remote player. 
 	
 	//1.check moveshistory for correctness.
+	var receivedGameString = gameString.split(",");
+	this.recordingOfGameInProgress();
+
+
+	this.moveHistoryToString();
+
+
+	//check if remote players turn
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
 		console.log("ASSERT ERROR: remote players turn, local tries to move.")
+		return false;
 	}
 	
 	
