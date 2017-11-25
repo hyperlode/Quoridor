@@ -4,8 +4,6 @@
 
 //All Game Settings
 
-import utilities from generalUtilities.js;
-
 var SOUND_ENABLED_AT_STARTUP = false;
 var BOARD_ROTATION_90DEGREES = false;
 var PRINT_ASSERT_ERRORS = false;
@@ -244,8 +242,9 @@ Game.prototype.loadBoard = function(gameString){
 
 Game.prototype.multiPlayerSubmitLocalMove = function(){
 	if (this.gameStatus != MULTIPLAYER_LOCAL_PLAYING){
+		console.log("remote players turn. move not submitted.");
 		alert("submit only when it is your turn.");
-		return "errorfefefefe";
+		return this.moveHistoryToString();
 	}
 	//change game status.
 	this.gameStatus = MULTIPLAYER_REMOTE_PLAYING;
@@ -271,37 +270,39 @@ Game.prototype.multiPlayerStartGame = function(startingPlayer){
 Game.prototype.multiPlayerRemoteMove = function(gameString){
 	//gamestring is always the total game like it was + the extra move of the remote player. 
 	
-	//1.check moveshistory for correctness.
-	var receivedGameString = gameString.split(",");
-	this.recordingOfGameInProgress();
-
-
-	this.moveHistoryToString();
-
 
 	//check if remote players turn
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
-		console.log("ASSERT ERROR: remote players turn, local tries to move.")
+		console.log("ASSERT ERROR: local players turn, remote tries to move, move not executed.")
 		return false;
 	}
+
+	//check moveshistory for correctness.
+	var receivedGame = gameString.split(",");
+	var remoteMove = receivedGame.pop();
+	var isGameStateRemoteCorrectHistory = utilities.arraysEqual(receivedGame, this.recordingOfGameInProgress);
+	if (isGameStateRemoteCorrectHistory!= true){
+		console.log("wrong remote game state. awaiting correct move.");
+		return false;
+	}
+
 	
-	
-	//compare this game's move history with send gameString
-	
-	
-	//2.execute extra move.
-	this.loadBoard(gameString) //this just executes all moves.
-	
-	//3.prepare game so local player can make his move.
+	//execute extra move. + check remote move valid
+	var moveExecuted = this.playTurnByVerboseNotation(remoteMove);
+	if (!moveExecuted){
+		console.log("remote move not executed, is the move syntax correct?: "+remoteMove );
+		return false;
+	}
+
+	//prepare game so local player can make his move.
 	//only one move is allowed to be made.
 	this.moveCounterAtGameLoad = this.moveCounter;
 
 	//change the player to local
-	this.gameStatus = MULTIPLAYER_LOCAL_PLAYING
+	this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
 	
-	//4.send feedback.
+	//send feedback.
 	return true;
-	
 }
 
 
@@ -372,7 +373,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		console.log("game finished, restart to replay.  status: %d", this.gameStatus	);
 		return false;
 	}else{
-		console.log("assert errorffe.");
+		console.log("assert error game status: " + this.gameStatus);
 	}
 	
 	moveData = this.interpreteVerboseNotation(verboseNotation);
@@ -468,7 +469,9 @@ Game.prototype.undoLastMove =function(){
 	var lastMoveVerbose = this.recordingOfGameInProgress[this.recordingOfGameInProgress.length - 1];
 	var lastMovedPlayer = this.recordingOfGameInProgress.length %2 == 0;
 	var lastMoveData = this.interpreteVerboseNotation(lastMoveVerbose);
-	
+	if (lastMoveData[0] == ILLEGAL_MOVE){
+		console.log("ASSERT ERROR : ILLEGAL MOVE");
+	}
 	console.log("player " + BOARD_PAWN_2_COLOR + "moved last?:"+ lastMovedPlayer);
 	console.log("total number of moves before undo:"+ (this.recordingOfGameInProgress.length));
 	console.log("lastMoveData: "+ lastMoveData);
@@ -970,6 +973,9 @@ Game.prototype.eraseBoard = function(){
 	this.playerAtMove = PLAYER1;
 	this.recordingOfGameInProgress = [];
 	this.moveCounter = 0;
+
+	var gameStatusMemory = this.gameStatus;
+
 	this.gameStatus = SETUP;
 	
 	this.outputGameStats();
@@ -978,7 +984,7 @@ Game.prototype.eraseBoard = function(){
 	this.board.isCurrentBoardLegal();
 	this.shortestPathPerPlayer;
 	this.outputBoard();
-	this.gameStatus = PLAYING;
+	this.gameStatus = gameStatusMemory;
 }
 
 Game.prototype.buildUpOptions = function(domElement){

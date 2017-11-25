@@ -29,8 +29,7 @@ class Manager {
 		return this.multiPlayerGame.multiPlayerSubmitLocalMove();
 	}
 	submitRemoteMove(text) {
-		f;
-		//total game state 
+		//total game state as text. i.e. "n,s,n,s,e3" 
 		this.multiPlayerGame.multiPlayerRemoteMove(text);
 	}
 	loadAndContinueMultiPlayerGame() {
