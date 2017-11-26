@@ -710,6 +710,12 @@ Game.prototype.mouseCellAsPawnCircleElement = function (callerElement, isHoverin
 	this.svgCellsAsPawnShapes[cellId].setAttribute('fill',colours[this.playerAtMove]);
 	
 	if (movePawnIfPossible){
+
+		if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
+			alert("remote player is playing, you're not allowed to make a move.");
+			return false;
+		}
+
 		this.playTurnByVerboseNotation(this.pawnDirectionToVerboseNotation(directionOfNeighbour));
 	}	
 	return true;
@@ -853,6 +859,12 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 	}
 	
 	if (placeWallIfAllowed){
+
+		if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
+			alert("remote players turn. You cannot perform a move.");
+			return false;
+		}
+
 		if(this.board.placeWall (PLAYER1, startCellId, isNorthSouthOriented, true)){
 			var verboseNotationWallPlacement = this.wallToVerboseNotation(startCellId, isNorthSouthOriented);
 			this.playTurnByVerboseNotation(verboseNotationWallPlacement);
