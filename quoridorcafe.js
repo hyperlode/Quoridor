@@ -38,7 +38,6 @@ Cafe.prototype.remoteGameStart= function (instance) {
 
 	instance.quoridorManager = new Manager();
 
-
 	var localPlayerStarts =  instance.debugLocalPlayerStartsCheckBox.checked ;
 	
 	var startingPlayer = PLAYER1;
@@ -47,6 +46,25 @@ Cafe.prototype.remoteGameStart= function (instance) {
 	}
 
 	instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts);
+
+
+
+
+	// var url = "http://lode.ameije.com/sandbox.php?q=666&action=read";// No question mark needed
+	var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php";// No question mark needed
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			document.getElementById("debugServerFeedback").innerHTML = this.responseText;
+		}
+	};
+	
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+
+
+
+
 }
 
 Cafe.prototype.remoteGameStop= function (instance) {
@@ -131,16 +149,15 @@ Cafe.prototype.setupButtonField= function () {
 	
 	this.debugLocalPlayerStartsCheckBox = addCheckBox(debugControlsDiv,"localPlayerStarts", "localPlayerStarts", false, "Local Player Starts");
 	this.debugLocalPlayerMovesUpCheckBox = addCheckBox(debugControlsDiv,"localPlayerMovesUp", "localPlayerMovesUp", true, "Local Player is blue (move up)");
+
+	this.debugNoServerSetup = addCheckBox(debugControlsDiv,"debugNoServerUse", "debugNoServerUse", false, "debug without server");
 }
-
-
 
 function Account(){
 	// var xmlhttp;
 	//this.xmlhttp=new XMLHttpRequest();	
 	this.setupLoginField();
 }
-
 
 Account.prototype.loadDoc= function (url, cFunction) {
 	//cfunction is a call back function, called when response from url ready. set to null if no callbackfunction used.
@@ -162,10 +179,8 @@ Account.prototype.loadDoc= function (url, cFunction) {
 	};
 	xmlhttp.open("GET", url, true);  //don't use false as third argument, apparently, synchronous is going to freeze stuff...
 	xmlhttp.send();
-	
-	
+
 	//this.listOfLoggedInUsers();
-	
 	
 }
 
@@ -256,8 +271,6 @@ Account.prototype.listOfLoggedInUsersCallBack = function(instance,xlmhttp){
 	document.getElementById(LOGGEDINUSERS_DIV_LIST).innerHTML= xlmhttp.responseText;
 	// console.log("iejijfjejfjef");
 }
-
-
 
 Account.prototype.userLogin = function(instance){
 	var url = "quoridorlogin.php?username="+ instance.usernameTextBox.value + "&password="+ instance.pwdTextBox.value + "";
