@@ -273,6 +273,8 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 
 	//check if remote players turn
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
+
+		alert("ASSERT ERROR: local players turn, remote tries to move, move not executed.")
 		console.log("ASSERT ERROR: local players turn, remote tries to move, move not executed.")
 		return false;
 	}
@@ -290,7 +292,7 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	//execute extra move. + check remote move valid
 	var moveExecuted = this.playTurnByVerboseNotation(remoteMove);
 	if (!moveExecuted){
-		console.log("remote move not executed, is the move syntax correct?: "+remoteMove );
+		console.log("remote move not executed, is the move syntax correct?: " + remoteMove );
 		return false;
 	}
 
@@ -391,6 +393,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		var success = this.movePawnByVerboseNotation(this.playerAtMove,verboseNotation);
 		if (!success){
 			console.log("ASSERT ERROR pawn move failed... player: " + this.playerAtMove + "  notation: "+ verboseNotation );
+			return false;
 		}
 		console.log("player %s moved pawn (%s)", PLAYER_NAMES[this.playerAtMove], verboseNotation);
 		validMove= true;
@@ -405,6 +408,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	}
 	
 	if (!validMove){
+		console.log("invalid move. ");
 		return false;
 	}
 	
