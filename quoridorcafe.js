@@ -6,8 +6,6 @@ var ACCOUNT_DIV_STATUS = "loginAreaStatus";
 var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
 
 
-
-
 document.addEventListener("DOMContentLoaded", function() {
 
 	cafe = new Cafe();
@@ -19,38 +17,48 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 function Cafe(){
+
+	//users login and credentials stuff
+	account = new Account();
+	console.log(logonText);
+	account.listOfLoggedInUsers();
+	
 	//create html elements
-	
-	//account = new Account();
-	//console.log(logonText);
-	//account.listOfLoggedInUsers();
-	
 	this.setupButtonField();
 }
 
-
 Cafe.prototype.remoteGameStart= function (instance) {
 	console.log("start remote game");
-	instance.quoridorManager = new Manager();
-	instance.quoridorManager.startMultiPlayerGame();
+	
 	instance.startLocalGameButton.style.visibility = 'hidden';
 	instance.stopLocalGameButton.style.visibility = 'hidden';
 	instance.restartLocalGameButton.style.visibility = 'hidden';
 	instance.startRemoteGameButton.style.visibility = 'hidden';
 	instance.stopRemoteGameButton.style.visibility = 'visible';
 
+	instance.quoridorManager = new Manager();
 
+
+	var localPlayerStarts =  instance.debugLocalPlayerStartsCheckBox.checked ;
+	
+	var startingPlayer = PLAYER1;
+	if (!instance.debugLocalPlayerMovesUpCheckBox.checked ){
+		startingPlayer = PLAYER2;
+	}
+
+	instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts);
 }
+
 Cafe.prototype.remoteGameStop= function (instance) {
 	console.log("stop remote game");
-	instance.quoridorManager.stopMultiPlayerGame();
+	
 	instance.startLocalGameButton.style.visibility = 'visible';
 	instance.stopLocalGameButton.style.visibility = 'hidden';
 	instance.restartLocalGameButton.style.visibility = 'hidden';
 	instance.startRemoteGameButton.style.visibility = 'visible';
 	instance.stopRemoteGameButton.style.visibility = 'hidden';
-
-
+	
+	instance.quoridorManager.stopMultiPlayerGame();
 }
 
 Cafe.prototype.debugSubmitMove= function (instance) {
@@ -63,23 +71,29 @@ Cafe.prototype.debugNewCommand= function (instance) {
 	
 Cafe.prototype.localGameStart= function (instance) {
 	console.log("start local game");
-	instance.quoridorManager = new Manager();
-	instance.quoridorManager.startNewLocalGame()
+
 	instance.startLocalGameButton.style.visibility = 'hidden';
 	instance.stopLocalGameButton.style.visibility = 'visible';
 	instance.restartLocalGameButton.style.visibility = 'visible';
 	instance.startRemoteGameButton.style.visibility = 'visible';
 	instance.startRemoteGameButton.style.visibility = 'hidden';
 	//instance.stopRemoteGameButton.style.visibility = 'visible';
+	
+	
+	instance.quoridorManager = new Manager();
+	instance.quoridorManager.startNewLocalGame()
+	
 
 }
 Cafe.prototype.localGameStop= function (instance) {
 	console.log("stop local game");
-	instance.quoridorManager.stopAndDeleteLocalGame();
 	instance.startLocalGameButton.style.visibility = 'visible';
 	instance.stopLocalGameButton.style.visibility = 'hidden';
 	instance.restartLocalGameButton.style.visibility = 'hidden';
 	instance.startRemoteGameButton.style.visibility = 'visible';
+
+	instance.quoridorManager.stopAndDeleteLocalGame();
+	
 }
 
 Cafe.prototype.localGameRestart= function (instance) {
@@ -115,6 +129,8 @@ Cafe.prototype.setupButtonField= function () {
 	
 	this.debugCommandTextBox = addTextBox (debugControlsDiv,"de willem gaataddierallemaaloplossenzeg","debugCmdText","debugCmdText",20);
 	
+	this.debugLocalPlayerStartsCheckBox = addCheckBox(debugControlsDiv,"localPlayerStarts", "localPlayerStarts", false, "Local Player Starts");
+	this.debugLocalPlayerMovesUpCheckBox = addCheckBox(debugControlsDiv,"localPlayerMovesUp", "localPlayerMovesUp", true, "Local Player is blue (move up)");
 }
 
 

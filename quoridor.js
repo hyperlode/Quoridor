@@ -181,7 +181,8 @@ GameReplay.prototype.callback = function( verboseMove){
 //==============================GAME===========================================
 
 
-function Game(boardDiv, statsDiv){
+function Game(boardDiv, statsDiv, startingPlayer){
+	startingPlayer = (typeof startingPlayer !== 'undefined') ?  startingPlayer : PLAYER1;
 	this.boardDiv = boardDiv;
 	this.statsDiv = statsDiv;
 	
@@ -199,7 +200,7 @@ function Game(boardDiv, statsDiv){
 	this.play_song();
 	
 	//administration
-	this.playerAtMove = PLAYER1;
+	this.playerAtMove = startingPlayer;
 	this.recordingOfGameInProgress = [];
 	this.moveCounter = 0;
 	this.gameStatus = SETUP;
@@ -251,16 +252,16 @@ Game.prototype.multiPlayerSubmitLocalMove = function(){
 	return this.moveHistoryToString();
 }
 
-Game.prototype.multiPlayerStartGame = function(startingPlayer){
+Game.prototype.multiPlayerStartGame = function(startingPlayerIsLocal){
 	//two thing to consider: which player is the local/remote player,
 	//for now: assume player1 is local.
 	//which player is starting?
-	
-	if (startingPlayer == this.playerAtMove){
-		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING
+
+	if (startingPlayerIsLocal ){
+		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
 		console.log("local player starts");
 	}else{
-		this.gameStatus = MULTIPLAYER_REMOTE_PLAYING
+		this.gameStatus = MULTIPLAYER_REMOTE_PLAYING;
 		console.log("remote player starts");
 	}
 	this.moveCounterAtGameLoad = 0;
@@ -273,7 +274,6 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 
 	//check if remote players turn
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
-
 		alert("ASSERT ERROR: local players turn, remote tries to move, move not executed.")
 		console.log("ASSERT ERROR: local players turn, remote tries to move, move not executed.")
 		return false;

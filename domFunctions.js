@@ -208,7 +208,7 @@ function addCheckBox(elementToAttachTo,id, name, checked, caption){
 	label.setAttribute ("id",id+"_label");
 	label.innerHTML = caption;
 	elementToAttachTo.appendChild(label);
-	
+	return checkbox;
 	
 }
 
