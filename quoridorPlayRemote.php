@@ -40,42 +40,92 @@
  
  <?php
 	// $servername = "lode.ameije.com";
-	$servername = "50.62.176.142"; //found in "remote Mysql" page of godaddy dashboard.
-	$username = "superlode";
-	$password = "sl8afval";
-	$databasename = "ameijeData";
-	
-	// Create connection
-	$conn = new mysqli($servername, $username, $password,$databasename);
 
-	// Check connection
-	if ($conn->connect_error) {
-		die("Connection failed: " . $conn->connect_error);
-	} 
-	
-	echo "Connected successfully <br>";
-
+	$conn = connectToDataBase();
 	//select database
 	//$db = mysql_select_db(databasename, $con);
 	
-//add record each time page is called	
-	//$sql = "INSERT INTO `test`(`gameId`, `owner`, `date`) VALUES (10,'bbjbe','1984-07-16 12:23:23')";  //works!
-	echo "trestrstrhjkk";
-	$gameState =  $_GET["gameState"];
-
-	$sql = "INSERT INTO `activeGames`(`gameId`, `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
-    VALUES (10,1,2,'".$gameState."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1)";  //works!
 	
-	echo sql ; 
 
-	if ($conn->query($sql) === TRUE) {	
-		echo "New record created successfully";
-	} else {
-		echo "Error: " . $sql . "<br>" . $conn->error;
+
+	//SQL command
+	//delete record with same gameId	
+	$gameId = $_GET["gameId"];
+	$gameState = $_GET["gameState"];
+	sqlDeleteGameIdRecord($conn, $gameId);
+	sqlCreateRecordForGameId($conn , $gameId, $gameState  );
+
+
+	//SQL command
+	//set gamestate of game with game id.
+	
+	function connectToDataBase() {
+		$servername = "50.62.176.142"; //found in "remote Mysql" page of godaddy dashboard.
+		$username = "superlode";
+		$password = "sl8afval";
+		$databasename = "ameijeData";
+		
+		// Create connection
+		$connn = new mysqli($servername, $username, $password,$databasename);
+	
+		// Check connection
+		if ($connn->connect_error) {
+			die("Connection failed: " . $connn->connect_error);
+		} 
+		
+		echo "Connected successfully <br>";
+
+		return $connn;
 	}
-	
-	
 
+
+	function sqlDeleteGameIdRecord($conn, $gameId){
+		$sql = "DELETE FROM activeGames WHERE gameId =".$gameId;  //works!
+		if ($conn->query($sql) === TRUE) {	
+			echo "delete record where gameId is". $gameId;
+		} else {
+			echo "Error: " . $sql . "<br>" . $conn->error;
+		}
+	}
+
+	function sqlCreateRecordForGameId($conn, $gameId, $gameState){
+		
+		
+		$sql = "INSERT INTO `activeGames`(`gameId`, `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
+		VALUES (". $gameId.",1,2,'".$gameState."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1)";  //works!
+		
+		echo sql ; 
+	
+		if ($conn->query($sql) === TRUE) {	
+			echo "New record created successfully,game id: ".$gameId;
+		} else {
+			echo "Error: " . $sql . "<br>" . $conn->error;
+		}
+			
+
+	}
+
+	function sqlOutputAllRowsIfValueInColumn(){
+		//SQL command
+		//check if record with gameid already exists.
+		/*
+		//http://php.net/manual/en/class.mysqli-result.php
+		$sql = "SELECT * FROM activeGames WHERE gameId = 10";
+		if ($result = $conn->query($sql) ) {	
+			//http://php.net/manual/en/mysqli.query.php
+			echo "executed ok. response: ".$result->num_rows ." <br>";
+			//while ($row = $result->fetch_row()) {
+			//	printf ("%s (%s)<br>", $row[0], $row[1]);
+			//}
+			while ($row = $result->fetch_assoc()) {
+				printf ("%s - (%s)<br>", $row["gameState"], $row["gameLastActivityPlayer1"]);
+			}
+			$result->close();
+		} else {
+			echo "Error return value: " . $sql . "<br>" . $conn->error;
+		}
+		*/
+	}
 ?>
  
  </body>
