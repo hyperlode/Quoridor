@@ -23,6 +23,8 @@ function Cafe(){
 	console.log(logonText);
 	account.listOfLoggedInUsers();
 	
+	remote = new RemoteContact();
+
 	//create html elements
 	this.setupButtonField();
 }
@@ -48,23 +50,7 @@ Cafe.prototype.remoteGameStart= function (instance) {
 	instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts);
 
 
-
-
-	// var url = "http://lode.ameije.com/sandbox.php?q=666&action=read";// No question mark needed
-	var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php";// No question mark needed
-	var xmlhttp = new XMLHttpRequest();
-	xmlhttp.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) {
-			document.getElementById("debugServerFeedback").innerHTML = this.responseText;
-		}
-	};
-	
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
-
-
-
-
+	this.remote.sendGameStateToRemote("");
 }
 
 Cafe.prototype.remoteGameStop= function (instance) {
@@ -82,6 +68,8 @@ Cafe.prototype.remoteGameStop= function (instance) {
 Cafe.prototype.debugSubmitMove= function (instance) {
 	//the local player presses this button when he wants to submit his move.
 	instance.debugCommandTextBox.value = instance.quoridorManager.submitLocalMove();
+	this.remote.sendGameStateToRemote(instance.debugCommandTextBox.value);
+
 }
 Cafe.prototype.debugNewCommand= function (instance) {
 	instance.quoridorManager.submitRemoteMove(instance.debugCommandTextBox.value);
@@ -152,6 +140,32 @@ Cafe.prototype.setupButtonField= function () {
 
 	this.debugNoServerSetup = addCheckBox(debugControlsDiv,"debugNoServerUse", "debugNoServerUse", false, "debug without server");
 }
+
+class RemoteContact {
+	constructor() {
+		
+	}
+	sendGameStateToRemote(gameStateString) {
+		//this.multiPlayerGame.deleteGame();
+	// var url = "http://lode.ameije.com/sandbox.php?q=666&action=read";// No question mark needed
+		//	var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php";// No question mark needed
+		//	quoridorlogin.php?username="+ instance.usernameTextBox.value + "&password="+ instance.pwdTextBox.value + "";
+
+		//var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState=n,s,n";// No question mark needed
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+gameStateString;// No question mark needed
+		var xmlhttp = new XMLHttpRequest();
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("debugServerFeedback").innerHTML = this.responseText;
+			}
+		};
+
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+	}
+}
+
+
 
 function Account(){
 	// var xmlhttp;

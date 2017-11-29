@@ -60,15 +60,19 @@
 	
 //add record each time page is called	
 	//$sql = "INSERT INTO `test`(`gameId`, `owner`, `date`) VALUES (10,'bbjbe','1984-07-16 12:23:23')";  //works!
-	$sql = "INSERT INTO `activeGames`(`gameId`, `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`) 
-    VALUES (10,1,2,'n,s','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."')";  //works!
+	echo "trestrstrhjkk";
+	$gameState =  $_GET["gameState"];
+
+	$sql = "INSERT INTO `activeGames`(`gameId`, `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
+    VALUES (10,1,2,'".$gameState."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1)";  //works!
 	
 	echo sql ; 
-if ($conn->query($sql) === TRUE) {	
-    echo "New record created successfully";
-} else {
-    echo "Error: " . $sql . "<br>" . $conn->error;
-}
+
+	if ($conn->query($sql) === TRUE) {	
+		echo "New record created successfully";
+	} else {
+		echo "Error: " . $sql . "<br>" . $conn->error;
+	}
 	
 	
 
