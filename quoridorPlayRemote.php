@@ -1,44 +1,4 @@
-<?php
-
-
-// class multiPlayerQuoridor{
-//     $GLOBALS["mysql_hostname"] = "50.62.176.142";
-//     $GLOBALS["mysql_username"] = "superlode";
-//     $GLOBALS["mysql_password"] = "sl8afval";
-//     $GLOBALS["mysql_database"] = "ameijeData";
-    
-    
-    
-//     public function __construct()
-//     {
-//         $sessionId = session_id();
-//         if( strlen($sessionId) == 0)
-//             throw new Exception("No session has been started.\n<br />Please add `session_start();` initially in your file before any output.");
-    
-//         $this->mysqli = new mysqli($GLOBALS["mysql_hostname"], $GLOBALS["mysql_username"], $GLOBALS["mysql_password"], $GLOBALS["mysql_database"]);
-//         if( $this->mysqli->connect_error )
-//             throw new Exception("MySQL connection could not be established: ".$this->mysqli->connect_error);
-    
-//         // $this->_validateUser();
-//         // $this->_populateUserdata();
-//         // $this->_updateActivity();
-
-//     }
-    
-    
-// }
-
-?>
-
-
-<html>
- <head>
-  <title>PHP Test</title>
- </head>
- <body>
- <?php echo '<p>MultiPlayerTest</p>'; ?> 
- 
- <?php
+  <?php
 	// $servername = "lode.ameije.com";
 
 	ob_start();
@@ -63,19 +23,25 @@
 		sqlDeleteGameIdRecord($conn, $gameId);
 		sqlCreateRecordForGameId($conn , $gameId, $gameState  );
 	}elseif ($action == "poll"){
-		//ob_end_clean();
+	
 		printf("polling for change...<br>");
 		$gameId = $_GET["gameId"];
-		return sqlGetGameState($conn, $gameId);
-		//ob_start();
-		//return "testgilsieg";
+		
+		$result = sqlGetGameState($conn, $gameId);
+		ob_end_clean();
+		ob_start();
+		$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
+		
+		echo $result;
+		return  ob_get_contents();
+	
 
 	}else{
 		printf("unknown action (or none provided) : ". $action ."<br>");
 
 	}
 
-	ob_end_clean();
+	// ob_end_clean();
 
 	//SQL command
 	//set gamestate of game with game id.
@@ -129,6 +95,7 @@
 	function sqlGetGameState ($conn, $gameId){
 		//http://php.net/manual/en/class.mysqli-result.php
 		$sql = "SELECT * FROM activeGames WHERE gameId =".$gameId;
+		$returnString = "";
 		if ($result = $conn->query($sql) ) {	
 			
 			//http://php.net/manual/en/mysqli.query.php
@@ -136,8 +103,12 @@
 			// while ($row = $result->fetch_row()) {
 			// 	printf ("%s (%s)<br>", $row[0], $row[1]);
 			// }
+			
 			while ($row = $result->fetch_assoc()) {
-				echo "%s", $row["gameState"];
+				//echo "%s", $row["gameState"];
+				// $test = "%s",$row["gameState"]; //ERROR!!!!
+				$test = $row["gameState"]; 
+				$returnString .=$test;
 				//return "%s", $row["gameState"];
 			}
 			$result->close();
@@ -145,6 +116,7 @@
 		} else {
 			echo "Error return value: " . $sql . "<br>" . $conn->error;
 		}	
+	return $returnString;
 	}
 
 	function sqlOutputAllRowsIfValueInColumn(){
@@ -169,6 +141,3 @@
 		*/
 	}
 ?>
- 
- </body>
-</html>

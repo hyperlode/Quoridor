@@ -336,6 +336,7 @@ class RemoteContact {
 		xmlhttp.onreadystatechange = function() {
 			if (this.readyState == 4 && this.status == 200) {
 				functionToCallWhenDone(this.responseText);
+				//functionToCallWhenDone("LEIJE");
 			}
 		};
 		xmlhttp.open("GET", url, true);
@@ -347,7 +348,6 @@ class RemoteContact {
 		
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+this.gameId;// No question mark needed
 		this.callPhpWithAjax(url,this.pollResponse);
-
 			
 		window.setTimeout(function (){this.callbackCheckForRemoteUpdate( this.counter )}.bind(this),GAME_CHECK_SERVER_INTERVAL); 
 		this.counter += 1;
@@ -355,9 +355,10 @@ class RemoteContact {
 		// console.log(instance.replayCounter);
 		// console.log(instance.replaySaveMoves);
 	}
+
 	pollResponse(response){
-		console.log(response);
-		
+		console.log("eef" + response);
+		//console.log("lode");
 	}
 
 	callbackCheckForRemoteUpdate(counter){
