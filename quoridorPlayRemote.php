@@ -1,4 +1,4 @@
-  <?php
+<?php
 	// $servername = "lode.ameije.com";
 
 	ob_start();
@@ -30,7 +30,7 @@
 		$result = sqlGetGameState($conn, $gameId);
 		ob_end_clean();
 		ob_start();
-		$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
+		//$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
 		
 		echo $result;
 		return  ob_get_contents();
@@ -94,7 +94,7 @@
 
 	function sqlGetGameState ($conn, $gameId){
 		//http://php.net/manual/en/class.mysqli-result.php
-		$sql = "SELECT * FROM activeGames WHERE gameId =".$gameId;
+		$sql = "SELECT gameState FROM activeGames WHERE gameId =".$gameId;
 		$returnString = "";
 		if ($result = $conn->query($sql) ) {	
 			

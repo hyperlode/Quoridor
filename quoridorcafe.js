@@ -357,7 +357,7 @@ class RemoteContact {
 	}
 
 	pollResponse(response){
-		console.log("eef" + response);
+		console.log(response);
 		//console.log("lode");
 	}
 
