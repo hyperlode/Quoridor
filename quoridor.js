@@ -1043,7 +1043,7 @@ Game.prototype.stopReplay = function (instance){
 	// this.replayGame = new GameReplay (this.localGame, gameString);
 	
 // }
-	instancegameStatus= instance.gameStatusMemory ;
+	//instanceGameStatus= instance.gameStatusMemory ;
 	rewindGameToPosition(this.recordingOfGameInProgress.length-1)
 	
 }
@@ -1052,7 +1052,7 @@ Game.prototype.replayLoop = function (instance){
 	console.log(" steps to do?");
 	console.log(instance.replayCounter < instance.replaySaveMoves.length);
 	if (instance.replayCounter < instance.replaySaveMoves.length +1 ){
-		console.log("-----------efefe");
+		
 		//console.log("player moving: %d",moveCounter%2 );
 		// window.setTimeout(this.callback(moveCounter%2, this.recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 		

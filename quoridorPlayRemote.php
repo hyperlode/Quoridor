@@ -41,6 +41,9 @@
  <?php
 	// $servername = "lode.ameije.com";
 
+	ob_start();
+	
+
 	$conn = connectToDataBase();
 	//select database
 	//$db = mysql_select_db(databasename, $con);
@@ -50,11 +53,29 @@
 
 	//SQL command
 	//delete record with same gameId	
-	$gameId = $_GET["gameId"];
-	$gameState = $_GET["gameState"];
-	sqlDeleteGameIdRecord($conn, $gameId);
-	sqlCreateRecordForGameId($conn , $gameId, $gameState  );
+	$action = $_GET["action"]; //action is "submit" or "poll"
 
+
+	if ($action == "submit" ){
+		echo "submitting move<br>";
+		$gameId = $_GET["gameId"];
+		$gameState = $_GET["gameState"];
+		sqlDeleteGameIdRecord($conn, $gameId);
+		sqlCreateRecordForGameId($conn , $gameId, $gameState  );
+	}elseif ($action == "poll"){
+		//ob_end_clean();
+		printf("polling for change...<br>");
+		$gameId = $_GET["gameId"];
+		return sqlGetGameState($conn, $gameId);
+		//ob_start();
+		//return "testgilsieg";
+
+	}else{
+		printf("unknown action (or none provided) : ". $action ."<br>");
+
+	}
+
+	ob_end_clean();
 
 	//SQL command
 	//set gamestate of game with game id.
@@ -103,6 +124,27 @@
 		}
 			
 
+	}
+
+	function sqlGetGameState ($conn, $gameId){
+		//http://php.net/manual/en/class.mysqli-result.php
+		$sql = "SELECT * FROM activeGames WHERE gameId =".$gameId;
+		if ($result = $conn->query($sql) ) {	
+			
+			//http://php.net/manual/en/mysqli.query.php
+			echo "executed ok. response (for gameId ".$gameId.") ".$result->num_rows ." <br>";
+			// while ($row = $result->fetch_row()) {
+			// 	printf ("%s (%s)<br>", $row[0], $row[1]);
+			// }
+			while ($row = $result->fetch_assoc()) {
+				echo "%s", $row["gameState"];
+				//return "%s", $row["gameState"];
+			}
+			$result->close();
+			
+		} else {
+			echo "Error return value: " . $sql . "<br>" . $conn->error;
+		}	
 	}
 
 	function sqlOutputAllRowsIfValueInColumn(){

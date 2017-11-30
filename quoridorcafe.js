@@ -4,7 +4,7 @@ var logonText = "ifjefffff";
 var ACCOUNT_DIV = "loginArea";
 var ACCOUNT_DIV_STATUS = "loginAreaStatus";
 var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
-
+var GAME_CHECK_SERVER_INTERVAL = 3000;
 
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -67,8 +67,10 @@ Cafe.prototype.remoteGameStop= function (instance) {
 
 Cafe.prototype.debugSubmitMove= function (instance) {
 	//the local player presses this button when he wants to submit his move.
+	//debugger;
 	instance.debugCommandTextBox.value = instance.quoridorManager.submitLocalMove();
 	this.remote.sendGameStateToRemote(instance.debugCommandTextBox.value);
+	this.remote.startCheckDatabaseForRemoteMoveLoop();
 
 }
 Cafe.prototype.debugNewCommand= function (instance) {
@@ -135,7 +137,7 @@ Cafe.prototype.setupButtonField= function () {
 	
 	this.debugCommandTextBox = addTextBox (debugControlsDiv,"de willem gaataddierallemaaloplossenzeg","debugCmdText","debugCmdText",20);
 	
-	this.debugLocalPlayerStartsCheckBox = addCheckBox(debugControlsDiv,"localPlayerStarts", "localPlayerStarts", false, "Local Player Starts");
+	this.debugLocalPlayerStartsCheckBox = addCheckBox(debugControlsDiv,"localPlayerStarts", "localPlayerStarts", true, "Local Player Starts");
 	this.debugLocalPlayerMovesUpCheckBox = addCheckBox(debugControlsDiv,"localPlayerMovesUp", "localPlayerMovesUp", true, "Local Player is blue (move up)");
 
 	this.debugNoServerSetup = addCheckBox(debugControlsDiv,"debugNoServerUse", "debugNoServerUse", false, "debug without server");
@@ -304,6 +306,7 @@ Account.prototype.userRegisterCallBack= function(instance, xlmhttp){
 class RemoteContact {
 	constructor() {
 		this.gameId = 666;
+		this.counter = 1;
 	}
 	sendGameStateToRemote(gameStateString) {
 		//this.multiPlayerGame.deleteGame();
@@ -312,19 +315,53 @@ class RemoteContact {
 		//	quoridorlogin.php?username="+ instance.usernameTextBox.value + "&password="+ instance.pwdTextBox.value + "";
 
 		//var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState=n,s,n";// No question mark needed
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+gameStateString+"&gameId="+this.gameId;// No question mark needed
-		var xmlhttp = new XMLHttpRequest();
-		xmlhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				document.getElementById("debugServerFeedback").innerHTML = this.responseText;
-			}
-		};
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+gameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
 
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
+		this.callPhpWithAjax(url, this.submitResponse);	
 	}
+
+	submitResponse(result){
+		//feedback result from submitting the move to the database.
+		document.getElementById("debugServerFeedback").innerHTML = result;
+	}
+
 	checkIfGameIdExists(id){
 
+	}
+
+	callPhpWithAjax(url,functionToCallWhenDone){
+		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
+		var xmlhttp = new XMLHttpRequest();
+		var returnText = "";
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				functionToCallWhenDone(this.responseText);
+			}
+		};
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+		return
+	}
+
+	startCheckDatabaseForRemoteMoveLoop(){
+		
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+this.gameId;// No question mark needed
+		this.callPhpWithAjax(url,this.pollResponse);
+
+			
+		window.setTimeout(function (){this.callbackCheckForRemoteUpdate( this.counter )}.bind(this),GAME_CHECK_SERVER_INTERVAL); 
+		this.counter += 1;
+
+		// console.log(instance.replayCounter);
+		// console.log(instance.replaySaveMoves);
+	}
+	pollResponse(response){
+		console.log(response);
+		
+	}
+
+	callbackCheckForRemoteUpdate(counter){
+		this.startCheckDatabaseForRemoteMoveLoop();
 	}
 }
 
