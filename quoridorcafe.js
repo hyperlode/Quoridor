@@ -324,12 +324,13 @@ class RemoteContact {
 		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
 		var xmlhttp = new XMLHttpRequest();
 		var returnText = "";
-		var that = this;
-		xmlhttp.onreadystatechange = function(that) {
+		var instance = this;
+		xmlhttp.onreadystatechange = function() {
 			if (this.readyState == 4 && this.status == 200) {
-				functionToCallWhenDone(that, this.responseText);
+				console.log(instance);
+				instance.pollResponse(instance, this.responseText);
 			}
-		};
+		}; //.bind(this)
 		xmlhttp.open("GET", url, true);
 		xmlhttp.send();
 		return
@@ -346,6 +347,10 @@ class RemoteContact {
 		this.counter += 1;
 	}
 
+	callbackCheckForRemoteUpdate(){
+		this.startCheckDatabaseForRemoteMoveLoop();
+	}
+
 	pollResponse(instance ,response){
 		instance.databaseGameState = response;
 		
@@ -360,9 +365,6 @@ class RemoteContact {
 
 	}
 
-	callbackCheckForRemoteUpdate(){
-		
-		this.startCheckDatabaseForRemoteMoveLoop();
-	}
+	
 }
 
