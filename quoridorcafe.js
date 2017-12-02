@@ -26,6 +26,7 @@ class Cafe {
 		this.remote = new RemoteContact();
 		//create html elements
 		this.setupButtonField();
+		//this.continuePollingForRemoteMove = false;
 	}
 	remoteGameStart(instance) {
 		console.log("start remote game");
@@ -53,30 +54,37 @@ class Cafe {
 		instance.stopRemoteGameButton.style.visibility = 'hidden';
 		instance.quoridorManager.stopMultiPlayerGame();
 	}
-	checkRemotePlayerUpdate() {
-		console.log(this.remote);
-		var remoteGameState = this.remote.getLastReceivedGameState();
-		console.log(remoteGameState);
-		var localGameState = this.quoridorManager.getMultiPlayerLocalGameState();
-		console.log(remoteGameState);
-		console.log(localGameState);
-		this.compareGameStates(localGameState, remoteGameState);
+	// checkRemotePlayerUpdate() {
+	// 	//console.log(this.remote);
+	// 	var remoteGameState = this.remote.getLastReceivedGameState();
+	// 	//console.log(remoteGameState);
+	// 	var localGameState = this.quoridorManager.getMultiPlayerLocalGameState();
+	// 	console.log(remoteGameState);
+	// 	console.log(localGameState);
+	// 	this.compareGameStates(localGameState, remoteGameState);
 		
-		// string1 = s1.split(" ");
-		if (true) {
-			this.autoRefreshRemoteMove();
-		}
-	}
-	compareGameStates(state1AsString, state2AsString) {
-		var state1Arr = state1AsString.split(",");
-		var state2Arr = state2AsString.split(",");
-		console.log(state1Arr);
-		console.log(state2Arr);
-		console.log("-----");
-	}
-	autoRefreshRemoteMove() {
-		window.setTimeout(function () { this.checkRemotePlayerUpdate(); } .bind(this), REFRESH_UPDATE_RATE);
-	}
+	// 	// string1 = s1.split(" ");
+	// 	if (this.continuePollingForRemoteMove) {
+	// 		this.autoRefreshRemoteMove();
+	// 	}
+	// }
+
+	// autoRefreshRemoteMove() {
+	// 	window.setTimeout(function () { this.checkRemotePlayerUpdate(); } .bind(this), REFRESH_UPDATE_RATE);
+	// }
+	// compareGameStates(state1AsString, state2AsString) {
+	// 	var state1Arr = state1AsString.split(",");
+	// 	var state2Arr = state2AsString.split(",");
+	// 	console.log(state1Arr);
+	// 	console.log(state2Arr);
+	// 	console.log("-----");
+	// }
+
+	// stopPollingForRemoteMove(){
+	// 	this.remote.stopCheckDatabaseForRemoteMoveLoop();
+	// 	this.continuePollingForRemoteMove = false;
+	// }
+
 	debugSubmitMove(instance) {
 		//the local player presses this button when he wants to submit his move.
 		//debugger;
@@ -85,12 +93,18 @@ class Cafe {
 
 		//send out the request for periodically checking the database on the server for opponent move
 		instance.remote.startCheckDatabaseForRemoteMoveLoop();
+		//instance.continuePollingForRemoteMove = true;
 
 		//check locally if remote has moved.
-		instance.checkRemotePlayerUpdate();
+		//instance.checkRemotePlayerUpdate();
 	}
 	debugNewCommand(instance) {
-		instance.quoridorManager.submitRemoteMove(instance.debugCommandTextBox.value);
+		//instance.quoridorManager.submitRemoteMove(instance.debugCommandTextBox.value);
+		
+		//instance.stopPollingForRemoteMove();
+		instance.remote.debugImitateRemoteMoved(instance.debugCommandTextBox.value);
+		//instance.remote.stopCheckDatabaseForRemoteMoveLoop();
+
 	}
 	localGameStart(instance) {
 		console.log("start local game");
@@ -298,17 +312,34 @@ class RemoteContact {
 		this.gameId = 666;
 		this.counter = 1;
 		this. databaseGameState = ""; 
+		this.continuePollingForRemoteMove = false;
+		this.currentLocalGameStateString = "";
 	}
+
+	debugImitateRemoteMoved(gameStateString) {
+		
+	var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ gameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
+		console.log("imitation move gamestring: " + gameStateString);
+		this.callPhpWithAjaxSubmitResponse(url, this.debugRemoteMoveImitation);	
+	}
+	debugRemoteMoveImitation(){
+		console.log("remoteImitatedMove");
+	}
+
+
 	sendGameStateToRemote(gameStateString) {
+
+		this.currentLocalGameStateString = gameStateString;
+
 		//this.multiPlayerGame.deleteGame();
 	// var url = "http://lode.ameije.com/sandbox.php?q=666&action=read";// No question mark needed
 		//	var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php";// No question mark needed
 		//	quoridorlogin.php?username="+ instance.usernameTextBox.value + "&password="+ instance.pwdTextBox.value + "";
 
 		//var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState=n,s,n";// No question mark needed
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+gameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
-
-		this.callPhpWithAjax(url, this.submitResponse);	
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ this.currentLocalGameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
+		
+		this.callPhpWithAjaxSubmitResponse(url, this.submitResponse);	
 	}
 
 	submitResponse(instance,result){
@@ -320,6 +351,9 @@ class RemoteContact {
 
 	}
 
+
+
+/*
 	callPhpWithAjax(url,functionToCallWhenDone){
 		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
 		var xmlhttp = new XMLHttpRequest();
@@ -328,7 +362,23 @@ class RemoteContact {
 		xmlhttp.onreadystatechange = function() {
 			if (this.readyState == 4 && this.status == 200) {
 				console.log(instance);
-				instance.pollResponse(instance, this.responseText);
+				functionToCallWhenDone( this.responseText);
+			}
+		}; //.bind(this)
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+		return
+	}
+*/
+
+	callPhpWithAjaxSubmitResponse(url,functionToCallWhenDone){
+		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
+		var xmlhttp = new XMLHttpRequest();
+		var returnText = "";
+		var instance = this;
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				instance.submitResponse( this.responseText);
 			}
 		}; //.bind(this)
 		xmlhttp.open("GET", url, true);
@@ -336,35 +386,87 @@ class RemoteContact {
 		return
 	}
 
+
+	callPhpWithAjaxPoll(url,functionToCallWhenDone){
+		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
+		var xmlhttp = new XMLHttpRequest();
+		var returnText = "";
+		var instance = this;
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				// console.log(instance);
+				instance.pollResponse( this.responseText);
+			}
+		}; //.bind(this)
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+		return
+	}
+
+
+
+
+	// ------------------check for remote move.
+
+
 	startCheckDatabaseForRemoteMoveLoop(){
-		
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+this.gameId;// No question mark needed
-		this.callPhpWithAjax(url,this.pollResponse);
-			
-		window.setTimeout(function (){this.callbackCheckForRemoteUpdate( this.counter)}.bind(this),GAME_CHECK_SERVER_INTERVAL); 
-		console.log(this);
+		this.continuePollingForRemoteMove = true;
+		this.callbackCheckForRemoteUpdate();
+	}
+
+	stopCheckDatabaseForRemoteMoveLoop(){
+		this.continuePollingForRemoteMove = false;
+	}
+
+	checkDatabaseForRemoteMoveLoop(){
+	
+		if (this.continuePollingForRemoteMove){
+			var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+this.gameId;// No question mark needed
+			this.callPhpWithAjaxPoll(url,this.pollResponse);
+			window.setTimeout(function (){this.callbackCheckForRemoteUpdate( this.counter)}.bind(this),GAME_CHECK_SERVER_INTERVAL); 	
+		}
 		//window.setTimeout(this.callbackCheckForRemoteUpdate,GAME_CHECK_SERVER_INTERVAL,this); 
 		this.counter += 1;
 	}
-
 	callbackCheckForRemoteUpdate(){
-		this.startCheckDatabaseForRemoteMoveLoop();
+		this.checkDatabaseForRemoteMoveLoop();
 	}
 
-	pollResponse(instance ,response){
-		instance.databaseGameState = response;
-		
+	pollResponse(response){
+		this.databaseGameState = response;
+		this.compareGameStates();
 	//	this.databaseGameState = response;
-		console.log(response);
-		console.log(instance);
+		//console.log(response);
+		//console.log(this);
 		//console.log("lode");
+	}
+
+	compareGameStates() {
+		var remote = this.databaseGameState.split(",");
+		var local = this.currentLocalGameStateString.split(",");
+		if (remote.length< local.length){
+			console.log ("not yet updated");
+		}else if(remote.length == local.length){
+			console.log("waiting for opponent to make a move");
+			console.log(utilities.arraysEqual(remote,local));
+			
+		}else if (remote.length > local.length){
+			console.log("opponent made a move")
+			
+		}else {
+
+			console.log("ASSERT ERROR unvalid arrasy.");
+		}
+
+		console.log(remote);
+		console.log(local);
+		
+		console.log(remote.length);
+		console.log(local.length)
 	}
 
 	getLastReceivedGameState(){
 		return this.databaseGameState;
-
 	}
-
-	
 }
 

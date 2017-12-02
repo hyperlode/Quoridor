@@ -229,8 +229,7 @@ Game.prototype.deleteGame = function (){
 
 Game.prototype.moveHistoryToString= function(){
 	//var gameString = ""
-	console.log("heyof");
-	console.log(this.recordingOfGameInProgress.toString());
+//	console.log(this.recordingOfGameInProgress.toString());
 	return this.recordingOfGameInProgress.toString();
 }
 
