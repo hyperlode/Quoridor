@@ -39,7 +39,7 @@ class Manager {
 	}
 	
 	getMultiPlayerLocalGameState(){
-		return this.multiplayerGame.moveHistoryToString();
+		return this.multiPlayerGame.moveHistoryToString();
 	}
 
 	loadAndContinueMultiPlayerGame() {

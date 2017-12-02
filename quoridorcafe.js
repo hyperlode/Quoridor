@@ -5,7 +5,7 @@ var ACCOUNT_DIV = "loginArea";
 var ACCOUNT_DIV_STATUS = "loginAreaStatus";
 var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
 var GAME_CHECK_SERVER_INTERVAL = 3000;
-var REFRESH_UPDATE_RATE = 500; 
+var REFRESH_UPDATE_RATE = 3000; 
 
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -54,19 +54,22 @@ class Cafe {
 		instance.quoridorManager.stopMultiPlayerGame();
 	}
 	checkRemotePlayerUpdate() {
+		console.log(this.remote);
 		var remoteGameState = this.remote.getLastReceivedGameState();
+		console.log(remoteGameState);
 		var localGameState = this.quoridorManager.getMultiPlayerLocalGameState();
-		this.compareGameStates(remoteGameState, localGameState);
-		// console.log(remoteGameState);
-		// console.log(localGameState);
+		console.log(remoteGameState);
+		console.log(localGameState);
+		this.compareGameStates(localGameState, remoteGameState);
+		
 		// string1 = s1.split(" ");
 		if (true) {
 			this.autoRefreshRemoteMove();
 		}
 	}
-	compareGameStates(state1AsString, string2AsString) {
-		state1Arr = state1AsString.split(",");
-		state2Arr = state2AsString.split(",");
+	compareGameStates(state1AsString, state2AsString) {
+		var state1Arr = state1AsString.split(",");
+		var state2Arr = state2AsString.split(",");
 		console.log(state1Arr);
 		console.log(state2Arr);
 		console.log("-----");
@@ -79,8 +82,12 @@ class Cafe {
 		//debugger;
 		instance.debugCommandTextBox.value = instance.quoridorManager.submitLocalMove();
 		instance.remote.sendGameStateToRemote(instance.debugCommandTextBox.value);
+
+		//send out the request for periodically checking the database on the server for opponent move
 		instance.remote.startCheckDatabaseForRemoteMoveLoop();
-		//instance.autoRefreshRemoteMove();
+
+		//check locally if remote has moved.
+		instance.checkRemotePlayerUpdate();
 	}
 	debugNewCommand(instance) {
 		instance.quoridorManager.submitRemoteMove(instance.debugCommandTextBox.value);
@@ -317,9 +324,10 @@ class RemoteContact {
 		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
 		var xmlhttp = new XMLHttpRequest();
 		var returnText = "";
-		xmlhttp.onreadystatechange = function() {
+		var that = this;
+		xmlhttp.onreadystatechange = function(that) {
 			if (this.readyState == 4 && this.status == 200) {
-				functionToCallWhenDone(this, this.responseText);
+				functionToCallWhenDone(that, this.responseText);
 			}
 		};
 		xmlhttp.open("GET", url, true);
@@ -332,14 +340,18 @@ class RemoteContact {
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+this.gameId;// No question mark needed
 		this.callPhpWithAjax(url,this.pollResponse);
 			
-		window.setTimeout(function (){this.callbackCheckForRemoteUpdate( this.counter )}.bind(this),GAME_CHECK_SERVER_INTERVAL); 
+		window.setTimeout(function (){this.callbackCheckForRemoteUpdate( this.counter)}.bind(this),GAME_CHECK_SERVER_INTERVAL); 
+		console.log(this);
+		//window.setTimeout(this.callbackCheckForRemoteUpdate,GAME_CHECK_SERVER_INTERVAL,this); 
 		this.counter += 1;
 	}
 
 	pollResponse(instance ,response){
 		instance.databaseGameState = response;
-		console.log("tetetij");
-	//console.log(response);
+		
+	//	this.databaseGameState = response;
+		console.log(response);
+		console.log(instance);
 		//console.log("lode");
 	}
 
@@ -348,7 +360,7 @@ class RemoteContact {
 
 	}
 
-	callbackCheckForRemoteUpdate(counter){
+	callbackCheckForRemoteUpdate(){
 		
 		this.startCheckDatabaseForRemoteMoveLoop();
 	}
