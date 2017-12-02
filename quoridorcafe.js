@@ -74,10 +74,13 @@ class Cafe {
 
 
 	doRemoteMove(instance, gameState){
-		console.log(this);
-		console.log(instance);
-		instance.quoridorManager.submitRemoteMove(gameState);
-
+		//console.log(this);  --> points to remote
+		//console.log(instance); --> points to this cafe
+		var success = instance.quoridorManager.submitRemoteMove(gameState);
+		if (!success){
+			//instance.remote.startCheckDatabaseForRemoteMoveLoop();
+			console.log("ASSERT ERROR Wrong move.  todo: deal with it.");
+		}
 		//console.log("schip");
 	}
 
@@ -89,6 +92,13 @@ class Cafe {
 		//instance.remote.stopCheckDatabaseForRemoteMoveLoop();
 
 	}
+
+	debugInitMultiPlayerGame(instance){
+
+		instance.remote.initNewGame();
+	}
+
+
 	localGameStart(instance) {
 		console.log("start local game");
 		instance.startLocalGameButton.style.visibility = 'hidden';
@@ -130,6 +140,8 @@ class Cafe {
 		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "Inputbox As received remote command", "sendDebug", "sendDebug", this.debugNewCommand, this);
 		this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
 		this.debugSendMove = addButtonToExecuteGeneralFunction(debugControlsDiv, "SubmitLocalMove", "submitMoveDebug", "submitMoveDebug", this.debugSubmitMove, this);
+		this.initializeMultiPlayerGameDebug = addButtonToExecuteGeneralFunction(debugControlsDiv, "initializeMultiPlayerGameDebug", "initializeMultiPlayerGameDebug", "initializeMultiPlayerGameDebug", this.debugInitMultiPlayerGame, this);
+		
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "de willem gaataddierallemaaloplossenzeg", "debugCmdText", "debugCmdText", 20);
 		this.debugLocalPlayerStartsCheckBox = addCheckBox(debugControlsDiv, "localPlayerStarts", "localPlayerStarts", true, "Local Player Starts");
 		this.debugLocalPlayerMovesUpCheckBox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Local Player is blue (move up)");
@@ -292,6 +304,8 @@ class Account {
 
 class RemoteContact {
 	constructor() {
+		this.localPlayerId = 666;
+		this.remotePlayerId = 666;
 		this.gameId = 666;
 		this.counter = 1;
 		this. databaseGameState = ""; 
@@ -300,11 +314,36 @@ class RemoteContact {
 		this.remoteMovedCallBackfunction;
 	}
 
+
+	setLocalPlayerId(id){
+		this.localPlayerId = id;
+	}
+	
+
+	//initialize a new game...
+	initNewGame(){
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ gameStateString+"&action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.remotePlayerId;// No question mark needed
+		console.log("create new game";
+		this.callPhpWithAjaxSubmitResponse(url, this.newGameCreatedFeedback);	
+	}
+	newGameCreatedFeedback(response){
+		console.log("game created with id: " + response);
+	}
+
+
+
+
+
+	//
+
 	setRemoteMovedCallback(instance ,callbackFunction){
 		this.storedInstance = instance;
 		this.remoteMovedCallBackfunction = callbackFunction;
 	}
 
+
+
+	//post from this computer, but change in database, as if a remote player moved...
 	debugImitateRemoteMoved(gameStateString) {
 		
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ gameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
@@ -376,7 +415,7 @@ class RemoteContact {
 	}
 
 
-	callPhpWithAjaxPoll(url,functionToCallWhenDone){
+	callPhpWithAjaxPoll(url ,functionToCallWhenDone){
 		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
 		var xmlhttp = new XMLHttpRequest();
 		var returnText = "";
@@ -391,9 +430,6 @@ class RemoteContact {
 		xmlhttp.send();
 		return
 	}
-
-
-
 
 	// ------------------check for remote move.
 

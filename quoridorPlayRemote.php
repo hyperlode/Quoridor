@@ -35,7 +35,16 @@
 		echo $result;
 		return  ob_get_contents();
 	
-
+	}elseif ($action == "createGame"){
+		//
+		$player1Id = $_GET["player1"];
+		$player2Id = $_GET["player2"];
+		$result = sqlCreateNewGame($conn, $gameId,$player1Id, $player2Id);
+		ob_end_clean();
+		ob_start();
+		echo $result;
+		return  ob_get_contents();
+	}
 	}else{
 		printf("unknown action (or none provided) : ". $action ."<br>");
 
@@ -75,6 +84,20 @@
 		}
 	}
 
+
+	function sqlCreateNewGame($conn, $gameId, $player1Id, $player2id){
+		$sql = "INSERT INTO `activeGames`(`gameId`, `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
+		VALUES (". $gameId.",".$player1Id.",".$player2Id.",'','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1)";  //works!
+		
+		//echo sql ; 
+	
+		if ($conn->query($sql) === TRUE) {	
+			echo "New game created successfully,game id: ".$gameId;
+		} else {
+			echo "Error: " . $sql . "<br>" . $conn->error;
+		}
+	}
+
 	function sqlCreateRecordForGameId($conn, $gameId, $gameState){
 		
 		
@@ -88,8 +111,6 @@
 		} else {
 			echo "Error: " . $sql . "<br>" . $conn->error;
 		}
-			
-
 	}
 
 	function sqlGetGameState ($conn, $gameId){
