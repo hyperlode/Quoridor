@@ -37,6 +37,11 @@ class Manager {
 		//total game state as text. i.e. "n,s,n,s,e3" 
 		this.multiPlayerGame.multiPlayerRemoteMove(text);
 	}
+	
+	getMultiPlayerLocalGameState(){
+		return this.multiplayerGame.moveHistoryToString();
+	}
+
 	loadAndContinueMultiPlayerGame() {
 		var qGame = new Game(this.domElements["board"], this.domElements["stats"]);
 		qGame.multiplayerLoadBoard("d8,e8,7f,7c,n,7a,7h,e6,d6,d4,e4,d2,e2,1c,1e");

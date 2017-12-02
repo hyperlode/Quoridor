@@ -18,9 +18,14 @@ var utilities = {
 		}
 		return true;
 	}
+	// ,
+
+	// stringsAreEqual: function(a, b){
 
 
+	// }
 
 }
+
 
 
