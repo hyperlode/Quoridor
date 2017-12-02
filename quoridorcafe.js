@@ -27,6 +27,8 @@ class Cafe {
 		//create html elements
 		this.setupButtonField();
 		//this.continuePollingForRemoteMove = false;
+		this.remote.setRemoteMovedCallback(this, this.doRemoteMove);
+
 	}
 	remoteGameStart(instance) {
 		console.log("start remote game");
@@ -54,36 +56,6 @@ class Cafe {
 		instance.stopRemoteGameButton.style.visibility = 'hidden';
 		instance.quoridorManager.stopMultiPlayerGame();
 	}
-	// checkRemotePlayerUpdate() {
-	// 	//console.log(this.remote);
-	// 	var remoteGameState = this.remote.getLastReceivedGameState();
-	// 	//console.log(remoteGameState);
-	// 	var localGameState = this.quoridorManager.getMultiPlayerLocalGameState();
-	// 	console.log(remoteGameState);
-	// 	console.log(localGameState);
-	// 	this.compareGameStates(localGameState, remoteGameState);
-		
-	// 	// string1 = s1.split(" ");
-	// 	if (this.continuePollingForRemoteMove) {
-	// 		this.autoRefreshRemoteMove();
-	// 	}
-	// }
-
-	// autoRefreshRemoteMove() {
-	// 	window.setTimeout(function () { this.checkRemotePlayerUpdate(); } .bind(this), REFRESH_UPDATE_RATE);
-	// }
-	// compareGameStates(state1AsString, state2AsString) {
-	// 	var state1Arr = state1AsString.split(",");
-	// 	var state2Arr = state2AsString.split(",");
-	// 	console.log(state1Arr);
-	// 	console.log(state2Arr);
-	// 	console.log("-----");
-	// }
-
-	// stopPollingForRemoteMove(){
-	// 	this.remote.stopCheckDatabaseForRemoteMoveLoop();
-	// 	this.continuePollingForRemoteMove = false;
-	// }
 
 	debugSubmitMove(instance) {
 		//the local player presses this button when he wants to submit his move.
@@ -97,7 +69,18 @@ class Cafe {
 
 		//check locally if remote has moved.
 		//instance.checkRemotePlayerUpdate();
+		
 	}
+
+
+	doRemoteMove(instance, gameState){
+		console.log(this);
+		console.log(instance);
+		instance.quoridorManager.submitRemoteMove(gameState);
+
+		//console.log("schip");
+	}
+
 	debugNewCommand(instance) {
 		//instance.quoridorManager.submitRemoteMove(instance.debugCommandTextBox.value);
 		
@@ -314,11 +297,17 @@ class RemoteContact {
 		this. databaseGameState = ""; 
 		this.continuePollingForRemoteMove = false;
 		this.currentLocalGameStateString = "";
+		this.remoteMovedCallBackfunction;
+	}
+
+	setRemoteMovedCallback(instance ,callbackFunction){
+		this.storedInstance = instance;
+		this.remoteMovedCallBackfunction = callbackFunction;
 	}
 
 	debugImitateRemoteMoved(gameStateString) {
 		
-	var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ gameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ gameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
 		console.log("imitation move gamestring: " + gameStateString);
 		this.callPhpWithAjaxSubmitResponse(url, this.debugRemoteMoveImitation);	
 	}
@@ -434,7 +423,13 @@ class RemoteContact {
 
 	pollResponse(response){
 		this.databaseGameState = response;
-		this.compareGameStates();
+		
+		var remoteMove  = this.compareGameStates();
+
+		if (remoteMove != false){
+			this.stopCheckDatabaseForRemoteMoveLoop();
+			this.remoteMovedCallBackfunction(this.storedInstance, this.databaseGameState);
+		}
 	//	this.databaseGameState = response;
 		//console.log(response);
 		//console.log(this);
@@ -444,25 +439,52 @@ class RemoteContact {
 	compareGameStates() {
 		var remote = this.databaseGameState.split(",");
 		var local = this.currentLocalGameStateString.split(",");
+		var remoteMoved = false;
+		var remoteMove = "";
+
 		if (remote.length< local.length){
 			console.log ("not yet updated");
 		}else if(remote.length == local.length){
 			console.log("waiting for opponent to make a move");
 			console.log(utilities.arraysEqual(remote,local));
+
+
+			console.log(remote);
+			console.log(local);
 			
 		}else if (remote.length > local.length){
 			console.log("opponent made a move")
+
+			if (remote.length != local.length +1 ){
+				console.log("ASSERT ERROR, game state remote does not reflext one extra move.");
+				console.log(remote);
+				console.log(local);
+				return false;
+			}
+
+			for (var i = 0; i < local.length; i++) { 
+				if (local[i] != remote[i] ){
+					console.log("ASSERT ERROR: gamestate history not indentical ");
+					console.log(remote);
+					console.log(local);
+				
+					return false;
+				}
+			} 
+			remoteMove = remote[remote.length - 1];
+			remoteMoved = true;
 			
+	
 		}else {
 
 			console.log("ASSERT ERROR unvalid arrasy.");
 		}
-
-		console.log(remote);
-		console.log(local);
+		if (remoteMoved){
+			return remoteMove
+		}else{
+			return false;
+		}
 		
-		console.log(remote.length);
-		console.log(local.length)
 	}
 
 	getLastReceivedGameState(){
