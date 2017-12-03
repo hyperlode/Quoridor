@@ -37,14 +37,16 @@
 	
 	}elseif ($action == "createGame"){
 		//
+		$gameId = 987;
 		$player1Id = $_GET["player1"];
 		$player2Id = $_GET["player2"];
 		$result = sqlCreateNewGame($conn, $gameId,$player1Id, $player2Id);
-		ob_end_clean();
-		ob_start();
-		echo $result;
-		return  ob_get_contents();
-	}
+		//ob_end_clean();
+		//ob_start();
+		echo "yo yo yo";
+		//echo $result;
+	///	return  ob_get_contents();
+	
 	}else{
 		printf("unknown action (or none provided) : ". $action ."<br>");
 
@@ -85,9 +87,9 @@
 	}
 
 
-	function sqlCreateNewGame($conn, $gameId, $player1Id, $player2id){
+	function sqlCreateNewGame($conn, $gameId, $player1Id, $player2Id){
 		$sql = "INSERT INTO `activeGames`(`gameId`, `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
-		VALUES (". $gameId.",".$player1Id.",".$player2Id.",'','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1)";  //works!
+		VALUES (". $gameId.",".$player1Id.",".$player2Id.",'notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1)";  //works!
 		
 		//echo sql ; 
 	

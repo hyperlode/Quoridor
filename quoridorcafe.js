@@ -32,6 +32,7 @@ class Cafe {
 	}
 	remoteGameStart(instance) {
 		console.log("start remote game");
+
 		instance.startLocalGameButton.style.visibility = 'hidden';
 		instance.stopLocalGameButton.style.visibility = 'hidden';
 		instance.restartLocalGameButton.style.visibility = 'hidden';
@@ -94,8 +95,9 @@ class Cafe {
 	}
 
 	debugInitMultiPlayerGame(instance){
-
-		instance.remote.initNewGame();
+		var localId = instance.account.getLoggedInUserId();
+		//console.log(instance.account.loggedInUserName);
+		instance.remote.initNewGame(localId, 4  );
 	}
 
 
@@ -141,7 +143,8 @@ class Cafe {
 		this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
 		this.debugSendMove = addButtonToExecuteGeneralFunction(debugControlsDiv, "SubmitLocalMove", "submitMoveDebug", "submitMoveDebug", this.debugSubmitMove, this);
 		this.initializeMultiPlayerGameDebug = addButtonToExecuteGeneralFunction(debugControlsDiv, "initializeMultiPlayerGameDebug", "initializeMultiPlayerGameDebug", "initializeMultiPlayerGameDebug", this.debugInitMultiPlayerGame, this);
-		
+		this.initializeMultiPlayerGameDebug.style.visibility = 'visible';
+
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "de willem gaataddierallemaaloplossenzeg", "debugCmdText", "debugCmdText", 20);
 		this.debugLocalPlayerStartsCheckBox = addCheckBox(debugControlsDiv, "localPlayerStarts", "localPlayerStarts", true, "Local Player Starts");
 		this.debugLocalPlayerMovesUpCheckBox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Local Player is blue (move up)");
@@ -151,22 +154,20 @@ class Cafe {
 
 
 
-
-
-	
-
-
-
-
-
-
-
 class Account {
 	constructor() {
 		// var xmlhttp;
 		//this.xmlhttp=new XMLHttpRequest();	
 		this.setupLoginField();
+		this.loggedIn = false;
+		this.loggedInUserId = 666;
+		this.loggedInUserName = "noname";
 	}
+
+	getLoggedInUserId(){
+		return this.loggedInUserId;
+	}
+
 	loadDoc(url, cFunction) {
 		//cfunction is a call back function, called when response from url ready. set to null if no callbackfunction used.
 		// call back function should accept xmlhttp, instance as argument.
@@ -219,16 +220,23 @@ class Account {
 	loginAreaStatusUpdateText(text) {
 		document.getElementById(ACCOUNT_DIV_STATUS).innerHTML = "<p>" + text + "</p>";
 	}
+
+	//ACTIONS 
+
+
+	//STATUS
+	//gets id and username of logged in user.
 	loginStatus(instance) {
-		var url = "quoridorisloggedin.php";
+		var url = "quoridorGetLoggedInStatus.php";
 		instance.loadDoc(url, instance.loginStatusCallBack);
 	}
 	loginStatusCallBack(instance, xmlhttp) {
-		console.log(xmlhttp.responseText);
+		//console.log(xmlhttp.responseText);
 		var loggedIn = true;
-		if (xmlhttp.responseText == "0") {
+		if (xmlhttp.responseText == "false") {
 			loggedIn = false;
 		}
+
 		//set visibility
 		instance.loginFieldElementsVisibility(instance, loggedIn);
 		if (!loggedIn) {
@@ -237,9 +245,18 @@ class Account {
 		}
 		else {
 			// console.log("user logged in ");
-			instance.loginAreaStatusUpdateText(xmlhttp.responseText + " logged in.");
+			//instance.loginAreaStatusUpdateText(xmlhttp.responseText + " logged in.");
+
+			var response = xmlhttp.responseText.split(",");
+			instance.loggedInUserId = response[0];
+			instance.loggedInUserName = response[1];
+			instance.loginAreaStatusUpdateText("user: " + instance.loggedInUserName + " with id: " + instance.loggedInUserId  + " logged in.");
 		}
+		instance.loggedIn = loggedIn;
+	
 	}
+
+	//LOG OUT
 	userLogout(instance) {
 		var url = "quoridorlogout.php";
 		instance.loadDoc(url, instance.userLogoutCallBack);
@@ -248,28 +265,54 @@ class Account {
 		instance.loginFieldElementsVisibility(instance, false);
 		instance.loginAreaStatusUpdateText(xlmhttp.responseText);
 	}
+
+	//all logged in players in database
 	listOfLoggedInUsers() {
 		var url = "quoridorloggedinusers.php";
 		this.loadDoc(url, this.listOfLoggedInUsersCallBack);
 		console.log("tiehey");
 	}
+
 	listOfLoggedInUsersCallBack(instance, xlmhttp) {
 		document.getElementById(LOGGEDINUSERS_DIV_LIST).innerHTML = xlmhttp.responseText;
 		// console.log("iejijfjejfjef");
 	}
+
+
+
+	//userLoginButtonClicked(instance){
+
+	//}
+
+	//LOG IN
 	userLogin(instance) {
 		var url = "quoridorlogin.php?username=" + instance.usernameTextBox.value + "&password=" + instance.pwdTextBox.value + "";
 		// console.log("user login button clicked");
 		instance.loadDoc(url, instance.userLoginCallBack);
 	}
 	userLoginCallBack(instance, xlmhttp) {
-		var loggedIn = false;
-		if (xlmhttp.responseText == "Logged in successfully!") {
-			loggedIn = true;
+		//returns error, or userId.
+
+		if (xlmhttp.responseText == "Wrong username-password combination.") {
+			loggedIn = false;
+			console.log("Wrong username-password combination.");
+		
+		}else{
+			
+			//var userId = xlmhttp.responseText;
+			
+			//instance.loggedInUserId = userId;
+			//instance.loginFieldElementsVisibility(instance, loggedIn);
+			instance.loginStatus(instance); //sets all login info up.
 		}
-		instance.loginFieldElementsVisibility(instance, loggedIn);
-		instance.loginAreaStatusUpdateText(xlmhttp.responseText);
+		//instance.loginAreaStatusUpdateText(xlmhttp.responseText);
+		//console.log(instance.loggedInUserId);
+		//instance.loggedIn = loggedIn;
 	}
+
+	//REGISTRATION 
+
+
 	userRegister(instance) {
 		var url = "quoridornewuser.php?username=" + instance.usernameTextBox.value + "&password=" + instance.pwdTextBox.value + "";
 		// console.log("user login button clicked");
@@ -287,25 +330,12 @@ class Account {
 
 
 
-	
-
-
-
-
-
-
-
-
-
-
-
-
 //------------------------------------------------------
 
 class RemoteContact {
 	constructor() {
-		this.localPlayerId = 666;
-		this.remotePlayerId = 666;
+		this.localPlayerId = 123;
+		this.remotePlayerId = 124;
 		this.gameId = 666;
 		this.counter = 1;
 		this. databaseGameState = ""; 
@@ -318,28 +348,47 @@ class RemoteContact {
 	setLocalPlayerId(id){
 		this.localPlayerId = id;
 	}
-	
+	setRemoteMovedCallback(instance ,callbackFunction){
+		this.storedInstance = instance;
+		this.remoteMovedCallBackfunction = callbackFunction;
+	}
+
+
+
+
+
 
 	//initialize a new game...
-	initNewGame(){
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ gameStateString+"&action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.remotePlayerId;// No question mark needed
-		console.log("create new game";
-		this.callPhpWithAjaxSubmitResponse(url, this.newGameCreatedFeedback);	
+	initNewGame(localPlayerId, remotePlayerId){
+		
+		this.localPlayerId = localPlayerId;
+		this.remotePlayerId = remotePlayerId;
+
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.remotePlayerId;// No question mark needed
+		console.log("create new game");
+		console.log(url);
+		this.callPhpWithAjaxCreateNewGame(url, this.newGameCreatedFeedback);	
 	}
 	newGameCreatedFeedback(response){
 		console.log("game created with id: " + response);
 	}
 
-
-
-
+	callPhpWithAjaxCreateNewGame(url,functionToCallWhenDone){
+		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
+		var xmlhttp = new XMLHttpRequest();
+		var instance = this;
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				instance.newGameCreatedFeedback(this.responseText);
+			}
+		}; //.bind(this)
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+	}
 
 	//
 
-	setRemoteMovedCallback(instance ,callbackFunction){
-		this.storedInstance = instance;
-		this.remoteMovedCallBackfunction = callbackFunction;
-	}
+	
 
 
 

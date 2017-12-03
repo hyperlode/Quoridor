@@ -15,11 +15,12 @@
 	$SimpleUsers = new SimpleUsers();
 
 	if( $SimpleUsers->logged_in ) {
-       echo $SimpleUsers->userdata["uUsername"];
-	   
+		echo $SimpleUsers->userdata["userId"];
+		echo ",";
+		echo $SimpleUsers->userdata["uUsername"];
 		exit;
 	}else{
-		echo 0;
+		echo "false";
 		exit;
 	}
 

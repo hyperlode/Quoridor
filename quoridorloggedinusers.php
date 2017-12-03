@@ -21,7 +21,11 @@
 		// if( $SimpleUsers->logged_in ) {
 		   // array_push( $SimpleUsers->userdata["uUsername"]);
 		   echo $user["uUsername"];
-		   echo "<br>";
+		   echo ",";
+		   echo $user["userId"];
+		   echo ",";
+		   
+		   // echo "<br>";
 			// exit;
 		// }
 		//else{
