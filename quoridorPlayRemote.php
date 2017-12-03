@@ -41,11 +41,11 @@
 		$player1Id = $_GET["player1"];
 		$player2Id = $_GET["player2"];
 		$result = sqlCreateNewGame($conn, $gameId,$player1Id, $player2Id);
-		//ob_end_clean();
-		//ob_start();
-		echo "yo yo yo";
-		//echo $result;
-	///	return  ob_get_contents();
+		ob_end_clean();
+		ob_start();
+		echo 987;
+		echo $result;
+		return  ob_get_contents();
 	
 	}else{
 		printf("unknown action (or none provided) : ". $action ."<br>");

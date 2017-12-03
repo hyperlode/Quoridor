@@ -45,8 +45,21 @@ class Cafe {
 			startingPlayer = PLAYER2;
 		}
 		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts);
+
+		var localId = instance.account.getLoggedInUserId();
+		alert("game start between: " + localId + " and " + instance.debugRemotePlayerIdTextBox.value);
+		instance.remote.initNewGame(localId, instance.debugRemotePlayerIdTextBox.value);
+
+
+
 		instance.remote.sendGameStateToRemote("");
 	}
+
+
+	debugInitMultiPlayerGame(instance){
+		alert ("nothing here, click the remote game start button.");
+	}
+
 
 	remoteGameStop(instance) {
 		console.log("stop remote game");
@@ -94,12 +107,7 @@ class Cafe {
 
 	}
 
-	debugInitMultiPlayerGame(instance){
-		var localId = instance.account.getLoggedInUserId();
-		//console.log(instance.account.loggedInUserName);
-		instance.remote.initNewGame(localId, 4  );
-	}
-
+	
 
 	localGameStart(instance) {
 		console.log("start local game");
@@ -146,6 +154,10 @@ class Cafe {
 		this.initializeMultiPlayerGameDebug.style.visibility = 'visible';
 
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "de willem gaataddierallemaaloplossenzeg", "debugCmdText", "debugCmdText", 20);
+		
+		
+		this.debugRemotePlayerIdTextBox = addTextBox(debugControlsDiv, "remote player id", "debugRemotePlayerIdTextBox", "debugRemotePlayerIdTextBox", 10);
+		
 		this.debugLocalPlayerStartsCheckBox = addCheckBox(debugControlsDiv, "localPlayerStarts", "localPlayerStarts", true, "Local Player Starts");
 		this.debugLocalPlayerMovesUpCheckBox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Local Player is blue (move up)");
 		this.debugNoServerSetup = addCheckBox(debugControlsDiv, "debugNoServerUse", "debugNoServerUse", false, "debug without server");
@@ -270,7 +282,7 @@ class Account {
 	listOfLoggedInUsers() {
 		var url = "quoridorloggedinusers.php";
 		this.loadDoc(url, this.listOfLoggedInUsersCallBack);
-		console.log("tiehey");
+		console.log("all logged in players");
 	}
 
 	listOfLoggedInUsersCallBack(instance, xlmhttp) {
@@ -370,7 +382,9 @@ class RemoteContact {
 		this.callPhpWithAjaxCreateNewGame(url, this.newGameCreatedFeedback);	
 	}
 	newGameCreatedFeedback(response){
+		this.gameId = response;
 		console.log("game created with id: " + response);
+	
 	}
 
 	callPhpWithAjaxCreateNewGame(url,functionToCallWhenDone){
