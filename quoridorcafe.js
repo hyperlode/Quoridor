@@ -403,14 +403,14 @@ class RemoteContact {
 	listOfGamesCallBack(responseText){
 		//console.log("list of games.ffff");
 		//console.log(responseText);
-		//var responseArray = xlmhttp.responseText.split(",");
-		// var outputString = "";
+		var responseArray = responseText.split(",");
+		var outputString = "";
 
-		// for (var i = 0; i < responseArray.length; i+=2) {
+		for (var i = 0; i < responseArray.length; i+=1) {
 		
-		// 	outputString += responseArray[i] + " - id: " + responseArray[i+1] + "<br>";
-		// }
-		// document.getElementById(LISTEDGAMES_DIV_LIST).innerHTML = outputString;
+			outputString +=  " game id: " + responseArray[i]   + "<br>";
+		}
+		document.getElementById(LISTEDGAMES_DIV_LIST).innerHTML = outputString;
 	}
 	
 
