@@ -1,7 +1,7 @@
 <?php
 	// $servername = "lode.ameije.com";
 
-	ob_start();
+	//ob_start();
 	
 
 	$conn = connectToDataBase();
@@ -9,8 +9,6 @@
 	//$db = mysql_select_db(databasename, $con);
 	
 	
-
-
 	//SQL command
 	//delete record with same gameId	
 	$action = $_GET["action"]; //action is "submit" or "poll"
@@ -40,19 +38,34 @@
 		$gameId = 987;
 		$player1Id = $_GET["player1"];
 		$player2Id = $_GET["player2"];
-		$result = sqlCreateNewGame($conn, $gameId,$player1Id, $player2Id);
+		sqlCreateNewGame($conn, $gameId,$player1Id, $player2Id);//$result = 
 		ob_end_clean();
 		ob_start();
 		echo 987;
+		//echo $result;
+		return  ob_get_contents();
+	}elseif ($action == "listOfGames"){
+		echo "testwww";
+		ob_end_clean();
+		ob_start();
+		
+		//return;
+		$result = getListOfActiveGames($conn);
 		echo $result;
 		return  ob_get_contents();
-	
 	}else{
-		printf("unknown action (or none provided) : ". $action ."<br>");
-
+		//printf("unknown action (or none provided) : ". $action ."<br>");
+		ob_end_clean();
+		ob_start();
+		echo "unknown action";
+		return  ob_get_contents();
 	}
 
 	// ob_end_clean();
+
+
+
+
 
 	//SQL command
 	//set gamestate of game with game id.
@@ -84,6 +97,27 @@
 		} else {
 			echo "Error: " . $sql . "<br>" . $conn->error;
 		}
+	}
+
+	function getListOfActiveGames($conn) {
+		$sql = "SELECT * FROM activeGames";
+		//$sql = "SELECT gameState FROM activeGames WHERE gameId = 666";
+		$returnString = "";
+		if ($result = $conn->query($sql) ) {	
+		
+			while ($row = $result->fetch_assoc()) {
+				//echo "%s", $row["gameState"];
+				// $test = "%s",$row["gameState"]; //ERROR!!!!
+				//$test = $row["gameId"]; 
+				$returnString .=$row["gameId"] . ",";
+				
+			}
+			$result->close();
+			
+		} else {
+			echo "Error return value: " . $sql . "<br>" . $conn->error;
+		}	
+		return $returnString;
 	}
 
 
@@ -139,7 +173,7 @@
 		} else {
 			echo "Error return value: " . $sql . "<br>" . $conn->error;
 		}	
-	return $returnString;
+		return $returnString;
 	}
 
 	function sqlOutputAllRowsIfValueInColumn(){

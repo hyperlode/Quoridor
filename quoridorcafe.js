@@ -4,6 +4,7 @@ var logonText = "ifjefffff";
 var ACCOUNT_DIV = "loginArea";
 var ACCOUNT_DIV_STATUS = "loginAreaStatus";
 var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
+var LISTEDGAMES_DIV_LIST = "listedGames";
 var GAME_CHECK_SERVER_INTERVAL = 3000;
 var REFRESH_UPDATE_RATE = 3000; 
 
@@ -14,8 +15,6 @@ document.addEventListener("DOMContentLoaded", function() {
 	
 	// getAllUsers();	
 });
-
-
 
 class Cafe {
 	constructor() {
@@ -57,7 +56,8 @@ class Cafe {
 
 
 	debugInitMultiPlayerGame(instance){
-		alert ("nothing here, click the remote game start button.");
+		//alert ("nothing here, click the remote game start button.");
+		instance.remote.listOfGames();
 	}
 
 
@@ -150,7 +150,7 @@ class Cafe {
 		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "Inputbox As received remote command", "sendDebug", "sendDebug", this.debugNewCommand, this);
 		this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
 		this.debugSendMove = addButtonToExecuteGeneralFunction(debugControlsDiv, "SubmitLocalMove", "submitMoveDebug", "submitMoveDebug", this.debugSubmitMove, this);
-		this.initializeMultiPlayerGameDebug = addButtonToExecuteGeneralFunction(debugControlsDiv, "initializeMultiPlayerGameDebug", "initializeMultiPlayerGameDebug", "initializeMultiPlayerGameDebug", this.debugInitMultiPlayerGame, this);
+		this.initializeMultiPlayerGameDebug = addButtonToExecuteGeneralFunction(debugControlsDiv, "getActiveGamesList", "getActiveGamesList", "getActiveGamesList", this.debugInitMultiPlayerGame, this);
 		this.initializeMultiPlayerGameDebug.style.visibility = 'visible';
 
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "de willem gaataddierallemaaloplossenzeg", "debugCmdText", "debugCmdText", 20);
@@ -278,23 +278,29 @@ class Account {
 		instance.loginAreaStatusUpdateText(xlmhttp.responseText);
 	}
 
-	//all logged in players in database
+
+	//LIST OF LOGGED IN USERS
 	listOfLoggedInUsers() {
 		var url = "quoridorloggedinusers.php";
 		this.loadDoc(url, this.listOfLoggedInUsersCallBack);
-		console.log("all logged in players");
+		//console.log("all logged in players listed up");
 	}
-
 	listOfLoggedInUsersCallBack(instance, xlmhttp) {
-		document.getElementById(LOGGEDINUSERS_DIV_LIST).innerHTML = xlmhttp.responseText;
-		// console.log("iejijfjejfjef");
+		var responseArray = xlmhttp.responseText.split(",");
+		var outputString = "";
+
+		for (var i = 0; i < responseArray.length; i+=2) {
+			// console.log(i); 
+			outputString += responseArray[i] + " - id: " + responseArray[i+1] + "<br>";
+		}
+		document.getElementById(LOGGEDINUSERS_DIV_LIST).innerHTML = outputString;
 	}
 
 
-
+	//LIST OF GAMES
 	//userLoginButtonClicked(instance){
-
-	//}
+		
+	//
 
 	//LOG IN
 	userLogin(instance) {
@@ -323,8 +329,6 @@ class Account {
 	}
 
 	//REGISTRATION 
-
-
 	userRegister(instance) {
 		var url = "quoridornewuser.php?username=" + instance.usernameTextBox.value + "&password=" + instance.pwdTextBox.value + "";
 		// console.log("user login button clicked");
@@ -403,7 +407,45 @@ class RemoteContact {
 	//
 
 	
+	listOfGames(){
+		
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"listOfGames";// No question mark needed
+		//var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+"666";// No question mark needed
+		
+		console.log(url);
+		console.log("list of games");
+		this.callPhpWithAjaxListOfGames(url, this.listOfGamesCallBack);	
+		// this.callPhpWithAjaxPoll(url,this.pollResponse);
+		
+	}
 
+	listOfGamesCallBack(responseText){
+		console.log("list of games.ffff");
+		console.log(responseText);
+		// var responseArray = xlmhttp.responseText.split(",");
+		// var outputString = "";
+
+		// for (var i = 0; i < responseArray.length; i+=2) {
+		
+		// 	outputString += responseArray[i] + " - id: " + responseArray[i+1] + "<br>";
+		// }
+		// document.getElementById(LISTEDGAMES_DIV_LIST).innerHTML = outputString;
+
+	}
+	callPhpWithAjaxListOfGames(url,functionToCallWhenDone){
+		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
+		var xmlhttp = new XMLHttpRequest();
+		var instance = this;
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				console.log(this);
+				instance.listOfGamesCallBack( this.responseText);
+			
+			}
+		}; //.bind(this)
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+	}
 
 
 	//post from this computer, but change in database, as if a remote player moved...
@@ -411,11 +453,29 @@ class RemoteContact {
 		
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ gameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
 		console.log("imitation move gamestring: " + gameStateString);
-		this.callPhpWithAjaxSubmitResponse(url, this.debugRemoteMoveImitation);	
+		this.callPhpWithAjaxMoveImitation(url, this.debugRemoteMoveImitation);	
 	}
-	debugRemoteMoveImitation(){
+	debugRemoteMoveImitation(response){
 		console.log("remoteImitatedMove");
 	}
+	callPhpWithAjaxMoveImitation(url,functionToCallWhenDone){
+		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
+		var xmlhttp = new XMLHttpRequest();
+		var returnText = "";
+		var instance = this;
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				instance.debugRemoteMoveImitation( this.responseText);
+			}
+		}; //.bind(this)
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+		return
+	}
+
+
+
+
 
 
 	sendGameStateToRemote(gameStateString) {
