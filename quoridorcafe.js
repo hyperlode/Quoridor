@@ -154,10 +154,10 @@ class Cafe {
 		this.initializeMultiPlayerGameDebug.style.visibility = 'visible';
 
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "de willem gaataddierallemaaloplossenzeg", "debugCmdText", "debugCmdText", 20);
-		
-		
+
+
 		this.debugRemotePlayerIdTextBox = addTextBox(debugControlsDiv, "remote player id", "debugRemotePlayerIdTextBox", "debugRemotePlayerIdTextBox", 10);
-		
+
 		this.debugLocalPlayerStartsCheckBox = addCheckBox(debugControlsDiv, "localPlayerStarts", "localPlayerStarts", true, "Local Player Starts");
 		this.debugLocalPlayerMovesUpCheckBox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Local Player is blue (move up)");
 		this.debugNoServerSetup = addCheckBox(debugControlsDiv, "debugNoServerUse", "debugNoServerUse", false, "debug without server");

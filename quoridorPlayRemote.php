@@ -1,7 +1,8 @@
 <?php
 	// $servername = "lode.ameije.com";
-
-	//ob_start();
+	
+	//output buffer, will store in output buffer, this needs to be returned manually.
+	ob_start();
 	
 
 	$conn = connectToDataBase();
