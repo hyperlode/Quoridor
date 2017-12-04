@@ -369,10 +369,7 @@ class RemoteContact {
 		this.remoteMovedCallBackfunction = callbackFunction;
 	}
 
-
-
-
-
+	//-------------------create a new game in the remote database 
 
 	//initialize a new game...
 	initNewGame(localPlayerId, remotePlayerId){
@@ -383,7 +380,7 @@ class RemoteContact {
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.remotePlayerId;// No question mark needed
 		console.log("create new game");
 		console.log(url);
-		this.callPhpWithAjaxCreateNewGame(url, this.newGameCreatedFeedback);	
+		this.callPhpWithAjax(url, this.newGameCreatedFeedback.bind(this));	
 	}
 	newGameCreatedFeedback(response){
 		this.gameId = response;
@@ -391,21 +388,7 @@ class RemoteContact {
 	
 	}
 
-	callPhpWithAjaxCreateNewGame(url,functionToCallWhenDone){
-		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
-		var xmlhttp = new XMLHttpRequest();
-		var instance = this;
-		xmlhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				instance.newGameCreatedFeedback(this.responseText);
-			}
-		}; //.bind(this)
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
-	}
-
-	//
-
+	//---------------list all the available games from the database
 	
 	listOfGames(){
 		
@@ -414,15 +397,13 @@ class RemoteContact {
 		
 		console.log(url);
 		console.log("list of games");
-		this.callPhpWithAjaxListOfGames(url, this.listOfGamesCallBack);	
-		// this.callPhpWithAjaxPoll(url,this.pollResponse);
-		
+		this.callPhpWithAjax(url, this.listOfGamesCallBack.bind(this));	
 	}
 
 	listOfGamesCallBack(responseText){
-		console.log("list of games.ffff");
-		console.log(responseText);
-		// var responseArray = xlmhttp.responseText.split(",");
+		//console.log("list of games.ffff");
+		//console.log(responseText);
+		//var responseArray = xlmhttp.responseText.split(",");
 		// var outputString = "";
 
 		// for (var i = 0; i < responseArray.length; i+=2) {
@@ -430,53 +411,23 @@ class RemoteContact {
 		// 	outputString += responseArray[i] + " - id: " + responseArray[i+1] + "<br>";
 		// }
 		// document.getElementById(LISTEDGAMES_DIV_LIST).innerHTML = outputString;
-
 	}
-	callPhpWithAjaxListOfGames(url,functionToCallWhenDone){
-		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
-		var xmlhttp = new XMLHttpRequest();
-		var instance = this;
-		xmlhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				console.log(this);
-				instance.listOfGamesCallBack( this.responseText);
-			
-			}
-		}; //.bind(this)
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
-	}
+	
 
+	//------------debug pretend a remote opponent moved.
 
 	//post from this computer, but change in database, as if a remote player moved...
 	debugImitateRemoteMoved(gameStateString) {
 		
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ gameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
 		console.log("imitation move gamestring: " + gameStateString);
-		this.callPhpWithAjaxMoveImitation(url, this.debugRemoteMoveImitation);	
+		this.callPhpWithAjax(url, this.debugRemoteMoveImitation.bind(this));	
 	}
 	debugRemoteMoveImitation(response){
 		console.log("remoteImitatedMove");
 	}
-	callPhpWithAjaxMoveImitation(url,functionToCallWhenDone){
-		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
-		var xmlhttp = new XMLHttpRequest();
-		var returnText = "";
-		var instance = this;
-		xmlhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				instance.debugRemoteMoveImitation( this.responseText);
-			}
-		}; //.bind(this)
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
-		return
-	}
 
-
-
-
-
+	//---------------post local move
 
 	sendGameStateToRemote(gameStateString) {
 
@@ -490,7 +441,7 @@ class RemoteContact {
 		//var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState=n,s,n";// No question mark needed
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ this.currentLocalGameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
 		
-		this.callPhpWithAjaxSubmitResponse(url, this.submitResponse);	
+		this.callPhpWithAjax(url, this.submitResponse.bind(this));	
 	}
 
 	submitResponse(instance,result){
@@ -498,61 +449,13 @@ class RemoteContact {
 		document.getElementById("debugServerFeedback").innerHTML = result;
 	}
 
-	checkIfGameIdExists(id){
+	// checkIfGameIdExists(id){
 
-	}
-
-
-
-/*
-	callPhpWithAjax(url,functionToCallWhenDone){
-		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
-		var xmlhttp = new XMLHttpRequest();
-		var returnText = "";
-		var instance = this;
-		xmlhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				console.log(instance);
-				functionToCallWhenDone( this.responseText);
-			}
-		}; //.bind(this)
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
-		return
-	}
-*/
-
-	callPhpWithAjaxSubmitResponse(url,functionToCallWhenDone){
-		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
-		var xmlhttp = new XMLHttpRequest();
-		var returnText = "";
-		var instance = this;
-		xmlhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				instance.submitResponse( this.responseText);
-			}
-		}; //.bind(this)
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
-		return
-	}
+	// }
 
 
-	callPhpWithAjaxPoll(url ,functionToCallWhenDone){
-		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
-		var xmlhttp = new XMLHttpRequest();
-		var returnText = "";
-		var instance = this;
-		xmlhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				// console.log(instance);
-				instance.pollResponse( this.responseText);
-			}
-		}; //.bind(this)
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
-		return
-	}
+
+	
 
 	// ------------------check for remote move.
 
@@ -570,7 +473,7 @@ class RemoteContact {
 	
 		if (this.continuePollingForRemoteMove){
 			var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+this.gameId;// No question mark needed
-			this.callPhpWithAjaxPoll(url,this.pollResponse);
+			this.callPhpWithAjax(url,this.pollResponse.bind(this));
 			window.setTimeout(function (){this.callbackCheckForRemoteUpdate( this.counter)}.bind(this),GAME_CHECK_SERVER_INTERVAL); 	
 		}
 		//window.setTimeout(this.callbackCheckForRemoteUpdate,GAME_CHECK_SERVER_INTERVAL,this); 
@@ -594,6 +497,28 @@ class RemoteContact {
 		//console.log(this);
 		//console.log("lode");
 	}
+
+
+
+
+	callPhpWithAjax(url,functionToCallWhenDone){
+		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
+		var xmlhttp = new XMLHttpRequest();
+		var returnText = "";
+		var instance = this;
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				console.log(instance);
+				functionToCallWhenDone( this.responseText);
+			}
+		}; //.bind(this)
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+		return
+	}
+
+
+
 
 	compareGameStates() {
 		var remote = this.databaseGameState.split(",");
