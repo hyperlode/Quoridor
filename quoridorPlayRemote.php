@@ -36,13 +36,13 @@
 	
 	}elseif ($action == "createGame"){
 		//
-		$gameId = 987;
+		$gameId = 988;
 		$player1Id = $_GET["player1"];
 		$player2Id = $_GET["player2"];
-		sqlCreateNewGame($conn, $gameId,$player1Id, $player2Id);//$result = 
+		$result  = sqlCreateNewGame($conn, $gameId,$player1Id, $player2Id);//$result = 
 		ob_end_clean();
 		ob_start();
-		echo 987;
+		echo $result;
 		//echo $result;
 		return  ob_get_contents();
 	}elseif ($action == "listOfGames"){
@@ -100,8 +100,13 @@
 		}
 	}
 
+	function getUntakenGameId($conn){
+		
+
+	}
+
 	function getListOfActiveGames($conn) {
-		$sql = "SELECT * FROM activeGames";
+		$sql = "SELECT * FROM activeGames WHERE playerId2 = 666";
 		//$sql = "SELECT gameState FROM activeGames WHERE gameId = 666";
 		$returnString = "";
 		if ($result = $conn->query($sql) ) {	

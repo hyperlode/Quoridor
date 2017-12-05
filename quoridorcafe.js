@@ -7,6 +7,7 @@ var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
 var LISTEDGAMES_DIV_LIST = "listedGames";
 var GAME_CHECK_SERVER_INTERVAL = 3000;
 var REFRESH_UPDATE_RATE = 3000; 
+var NO_PLAYER_DUMMY_ID = 666;
 
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -46,8 +47,10 @@ class Cafe {
 		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts);
 
 		var localId = instance.account.getLoggedInUserId();
-		alert("game start between: " + localId + " and " + instance.debugRemotePlayerIdTextBox.value);
-		instance.remote.initNewGame(localId, instance.debugRemotePlayerIdTextBox.value);
+
+		// instance.debugRemotePlayerIdTextBox.value
+		alert("game start: " + localId + " and ...wait for opponent to log in.");
+		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID);
 
 
 
@@ -97,6 +100,16 @@ class Cafe {
 		}
 		//console.log("schip");
 	}
+
+
+	debugJoinRemoteGame(instance){
+		//get game id from field.
+
+		//check for remote game with this id
+
+		//add name to 
+	}
+
 
 	debugNewCommand(instance) {
 		//instance.quoridorManager.submitRemoteMove(instance.debugCommandTextBox.value);
@@ -150,6 +163,10 @@ class Cafe {
 		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "Inputbox As received remote command", "sendDebug", "sendDebug", this.debugNewCommand, this);
 		this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
 		this.debugSendMove = addButtonToExecuteGeneralFunction(debugControlsDiv, "SubmitLocalMove", "submitMoveDebug", "submitMoveDebug", this.debugSubmitMove, this);
+		this.debugJoinRemoteGame = addButtonToExecuteGeneralFunction(debugControlsDiv, "join Game", "joinGame", "joinGame", this.debugJoinRemoteGame, this);
+		
+		
+		
 		this.initializeMultiPlayerGameDebug = addButtonToExecuteGeneralFunction(debugControlsDiv, "getActiveGamesList", "getActiveGamesList", "getActiveGamesList", this.debugInitMultiPlayerGame, this);
 		this.initializeMultiPlayerGameDebug.style.visibility = 'visible';
 
