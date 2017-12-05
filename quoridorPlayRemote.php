@@ -46,7 +46,6 @@
 		//echo $result;
 		return  ob_get_contents();
 	}elseif ($action == "listOfGames"){
-		echo "testwww";
 		ob_end_clean();
 		ob_start();
 		
@@ -54,6 +53,21 @@
 		$result = getListOfActiveGames($conn);
 		echo $result;
 		return  ob_get_contents();
+		
+	}elseif ($action == "joinGame"){
+		echo "joingame php test";
+		$gameId = $_GET["gameId"];
+		$player2Id = $_GET["player2"];
+		$result = joinActiveGame($conn,$gameId,$player2Id);
+		ob_end_clean();
+		ob_start();
+		if ($result == true){
+			echo "1";
+		}else{
+			echo $result;
+		}
+		
+		return ob_get_contents();
 	}else{
 		//printf("unknown action (or none provided) : ". $action ."<br>");
 		ob_end_clean();
@@ -100,8 +114,23 @@
 		}
 	}
 
+
+
+	
+
+	function joinActiveGame($conn,$gameId,$player2Id){
+		$sql = "UPDATE activeGames SET playerId2 = '".$player2Id."'	WHERE gameId = ".$gameId;
+		if ($conn->query($sql) === TRUE) {	
+			return true;
+		} else {
+			echo "Error: " . $sql . "<br>" . $conn->error;
+			return false;
+		}
+	}
+	
+
 	function getUntakenGameId($conn){
-		
+
 
 	}
 

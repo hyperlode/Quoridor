@@ -8,6 +8,8 @@ var LISTEDGAMES_DIV_LIST = "listedGames";
 var GAME_CHECK_SERVER_INTERVAL = 3000;
 var REFRESH_UPDATE_RATE = 3000; 
 var NO_PLAYER_DUMMY_ID = 666;
+var NO_GAME_ID_YET = 667;
+var NO_LOGGED_IN_USER_DUMMY_ID= 668;
 
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -48,7 +50,7 @@ class Cafe {
 
 		var localId = instance.account.getLoggedInUserId();
 
-		// instance.debugRemotePlayerIdTextBox.value
+		
 		alert("game start: " + localId + " and ...wait for opponent to log in.");
 		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID);
 
@@ -56,7 +58,24 @@ class Cafe {
 
 		instance.remote.sendGameStateToRemote("");
 	}
+	
+	
+	
 
+	debugJoinRemoteGame(instance){
+
+			//get game id from field.
+
+		//check for remote game with this id
+
+		//add name to 
+		var joinGameId = instance.debugRemotePlayerIdTextBox.value;
+		var localId = instance.account.getLoggedInUserId();
+		console.log("join game button clicked");
+
+		instance.remote.joinGame(joinGameId, localId);
+		
+	}
 
 	debugInitMultiPlayerGame(instance){
 		//alert ("nothing here, click the remote game start button.");
@@ -102,13 +121,6 @@ class Cafe {
 	}
 
 
-	debugJoinRemoteGame(instance){
-		//get game id from field.
-
-		//check for remote game with this id
-
-		//add name to 
-	}
 
 
 	debugNewCommand(instance) {
@@ -189,7 +201,7 @@ class Account {
 		//this.xmlhttp=new XMLHttpRequest();	
 		this.setupLoginField();
 		this.loggedIn = false;
-		this.loggedInUserId = 666;
+		this.loggedInUserId = NO_LOGGED_IN_USER_DUMMY_ID;
 		this.loggedInUserName = "noname";
 	}
 
@@ -369,7 +381,7 @@ class RemoteContact {
 	constructor() {
 		this.localPlayerId = 123;
 		this.remotePlayerId = 124;
-		this.gameId = 666;
+		this.gameId = NO_GAME_ID_YET;
 		this.counter = 1;
 		this. databaseGameState = ""; 
 		this.continuePollingForRemoteMove = false;
@@ -386,9 +398,22 @@ class RemoteContact {
 		this.remoteMovedCallBackfunction = callbackFunction;
 	}
 
-	//-------------------create a new game in the remote database 
 
-	//initialize a new game...
+	//join existing game by gameId.
+
+	joinGame(gameId, localPlayerIdThatWillBecomeTheRemotePlayerOfThisGame){
+		var playerId = localPlayerIdThatWillBecomeTheRemotePlayerOfThisGame;
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"joinGame"+"&player2=" + playerId + "&gameId=" + gameId;// No question mark needed
+		console.log("try to join game: " + gameId + ". By player: " + playerId);
+		this.callPhpWithAjax(url, this.joinGameFeedback.bind(this));
+
+		
+	}
+	joinGameFeedback(response){
+		console.log("feedback.");
+	}
+
+	//-------------------create a new game in the remote database 
 	initNewGame(localPlayerId, remotePlayerId){
 		
 		this.localPlayerId = localPlayerId;
@@ -410,9 +435,6 @@ class RemoteContact {
 	listOfGames(){
 		
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"listOfGames";// No question mark needed
-		//var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+"666";// No question mark needed
-		
-		console.log(url);
 		console.log("list of games");
 		this.callPhpWithAjax(url, this.listOfGamesCallBack.bind(this));	
 	}
@@ -525,10 +547,10 @@ class RemoteContact {
 		var instance = this;
 		xmlhttp.onreadystatechange = function() {
 			if (this.readyState == 4 && this.status == 200) {
-				console.log(instance);
+				//console.log(instance);
 				functionToCallWhenDone( this.responseText);
 			}
-		}; //.bind(this)
+		};
 		xmlhttp.open("GET", url, true);
 		xmlhttp.send();
 		return
