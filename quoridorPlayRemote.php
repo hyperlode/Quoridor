@@ -40,10 +40,10 @@
 	
 	}elseif ($action == "createGame"){
 		//
-		$gameId = $_GET["gameId"];
+		
 		$player1Id = $_GET["player1"];
 		$player2Id = $_GET["player2"];
-		$result  = sqlCreateNewGame($conn, $gameId,$player1Id, $player2Id);//$result = 
+		$result  = sqlCreateNewGame($conn, $player1Id, $player2Id);//$result = 
 		ob_end_clean();
 		ob_start();
 		echo $result;
@@ -174,14 +174,14 @@
 	}
 
 
-	function sqlCreateNewGame($conn, $gameId, $player1Id, $player2Id){
-		$sql = "INSERT INTO `activeGames`(`gameId`, `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
-		VALUES (". $gameId.",".$player1Id.",".$player2Id.",'notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1)";  //works!
-		
-		//echo sql ; 
-	
+	function sqlCreateNewGame($conn,  $player1Id, $player2Id){
+		$sql = "INSERT INTO `activeGames`( `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
+		VALUES (".$player1Id.",".$player2Id.",'notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1);";  //works!
+			
 		if ($conn->query($sql) === TRUE) {	
-			return $gameId;
+			////https://www.w3schools.com/php/php_mysql_insert_lastid.asp		
+			$last_id = $conn->insert_id; //returns last created primary key
+			return $last_id;
 		} else {
 			return "Error: " . $sql . "<br>" . $conn->error;
 		}

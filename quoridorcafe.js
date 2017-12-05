@@ -58,15 +58,15 @@ class Cafe {
 		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts);
 
 		var localId = instance.account.getLoggedInUserId();
-		var debugGameId = instance.debugRemotePlayerIdTextBox.value;
+		//var debugGameId = instance.debugRemotePlayerIdTextBox.value;
 		
-		alert("game start: player:" + localId + " and ...wait for opponent to log in." + "debug: game id set to: " + debugGameId);
+		alert("game start: player:" + localId + " and ...wait for opponent to log in." + "debug: game id will be shown in log window.");
 		
-		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID,debugGameId );
+		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID );
 	
 		instance.remote.sendGameStateToRemote("");
 
-		console.log("game id at start:  "+instance.remote.gameId);
+		//console.log("game id at start:  "+instance.remote.gameId);
 	}
 	
 	
@@ -447,23 +447,23 @@ class RemoteContact {
 	}
 
 	//-------------------create a new game in the remote database 
-	initNewGame(localPlayerId, remotePlayerId, gameIdProvided){
+	initNewGame(localPlayerId, remotePlayerId){
 		
 		this.localPlayerId = localPlayerId;
 		this.remotePlayerId = remotePlayerId;
 
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.remotePlayerId + "&gameId=" + gameIdProvided;// No question mark needed
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.remotePlayerId ;// No question mark needed
 		console.log("create new game");
 		console.log(url);
 		this.callPhpWithAjax(url, this.newGameCreatedFeedback.bind(this));	
 
 		//debug.
-		this.gameId = gameIdProvided;
+		//this.gameId = gameIdProvided;
 	}
 	newGameCreatedFeedback(response){
 		this.gameId = response;
 		console.log("game created with id: " + response);
-	
+		
 	}
 
 	//---------------list all the available games from the database
