@@ -40,6 +40,8 @@ class Cafe {
 		instance.restartLocalGameButton.style.visibility = 'hidden';
 		instance.startRemoteGameButton.style.visibility = 'hidden';
 		instance.stopRemoteGameButton.style.visibility = 'visible';
+
+
 		instance.quoridorManager = new Manager();
 		var localPlayerStarts = instance.debugLocalPlayerStartsCheckBox.checked;
 		var startingPlayer = PLAYER1;
@@ -52,7 +54,7 @@ class Cafe {
 
 		
 		alert("game start: " + localId + " and ...wait for opponent to log in.");
-		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID);
+		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID, instance.debugRemotePlayerIdTextBox.value);
 
 
 
@@ -72,7 +74,6 @@ class Cafe {
 		var joinGameId = instance.debugRemotePlayerIdTextBox.value;
 		var localId = instance.account.getLoggedInUserId();
 		console.log("join game button clicked");
-
 		instance.remote.joinGame(joinGameId, localId);
 		
 	}
@@ -414,12 +415,12 @@ class RemoteContact {
 	}
 
 	//-------------------create a new game in the remote database 
-	initNewGame(localPlayerId, remotePlayerId){
+	initNewGame(localPlayerId, remotePlayerId, gameIdProvided){
 		
 		this.localPlayerId = localPlayerId;
 		this.remotePlayerId = remotePlayerId;
 
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.remotePlayerId;// No question mark needed
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.remotePlayerId + "&gameId=" + gameIdProvided;// No question mark needed
 		console.log("create new game");
 		console.log(url);
 		this.callPhpWithAjax(url, this.newGameCreatedFeedback.bind(this));	

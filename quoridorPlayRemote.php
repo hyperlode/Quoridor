@@ -36,7 +36,7 @@
 	
 	}elseif ($action == "createGame"){
 		//
-		$gameId = 988;
+		$gameId = $_GET["gameId"];
 		$player1Id = $_GET["player1"];
 		$player2Id = $_GET["player2"];
 		$result  = sqlCreateNewGame($conn, $gameId,$player1Id, $player2Id);//$result = 
@@ -53,7 +53,7 @@
 		$result = getListOfActiveGames($conn);
 		echo $result;
 		return  ob_get_contents();
-		
+
 	}elseif ($action == "joinGame"){
 		echo "joingame php test";
 		$gameId = $_GET["gameId"];
@@ -128,12 +128,26 @@
 		}
 	}
 	
+/*
+	function returnUnexistingGameId($conn){
 
-	function getUntakenGameId($conn){
-
-
+		$sql = "SELECT EXISTS(SELECT 1 FROM activeGames WHERE gameId = 10 )";
+		$returnString = "";
+		if ($result = $conn->query($sql) ) {	
+			
+			while ($row = $result->fetch_assoc()) {
+			
+				$returnString .=$row["gameId"] . ",";
+				
+			}
+			$result->close();
+			
+		} else {
+			echo "Error return value: " . $sql . "<br>" . $conn->error;
+		}	
+		return $returnString;
 	}
-
+*/
 	function getListOfActiveGames($conn) {
 		$sql = "SELECT * FROM activeGames WHERE playerId2 = 666";
 		//$sql = "SELECT gameState FROM activeGames WHERE gameId = 666";
