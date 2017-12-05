@@ -17,10 +17,14 @@
 
 	if ($action == "submit" ){
 		echo "submitting move<br>";
+		ob_end_clean();
+		ob_start();
 		$gameId = $_GET["gameId"];
 		$gameState = $_GET["gameState"];
-		sqlDeleteGameIdRecord($conn, $gameId);
-		sqlCreateRecordForGameId($conn , $gameId, $gameState  );
+		//sqlDeleteGameIdRecord($conn, $gameId);
+		//sqlCreateRecordForGameId($conn , $gameId, $gameState  );
+		echo sqlUpdateRecordToGameState($conn , $gameId, $gameState);
+		return  ob_get_contents();
 	}elseif ($action == "poll"){
 	
 		printf("polling for change...<br>");
@@ -177,12 +181,24 @@
 		//echo sql ; 
 	
 		if ($conn->query($sql) === TRUE) {	
-			echo "New game created successfully,game id: ".$gameId;
+			return $gameId;
 		} else {
-			echo "Error: " . $sql . "<br>" . $conn->error;
+			return "Error: " . $sql . "<br>" . $conn->error;
 		}
 	}
 
+
+
+	function sqlUpdateRecordToGameState($conn, $gameId, $gameState){
+		$sql = "UPDATE activeGames SET gameState = '".$gameState."'	WHERE gameId = ".$gameId;
+		if ($conn->query($sql) === TRUE) {	
+			return true;
+		} else {
+			return "Error: " . $sql . "<br>" . $conn->error;
+		
+		}
+	}
+	
 	function sqlCreateRecordForGameId($conn, $gameId, $gameState){
 		
 		
