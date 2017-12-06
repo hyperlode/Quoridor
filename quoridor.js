@@ -60,6 +60,7 @@ var WALL_COLOR = "teal"; //"steelblue";
 
 //symbols
 var DIRECTIONS_VERBOSE = ["n","e","s","w","ne","se","sw","nw","nn","ee","ss","ww"];
+var OPPOSITE_DIRECTIONS_VERBOSE = ["s","w","n","e","sw","nw","ne","se","ss","ww","nn","ee"];
 var NORTH = 0;
 var EAST = 1
 var SOUTH = 2;
@@ -73,6 +74,7 @@ var EASTEAST = 9;
 var SOUTHSOUTH = 10;
 var WESTWEST = 11;
  
+var ILLEGAL_DIRECTION  =-1;
 var PLAYER1 = 0;
 var PLAYER2 = 1;
 
@@ -235,6 +237,40 @@ Game.prototype.moveHistoryToString= function(){
 	return this.recordingOfGameInProgress.toString();
 }
 
+
+Game.prototype.rotateGameState= function(gameStateString){
+	console.log(gameStateString);
+	var gameStateArray = gameStateString.split(",");
+	for (var i = 0; i < gameStateArray.length; i+=1){
+		console.log(gameStateArray[i]);
+		console.log(this.getRotatedMove(gameStateArray[i]));
+	}
+}
+	
+Game.prototype.getRotatedMove = function(verboseMove){
+	
+	//check if "gave up"
+	
+	//check if pawnmove
+	var direction = this.pawnVerboseNotationToDirection(verboseMove);
+	
+	if (direction != ILLEGAL_DIRECTION){
+		//pawn move
+		return OPPOSITE_DIRECTIONS_VERBOSE[direction];
+	}
+	
+	var cellPosArr = this.board.wallNotationToCellAndOrientation (verboseMove);
+	
+	if (cellPosArr != false){
+		var rotatedCell = 70 - cellPosArr[0];
+		var orientation = cellPosArr[1];
+		return this.wallToVerboseNotation(rotatedCell, orientation);
+	}
+	
+	console.log("ASSERT ERROR: verbose move not found.: " + verboseMove);
+	return false;
+}	
+	
 Game.prototype.loadBoard = function(gameString){
 	this.eraseBoard();
 		
@@ -441,8 +477,8 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.outputGameStats();
 	this.outputBoard();
 
-	this.moveHistoryToString();
-
+	var test = this.moveHistoryToString();
+	this.rotateGameState(test );
 	return true;
 }
 
@@ -550,8 +586,8 @@ Game.prototype.pawnVerboseNotationToDirection = function ( verboseCoordinate ){
 	var verboseLowerCase = verboseCoordinate.toLowerCase();
 	
 	var direction = DIRECTIONS_VERBOSE.indexOf(verboseLowerCase);
-	if (direction == -1){
-		return 666;
+	if (direction == ILLEGAL_DIRECTION){
+		return ILLEGAL_DIRECTION;
 	}else{
 		return direction;
 	}

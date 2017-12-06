@@ -62,6 +62,8 @@ class Manager {
 	stopAndDeleteLocalGame() {
 		this.localGame.deleteGame();
 	}
+		
+	
 }
 	
 
