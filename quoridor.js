@@ -379,7 +379,7 @@ Game.prototype.interpreteVerboseNotation = function (verboseNotation){
 	
 	//check pawnmove
 	moveTranslated = this.pawnVerboseNotationToDirection(verboseNotation);
-	if (moveTranslated != 666){
+	if (moveTranslated != ILLEGAL_DIRECTION){
 		return [PAWN_MOVE,moveTranslated,false];
 	}
 	
@@ -393,7 +393,7 @@ Game.prototype.interpreteVerboseNotation = function (verboseNotation){
 }
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
-	console.log("verbose Move:" + verboseNotation);
+	console.log("verbose Move:" + verboseNotation);	
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
 		console.log("multiplayer move. local");
 		if ( this.moveCounter > this.moveCounterAtGameLoad){
@@ -410,9 +410,11 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		console.log("replay mode. automatic.");
 		
 	}else if (this.gameStatus != PLAYING){
-		
+		//todo, catches every situation!!!!!
 		console.log("game finished, restart to replay.  status: %d", this.gameStatus	);
 		return false;
+	}else if (this.gameStatus == PLAYING){
+		//pass
 	}else{
 		console.log("assert error game status: " + this.gameStatus);
 	}
@@ -478,7 +480,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.outputBoard();
 
 	var test = this.moveHistoryToString();
-	this.rotateGameState(test );
+	//this.rotateGameState(test );
 	return true;
 }
 
@@ -565,7 +567,7 @@ Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
 
 Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 	var direction = this.pawnVerboseNotationToDirection(verboseCoordinate);
-	if (direction == 666){
+	if (direction == ILLEGAL_DIRECTION){
 		console.log("ASSERT ERROR non valid verbose coordinate.");
 	}
 	
@@ -711,14 +713,14 @@ Game.prototype.indicateActivePlayer = function(){
 
 Game.prototype.blinkOFFActivatedPlayerCallBack = function(activePlayerMemory){
 	if (activePlayerMemory ==this.playerAtMove){ 
-		this.svgPawns[this.playerAtMove].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);
+		this.svgPawns[activePlayerMemory].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);
 		window.setTimeout(function (){this.blinkONActivatedPlayerCallBack(activePlayerMemory)}.bind(this),PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS); 
 	}
 }
 
 Game.prototype.blinkONActivatedPlayerCallBack = function(activePlayerMemory){
 	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED];
-	this.svgPawns[this.playerAtMove].setAttribute("fill",colours[activePlayerMemory]);
+	this.svgPawns[activePlayerMemory].setAttribute("fill",colours[activePlayerMemory]);
 	if (activePlayerMemory ==this.playerAtMove){
 		window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(activePlayerMemory)}.bind(this),PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS); 
 	}
