@@ -8,6 +8,7 @@ var SOUND_ENABLED_AT_STARTUP = false;
 var BOARD_ROTATION_90DEGREES = false;
 var PRINT_ASSERT_ERRORS = false;
 var GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
+var PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS = 2000/2;
 
 var BOARD_WIDTH = 1000;
 var BOARD_HEIGHT = 1500;
@@ -39,6 +40,7 @@ var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1 = "paleturquoise";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "paleturquoise"; //"deepskyblue";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2 = "peachpuff";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "peachpuff"; //"salmon";
+var BOARD_CELL_PAWNCIRCLE_COLOR_BLINK = "white";
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_2= BOARD_BACKGROUND_COLOR; //BOARD_PAWN_2_COLOR   //this is the highlighting of the finish locations
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_1= BOARD_BACKGROUND_COLOR; //BOARD_PAWN_1_COLOR //this is the highlighting of the finish locations
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_TRANSPARENCY = 0.4;
@@ -638,6 +640,7 @@ Game.prototype.eraseCellAsCircleElements = function(){
 	}
 }
 Game.prototype.setCellAsCircleElementsPlayerFinishLines = function(){
+	//output home row player 1 and home row player 2
 	var playerFinishColours = [BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_1, BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_2 ];
 	for (var cellIndex=0;cellIndex<9;cellIndex++){
 		this.svgCellsAsPawnShapes[FINISH_CELLS_LOOKUP_TABLE[this.playerAtMove][cellIndex]].setAttribute('fill',playerFinishColours[this.playerAtMove]);
@@ -663,7 +666,28 @@ Game.prototype.indicateActivePlayer = function(){
 		this.svgPawns[PLAYER1].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1	);
 		this.svgPawns[PLAYER2].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED);
 	}
+	
+	//set time for calling blinker.
+	//on and off blinkers keep calling each other, until other player's turn. 
+	//note that when it is the other player's turn, blinking doesn't start awkwardly (doesn't go "off" right away.)
+	window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(this.playerAtMove)}.bind(this),PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS); 
 }
+
+Game.prototype.blinkOFFActivatedPlayerCallBack = function(activePlayerMemory){
+	if (activePlayerMemory ==this.playerAtMove){ 
+		this.svgPawns[this.playerAtMove].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);
+		window.setTimeout(function (){this.blinkONActivatedPlayerCallBack(activePlayerMemory)}.bind(this),PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS); 
+	}
+}
+
+Game.prototype.blinkONActivatedPlayerCallBack = function(activePlayerMemory){
+	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED];
+	this.svgPawns[this.playerAtMove].setAttribute("fill",colours[activePlayerMemory]);
+	if (activePlayerMemory ==this.playerAtMove){
+		window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(activePlayerMemory)}.bind(this),PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS); 
+	}
+}
+
 
 Game.prototype.mouseClickCellAsPawnCircleElement = function (callerElement){
 	this.mouseCellAsPawnCircleElement(callerElement, true,true);
