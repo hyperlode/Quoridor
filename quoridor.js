@@ -239,12 +239,18 @@ Game.prototype.moveHistoryToString= function(){
 
 
 Game.prototype.rotateGameState= function(gameStateString){
-	console.log(gameStateString);
 	var gameStateArray = gameStateString.split(",");
+	var rotatedGameStateArray = [];
 	for (var i = 0; i < gameStateArray.length; i+=1){
-		console.log(gameStateArray[i]);
-		console.log(this.getRotatedMove(gameStateArray[i]));
+		
+		var rotatedMove = this.getRotatedMove(gameStateArray[i]);
+		// console.log("normal move: " + gameStateArray[i] + " rotated counterpart: " + rotatedMove );
+		rotatedGameStateArray.push(rotatedMove);
 	}
+	
+	//result to string
+	return rotatedGameStateArray.join(",");
+	
 }
 	
 Game.prototype.getRotatedMove = function(verboseMove){
@@ -479,8 +485,8 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.outputGameStats();
 	this.outputBoard();
 
-	var test = this.moveHistoryToString();
-	//this.rotateGameState(test );
+	console.log(this.moveHistoryToString());
+	console.log( this.rotateGameState(this.moveHistoryToString() ) );
 	return true;
 }
 
