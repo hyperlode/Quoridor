@@ -5,7 +5,7 @@
 //All Game Settings
 
 var SOUND_ENABLED_AT_STARTUP = false;
-var BOARD_ROTATION_90DEGREES = false;
+var BOARD_ROTATION_90DEGREES = true;
 var PRINT_ASSERT_ERRORS = false;
 var GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
 var PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS = 2000/2;
@@ -120,9 +120,9 @@ function initQuoridorDOM(){
 	//<button type="button" onclick="toggleNotation()" class="btn btn-primary">Display notation</button>
 	
 	var multiplayerDiv = document.getElementById("multiPlayerControls");
-	if (BOARD_ROTATION_90DEGREES){
-		quoridorField.setAttribute("transform", "rotate(90)");
-	}
+	
+	
+	
 	return {"board":quoridorField, "stats":statsDiv, "multiplayerDiv":multiplayerDiv} ;
 
 	/**/
@@ -1203,6 +1203,13 @@ Game.prototype.buildUpBoard = function(boardDiv){
 	//vertical line segments, after subtracting by 72 (=number of horizontal line segments) correspond with cell ID(with cell on the north)
 	
 	var svgElement = addSvg(boardDiv, "quoridorFieldSvg",BOARD_WIDTH*BOARD_SCALE, BOARD_HEIGHT*BOARD_SCALE,BOARD_BACKGROUND_COLOR,"black");
+	
+	
+	if (BOARD_ROTATION_90DEGREES){
+		svgElement.setAttribute("transform", "rotate(90)");
+	}	
+	
+	
 	//var statsDiv = document.createElement('div');
 	//statsDiv.id = 'statsDiv';
 	//statsDiv.className = 'stats';
