@@ -16,15 +16,17 @@ class Manager {
 		this.domElements = initQuoridorDOM();
 		this.multiPlayerDiv = this.domElements["multiplayerDiv"];
 	}
+	
 	stopMultiPlayerGame(remotePlayer) {
 		this.multiPlayerGame.deleteGame();
 	}
-	startMultiPlayerGame(startPlayer, localPlayerStarts) {
+	
+	startMultiPlayerGame(startPlayer, localPlayerStarts, player1DirectionToTopOfScreen) {
 		//startplayer is constant (see quoridor.js) PLAYER1 or PLAYER2
 		//localplayerStarts is boolean.
 		console.log("startPlayer:"+ startPlayer);
 		console.log("localPlayerStarts:" + localPlayerStarts);
-		this.multiPlayerGame = new Game(this.domElements["board"], this.domElements["stats"], startPlayer);
+		this.multiPlayerGame = new Game(this.domElements["board"], this.domElements["stats"], startPlayer,player1DirectionToTopOfScreen);
 		this.multiPlayerGame.multiPlayerStartGame(localPlayerStarts);
 		// 
 		

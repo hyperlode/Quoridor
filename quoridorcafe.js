@@ -55,7 +55,7 @@ class Cafe {
 		var localPlayerStarts = true;
 		var startingPlayer = PLAYER1;
 
-		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts);
+		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,true);
 
 		var localId = instance.account.getLoggedInUserId();
 		//var debugGameId = instance.debugRemotePlayerIdTextBox.value;
@@ -97,7 +97,7 @@ class Cafe {
 		var localPlayerStarts = false;
 		var startingPlayer = PLAYER1;
 		
-		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts);
+		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,true);
 	
 		instance.remote.startCheckDatabaseForRemoteMoveLoop();
 

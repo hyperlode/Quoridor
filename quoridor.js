@@ -121,7 +121,7 @@ function initQuoridorDOM(){
 	
 	var multiplayerDiv = document.getElementById("multiPlayerControls");
 	if (BOARD_ROTATION_90DEGREES){
-		field.setAttribute("transform", "rotate(90)");
+		quoridorField.setAttribute("transform", "rotate(90)");
 	}
 	return {"board":quoridorField, "stats":statsDiv, "multiplayerDiv":multiplayerDiv} ;
 
@@ -185,7 +185,7 @@ GameReplay.prototype.callback = function( verboseMove){
 //==============================GAME===========================================
 
 
-function Game(boardDiv, statsDiv, startingPlayer){
+function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen){
 	startingPlayer = (typeof startingPlayer !== 'undefined') ?  startingPlayer : PLAYER1;
 	this.boardDiv = boardDiv;
 	this.statsDiv = statsDiv;
@@ -247,10 +247,8 @@ Game.prototype.rotateGameState= function(gameStateString){
 		// console.log("normal move: " + gameStateArray[i] + " rotated counterpart: " + rotatedMove );
 		rotatedGameStateArray.push(rotatedMove);
 	}
-	
 	//result to string
 	return rotatedGameStateArray.join(",");
-	
 }
 	
 Game.prototype.getRotatedMove = function(verboseMove){
@@ -399,7 +397,7 @@ Game.prototype.interpreteVerboseNotation = function (verboseNotation){
 }
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
-	console.log("verbose Move:" + verboseNotation);	
+	// console.log("verbose Move:" + verboseNotation);	
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
 		console.log("multiplayer move. local");
 		if ( this.moveCounter > this.moveCounterAtGameLoad){
@@ -446,7 +444,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		validMove= true;
 	}else if (moveData[0] == WALL_MOVE){
 		this.placeWallByVerboseNotation(this.playerAtMove,verboseNotation);
-		console.log("player %s placed wall (%s)  (player %s)", PLAYER_NAMES[this.playerAtMove], verboseNotation, this.playerAtMove);
+		console.log("player %s placed wall (%s)  (playerid: %s)", PLAYER_NAMES[this.playerAtMove], verboseNotation, this.playerAtMove);
 		validMove = true;
 		undoWallValid  = true;
 	}else {
@@ -485,8 +483,8 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.outputGameStats();
 	this.outputBoard();
 
-	console.log(this.moveHistoryToString());
-	console.log( this.rotateGameState(this.moveHistoryToString() ) );
+	console.log("game move history: " + this.moveHistoryToString());
+	//console.log( "rotated history string: " + this.rotateGameState(this.moveHistoryToString() ) );
 	return true;
 }
 
