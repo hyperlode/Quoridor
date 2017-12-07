@@ -5,7 +5,8 @@
 //All Game Settings
 
 var SOUND_ENABLED_AT_STARTUP = false;
-var BOARD_ROTATION_90DEGREES = true;
+var BOARD_ROTATION_DEGREES = 0; //0 is default
+
 var PRINT_ASSERT_ERRORS = false;
 var GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
 var PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS = 2000/2;
@@ -187,6 +188,7 @@ GameReplay.prototype.callback = function( verboseMove){
 
 function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen){
 	startingPlayer = (typeof startingPlayer !== 'undefined') ?  startingPlayer : PLAYER1;
+	player1MovesToTopOfScreen = (typeof player1MovesToTopOfScreen !== 'undefined') ?  player1MovesToTopOfScreen : true;
 	this.boardDiv = boardDiv;
 	this.statsDiv = statsDiv;
 	
@@ -198,7 +200,17 @@ function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen){
 	this.buildUpOptions(this.statsDiv);
 	
 	this.board = new Board();
-	this.buildUpBoard(this.boardDiv);
+	
+	this.boardRotation = BOARD_ROTATION_DEGREES;
+	if (player1MovesToTopOfScreen){
+		this.boardRotation = 0;
+		
+	}else {
+		//assume player 2 moves to to of screen
+		this.boardRotation = 180;
+	}
+	
+	this.buildUpBoard(this.boardDiv, this.boardRotation);
 	this.outputPawns();
 	
 	this.play_song();
@@ -1049,7 +1061,7 @@ Game.prototype.eraseBoard = function(){
 	
 	this.board = new Board();
 	this.boardDiv.innerHTML = "";
-	this.buildUpBoard(this.boardDiv);
+	this.buildUpBoard(this.boardDiv, this.boardRotation);
 	this.outputPawns();
 		
 	//administration
@@ -1196,7 +1208,7 @@ Game.prototype.testPhp =  function(gameInstance)
 		
  }
 
-Game.prototype.buildUpBoard = function(boardDiv){
+Game.prototype.buildUpBoard = function(boardDiv, svgRotation){
 	//wall lines:
 	//all line segements go in an array, their position index corresponds with their ID.
 	//horizontal line segments: correspond with cell ID (with cell on the west)
@@ -1204,10 +1216,10 @@ Game.prototype.buildUpBoard = function(boardDiv){
 	
 	var svgElement = addSvg(boardDiv, "quoridorFieldSvg",BOARD_WIDTH*BOARD_SCALE, BOARD_HEIGHT*BOARD_SCALE,BOARD_BACKGROUND_COLOR,"black");
 	
-	
-	if (BOARD_ROTATION_90DEGREES){
-		svgElement.setAttribute("transform", "rotate(90)");
-	}	
+	svgElement.setAttribute("transform", "rotate("+ svgRotation+")");
+	//}else if (BOARD_ROTATION_180DEGREES){
+	//	
+	//}
 	
 	
 	//var statsDiv = document.createElement('div');
@@ -1363,21 +1375,35 @@ Game.prototype.buildUpBoard = function(boardDiv){
 			WALL_WIDTH * BOARD_SCALE));	
 	}
 	if (BOARD_TEXT_NOTATION_ENABLED){
+		
+		var textSize = BOARD_TEXT_NOTATION_SIZE * BOARD_SCALE;
 		//add text 
+		
 		for (var i=0;i<8;i++){
+			
+			xcoord = BOARD_X_OFFSET_SCALED + (BOARD_SCALE*BOARD_SQUARE_SPACING)*(i+1) - (BOARD_SCALE * BOARD_TEXT_NOTATION_SIZE/4);
+			ycoord = 9*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + (BOARD_SCALE*BOARD_TEXT_NOTATION_SIZE);
+			
 			add_text(svgElement, String.fromCharCode(i+97), "black", 
-				BOARD_TEXT_NOTATION_SIZE * BOARD_SCALE,
-				BOARD_X_OFFSET_SCALED + (BOARD_SCALE*BOARD_SQUARE_SPACING)*(i+1) - (BOARD_SCALE * BOARD_TEXT_NOTATION_SIZE/4), 
-				9*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + (BOARD_SCALE*BOARD_TEXT_NOTATION_SIZE), 
-				"Verdana");
+				textSize,
+				xcoord, 
+				ycoord, 
+				"Verdana",
+				""+ -svgRotation + " " + (xcoord + textSize/4)  +" "+  (ycoord - textSize/4 ) +"" );
 		}
 		
 		for (var i=0;i<8;i++){
+			
+			xcoord = BOARD_X_OFFSET_SCALED - (BOARD_SCALE * BOARD_TEXT_NOTATION_SIZE);
+			ycoord = ((7-i)+1)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + (BOARD_SCALE*BOARD_TEXT_NOTATION_SIZE/4);
+			
 			add_text(svgElement, String.fromCharCode(i+49), "black", 
-				BOARD_TEXT_NOTATION_SIZE * BOARD_SCALE,
-				BOARD_X_OFFSET_SCALED - (BOARD_SCALE * BOARD_TEXT_NOTATION_SIZE), 
-				((7-i)+1)*BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED + (BOARD_SCALE*BOARD_TEXT_NOTATION_SIZE/4), 
-				"Verdana");
+				textSize,
+				xcoord, 
+				ycoord, 
+				"Verdana",
+				
+				""+ -svgRotation + " " + (xcoord + textSize/4)  +" "+  (ycoord - textSize/4 ) +"" ); 
 				//console.log(String.fromCharCode(i+97));
 		}
 	}

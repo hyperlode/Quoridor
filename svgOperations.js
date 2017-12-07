@@ -185,7 +185,7 @@ function add_polygon(svgElement,pointsAsString,strokeColor ,infill,xOffset,  yOf
 	return shape;
 }
 
-function add_text(svgElement, text, color, size, x,y, font){ //, xOffset, yOffset
+function add_text(svgElement, text, color, size, x,y, font,rotation){ //, xOffset, yOffset
 	var shape = document.createElementNS("http://www.w3.org/2000/svg", "text");
 	
 	shape.setAttribute("font-size",size);
@@ -193,7 +193,9 @@ function add_text(svgElement, text, color, size, x,y, font){ //, xOffset, yOffse
 	shape.setAttribute("x",x);
 	shape.setAttribute("y",y);
 	shape.setAttribute("font-family",font); //font-family="Verdana"
+	shape.setAttribute("transform", "rotate("+ rotation+")");
 	shape.textContent = text;
+	
 	svgElement.appendChild(shape);	
 }
 
