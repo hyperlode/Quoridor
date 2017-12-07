@@ -27,7 +27,12 @@ class Manager {
 		console.log("startPlayer:"+ startPlayer);
 		console.log("localPlayerStarts:" + localPlayerStarts);
 		this.multiPlayerGame = new Game(this.domElements["board"], this.domElements["stats"], startPlayer,player1DirectionToTopOfScreen);
-		this.multiPlayerGame.multiPlayerStartGame(localPlayerStarts, localPlayerEndGoalTopRow);
+		
+		// if (startPlayer == PLAYER2){
+			
+		// }	
+		
+		this.multiPlayerGame.multiPlayerStartGame(localPlayerStarts);
 		// 
 		
 		// this.multiPlayerGame.multiPlayerRemoteMove("START");

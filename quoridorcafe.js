@@ -96,8 +96,9 @@ class Cafe {
 		
 		var localPlayerStarts = false;
 		var startingPlayer = PLAYER1;
+		var player1GoesUpwards = false;
 		
-		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,true);
+		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,player1GoesUpwards);
 	
 		instance.remote.startCheckDatabaseForRemoteMoveLoop();
 
@@ -602,32 +603,36 @@ class RemoteContact {
 		var remoteMoved = false;
 		var remoteMove = "";
 
-		if (remote[0]!="" && local [0]==""  ){
-			console.log("first move opponent.");
+		if (remote[0]!="" && remote[0]!="notyetstarted" &&  local [0]==""  ){
 			local = [];
+			console.log("first move opponent. remote: "+ remote  + " local: " + local);
+			
+		
 		}
+
 		if (remote.length< local.length){
 			console.log ("not yet updated");
 		}else if(remote.length == local.length){
 			console.log("waiting for opponent to make a move");
 			console.log(utilities.arraysEqual(remote,local));
-			
-
-
+		
 			console.log(remote);
 			console.log(local);
-			
-
+		
 			console.log(remote.length);
 			console.log(local.length);
 			
 		}else if (remote.length > local.length){
 			console.log("opponent made a move")
-
+			console.log()
 			if (remote.length != local.length +1 ){
 				console.log("ASSERT ERROR, game state remote does not reflext one extra move.");
 				console.log(remote);
 				console.log(local);
+
+				//set up game for continuation
+				//create new game with starting gamestring.
+
 				return false;
 			}
 
@@ -640,6 +645,7 @@ class RemoteContact {
 					return false;
 				}
 			} 
+			//return last element (the move)
 			remoteMove = remote[remote.length - 1];
 			remoteMoved = true;
 			
