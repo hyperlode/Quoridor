@@ -11,6 +11,16 @@ var NO_PLAYER_DUMMY_ID = 666;
 var NO_GAME_ID_YET = 667;
 var NO_LOGGED_IN_USER_DUMMY_ID= 668;
 
+
+
+var REMOTE_STATUS_ERROR = 0;
+var REMOTE_STATUS_NORMAL_MOVE = 1;
+var REMOTE_STATUS_STARTUP = 2;
+var REMOTE_STATUS_NO_CHANGE = 3;
+// var REMOTE_STATUS_ = 4;
+// var REMOTE_STATUS_ = 5;
+// var REMOTE_STATUS_ = 6;
+
 document.addEventListener("DOMContentLoaded", function() {
 
 	cafe = new Cafe();
@@ -30,6 +40,7 @@ class Cafe {
 		this.setupButtonField();
 		//this.continuePollingForRemoteMove = false;
 		this.remote.setRemoteMovedCallback(this, this.doRemoteMove);
+		this.remote.setStartLocalBoardCallback(this, this.startGameBoard);
 
 	}
 	remoteGameStart(instance) {
@@ -51,12 +62,8 @@ class Cafe {
 		// 	startingPlayer = PLAYER2;
 		// }
 		
+		startGameBoard();
 		
-		var localPlayerStarts = true;
-		var startingPlayer = PLAYER1;
-
-		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,true);
-
 		var localId = instance.account.getLoggedInUserId();
 		//var debugGameId = instance.debugRemotePlayerIdTextBox.value;
 		
@@ -70,7 +77,25 @@ class Cafe {
 	}
 	
 	
-	
+	startGameBoard(){
+		//when the whole game is set up, this is the moment to start.
+		var localPlayerStarts = true;
+		var startingPlayer = PLAYER1;
+
+		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,true);
+		
+	}
+
+	doRemoteMove(instance, gameState){
+		//console.log(this);  --> points to remote
+		//console.log(instance); --> points to this cafe
+		var success = instance.quoridorManager.submitRemoteMove(gameState);
+		if (!success){
+			//instance.remote.startCheckDatabaseForRemoteMoveLoop();
+			console.log("ASSERT ERROR Wrong move.  todo: deal with it.");
+		}
+		//console.log("schip");
+	}
 
 	debugJoinRemoteGame(instance){
 
@@ -139,16 +164,7 @@ class Cafe {
 	}
 
 
-	doRemoteMove(instance, gameState){
-		//console.log(this);  --> points to remote
-		//console.log(instance); --> points to this cafe
-		var success = instance.quoridorManager.submitRemoteMove(gameState);
-		if (!success){
-			//instance.remote.startCheckDatabaseForRemoteMoveLoop();
-			console.log("ASSERT ERROR Wrong move.  todo: deal with it.");
-		}
-		//console.log("schip");
-	}
+	
 
 
 
@@ -433,6 +449,11 @@ class RemoteContact {
 		this.remoteMovedCallBackfunction = callbackFunction;
 	}
 
+	setStartLocalBoardCallback(instance ,callbackFunction){
+		this.storedInstance2 = instance;
+		this.startLocalBoardCallBackfunction = callbackFunction;
+	}
+	
 
 	//---------------------------join existing game by gameId.
 
@@ -567,15 +588,23 @@ class RemoteContact {
 	pollResponse(response){
 		console.log(response);	
 		var status = this.processResponse(response);
-		if (!status){
-			console.log("error in database response. The game seems not to be valid. " + this.remoteGameData );
-		}
-		var remoteMove  = this.compareGameStates();
+	
+		if (status == REMOTE_STATUS_NORMAL_MOVE){
+			if (this.remoteMove){
+				this.stopCheckDatabaseForRemoteMoveLoop();
+				this.remoteMovedCallBackfunction(this.storedInstance, this.remoteGameData["gameState"]);
+			}
+		}else if (status == REMOTE_STATUS_STARTUP){
+			//give command to startup the boards 
 
-		if (remoteMove != false){
-			this.stopCheckDatabaseForRemoteMoveLoop();
-			this.remoteMovedCallBackfunction(this.storedInstance, this.remoteGameData["gameState"]);
+			//--> not yet ok, this would imply that there must be a move first, while that's impossible if there is not yet a board visible. 
+		}else if (status == REMOTE_STATUS_ERROR){
+			console.log("error in database response. The game seems not to be valid. " + this.remoteGameData );
+			
 		}
+
+		//startup of the local game board.
+
 
 	}
 
@@ -631,22 +660,47 @@ class RemoteContact {
 		this.remoteGameData = remoteDataArray;
 		// console.log(remoteDataArray);
 		console.log( this.remoteGameData["gameId"]);
+		var returnStatus = REMOTE_STATUS_ERROR;
 
+
+
+		//check player ids.
 		if (this.remoteGameData["playerId1"] == this.remoteGameData["playerId2"]){
 
 			console.log("ASSERT ERROR: two times the same player. You make this too hard for me. Please chose another opponent then yourself. id:" + this.remoteGameData["playerId2"] );
-			return false;
+			returnStatus = REMOTE_STATUS_ERROR;
 		}else if(this.remoteGameData["playerId1"] == this.localPlayerId){
 			this.localPlayerIsPlayer1 = true;
+			returnStatus = REMOTE_STATUS_NORMAL_MOVE;
 		}else if(this.remoteGameData["playerId2"] == this.localPlayerId){
 			this.localPlayerIsPlayer1 = false;
-
+			returnStatus = REMOTE_STATUS_NORMAL_MOVE;
 		}else{
 			console.log("response from a game where this playerId is not one of the players. is it set up correctly? Is the right gameId provided?");
-			return false;
+			returnStatus = REMOTE_STATUS_ERROR;
+		}
+		if (returnStatus == REMOTE_STATUS_ERROR){
+			return returnStatus;
 		}
 
-		return true;
+
+		if (this.remoteGameData["gameStatus"]== 1 && this.remoteGCREATE A BUG TODO TODO TODO ameData["gameState"] == ){
+			//set here the conditions for starting the boards when there is no move yet, but the game has just started.
+		}
+
+		returnStatus = compareGameStates()
+
+
+		//check game status
+
+		// if (this.remoteGameData["gameStatus" == 0]){
+		// 	//game not yet started.
+		// }else if (this.remoteGameData["gameStatus" == 1]){
+		// 	//game continuation.
+
+		// }
+
+		return returnStatus ;
 		//return  remoteDataArray["gameId"];
 		
 		
@@ -659,15 +713,18 @@ class RemoteContact {
 		var remoteMoved = false;
 		var remoteMove = "";
 
+		var returnStatus = REMOTE_STATUS_ERROR;
+
 		if (remote[0]!="" && remote[0]!="notyetstarted" &&  local [0]==""  ){
 			local = [];
 			console.log("first move opponent. remote: "+ remote  + " local: " + local);
-			
-		
-		}
+			returnStatus = REMOTE_STATUS_STARTUP;
 
+		}
+		
 		if (remote.length< local.length){
 			console.log ("not yet updated");
+			
 		}else if(remote.length == local.length){
 			console.log("waiting for opponent to make a move");
 			console.log(utilities.arraysEqual(remote,local));
@@ -677,44 +734,60 @@ class RemoteContact {
 		
 			console.log(remote.length);
 			console.log(local.length);
+			returnStatus = REMOTE_STATUS_NO_CHANGE;
 			
 		}else if (remote.length > local.length){
 			console.log("opponent made a move")
 			console.log()
 			if (remote.length != local.length +1 ){
-				console.log("ASSERT ERROR, game state remote does not reflect one extra move. It seems like this is a recovered game.");
+			
+				
+				if (local[0]== ""){
+					console.log("It seems like this is a recovered game.");
+					returnStatus = REMOTE_STATUS_STARTUP;
+				}else{
+					console.log("ASSERT ERROR, game state remote does not reflect one extra move. ");
+					returnStatus = REMOTE_STATUS_ERROR;
+				}
+				
 				console.log(remote);
 				console.log(local);
 
 				//set up game for continuation
 				//create new game with starting gamestring.
 
-				return false;
-			}
-
-			for (var i = 0; i < local.length; i++) { 
-				if (local[i] != remote[i] ){
-					console.log("ASSERT ERROR: gamestate history not indentical ");
-					console.log(remote);
-					console.log(local);
 				
-					return false;
+			}else{
+
+				//check history
+				for (var i = 0; i < local.length; i++) { 
+					if (local[i] != remote[i] ){
+						console.log("ASSERT ERROR: gamestate history not indentical ");
+						console.log(remote);
+						console.log(local);
+					
+						returnStatus = REMOTE_STATUS_ERROR;
+					}
+				} 
+
+				if (local [0]==""){
+					returnStatus = REMOTE_STATUS_STARTUP;
+				}else{
+					returnStatus = REMOTE_STATUS_NORMAL_MOVE;
 				}
-			} 
-			//return last element (the move)
-			remoteMove = remote[remote.length - 1];
-			remoteMoved = true;
+
+				//get the last move
+				this.remoteMove = remote[remote.length - 1];
+			}
 			
 	
 		}else {
 
 			console.log("ASSERT ERROR unvalid arrasy.");
+			returnStatus = REMOTE_STATUS_ERROR;
 		}
-		if (remoteMoved){
-			return remoteMove
-		}else{
-			return false;
-		}
+		
+		return returnStatus;
 		
 	}
 
