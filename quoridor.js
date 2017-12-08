@@ -186,9 +186,10 @@ GameReplay.prototype.callback = function( verboseMove){
 //==============================GAME===========================================
 
 
-function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen){
+function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen,startGameState){
 	startingPlayer = (typeof startingPlayer !== 'undefined') ?  startingPlayer : PLAYER1;
 	player1MovesToTopOfScreen = (typeof player1MovesToTopOfScreen !== 'undefined') ?  player1MovesToTopOfScreen : true;
+	startGameState = (typeof startGameState !== 'undefined') ?  startGameState : false; //if wanted, a begin situation may be loaded as a gameStateString i.e. "n,s,n,a2,e4"
 	this.boardDiv = boardDiv;
 	this.statsDiv = statsDiv;
 	
@@ -228,6 +229,15 @@ function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen){
 	this.shortestPathPerPlayer;
 	this.outputBoard();
 	this.gameStatus = PLAYING;
+
+	//set up special start state
+	if (startGameState != false){
+		var movesHistoryFromString = startGameState.split(",");
+		for (var i =0; i<movesHistoryFromString.length;i++){
+			this.playTurnByVerboseNotation(movesHistoryFromString[i]);
+		}
+
+	}
 }
 
 Game.prototype.deleteGame = function (){
@@ -251,6 +261,7 @@ Game.prototype.moveHistoryToString= function(){
 
 
 Game.prototype.rotateGameState= function(gameStateString){
+	//auxilariy function to rotate the gamestate like the letters and numbers of the lines would be rotated.
 	var gameStateArray = gameStateString.split(",");
 	var rotatedGameStateArray = [];
 	for (var i = 0; i < gameStateArray.length; i+=1){
@@ -287,14 +298,13 @@ Game.prototype.getRotatedMove = function(verboseMove){
 	return false;
 }	
 	
-Game.prototype.loadBoard = function(gameString){
-	this.eraseBoard();
-		
-	var movesHistoryFromString = gameString.split(",");
-	for (var i =0; i<movesHistoryFromString.length;i++){
-		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
-	}
-}
+// Game.prototype.loadBoard = function(gameString){
+// 	this.eraseBoard();
+// 	var movesHistoryFromString = gameString.split(",");
+// 	for (var i =0; i<movesHistoryFromString.length;i++){
+// 		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
+// 	}
+// }
 
 Game.prototype.multiPlayerSubmitLocalMove = function(){
 	if (this.gameStatus != MULTIPLAYER_LOCAL_PLAYING){
@@ -309,7 +319,6 @@ Game.prototype.multiPlayerSubmitLocalMove = function(){
 
 Game.prototype.multiPlayerStartGame = function(startingPlayerIsLocal){
 	//two thing to consider: which player is the local/remote player,
-	//for now: assume player1 is local.
 	//which player is starting?
 
 	if (startingPlayerIsLocal ){
@@ -321,6 +330,15 @@ Game.prototype.multiPlayerStartGame = function(startingPlayerIsLocal){
 	}
 	this.moveCounterAtGameLoad = 0;
 	
+}
+
+Game.prototype.multiPlayerLoadBoard = function(gameString, startingPlayerIsLocal, ){
+	
+	this.eraseBoard();
+	var movesHistoryFromString = gameString.split(",");
+	for (var i =0; i<movesHistoryFromString.length;i++){
+		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
+	}
 }
 
 Game.prototype.multiPlayerRemoteMove = function(gameString){

@@ -50,9 +50,10 @@ class Manager {
 		return this.multiPlayerGame.moveHistoryToString();
 	}
 
-	loadAndContinueMultiPlayerGame() {
-		var qGame = new Game(this.domElements["board"], this.domElements["stats"]);
-		qGame.multiplayerLoadBoard("d8,e8,7f,7c,n,7a,7h,e6,d6,d4,e4,d2,e2,1c,1e");
+	loadAndContinueMultiPlayerGame(gameState, startingPlayer, player1MovesToTopOfScreen) {
+		var qGame = new Game(this.domElements["board"], this.domElements["stats"], startingPlayer, player1MovesToTopOfScreen);
+		qGame.multiplayerLoadBoard(gameState);
+		//qGame.multiplayerLoadBoard("d8,e8,7f,7c,n,7a,7h,e6,d6,d4,e4,d2,e2,1c,1e");
 		// qGame.multiplayerLoadBoard("n,s,n,s");
 	}
 	loadAndContinueLocalGame(gameString) {

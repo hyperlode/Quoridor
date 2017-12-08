@@ -152,7 +152,6 @@ class Cafe {
 
 
 
-
 	debugNewCommand(instance) {
 		//instance.quoridorManager.submitRemoteMove(instance.debugCommandTextBox.value);
 		
@@ -567,8 +566,10 @@ class RemoteContact {
 
 	pollResponse(response){
 		console.log(response);	
-		var status = this.interpreteResponse(response);
-		
+		var status = this.processResponse(response);
+		if (!status){
+			console.log("error in database response. The game seems not to be valid. " + this.remoteGameData );
+		}
 		var remoteMove  = this.compareGameStates();
 
 		if (remoteMove != false){
@@ -598,7 +599,7 @@ class RemoteContact {
 	}
 
 
-	interpreteResponse(remoteGameData){
+	processResponse(remoteGameData){
 
 
 
@@ -642,9 +643,10 @@ class RemoteContact {
 
 		}else{
 			console.log("response from a game where this playerId is not one of the players. is it set up correctly? Is the right gameId provided?");
+			return false;
 		}
 
-
+		return true;
 		//return  remoteDataArray["gameId"];
 		
 		
@@ -680,7 +682,7 @@ class RemoteContact {
 			console.log("opponent made a move")
 			console.log()
 			if (remote.length != local.length +1 ){
-				console.log("ASSERT ERROR, game state remote does not reflect one extra move.");
+				console.log("ASSERT ERROR, game state remote does not reflect one extra move. It seems like this is a recovered game.");
 				console.log(remote);
 				console.log(local);
 
