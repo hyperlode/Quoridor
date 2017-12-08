@@ -79,10 +79,13 @@ class Cafe {
 		//check for remote game with this id
 
 		//add name to 
+
+
+		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
 		var joinGameId = instance.debugRemotePlayerIdTextBox.value;
-		var localId = instance.account.getLoggedInUserId();
+		
 		console.log("join game button clicked");
-		instance.remote.joinGame(joinGameId, localId);
+		instance.remote.joinGame(joinGameId);
 		
 
 		instance.quoridorManager = new Manager();
@@ -406,14 +409,20 @@ class Account {
 
 class RemoteContact {
 	constructor() {
-		this.localPlayerId = 123;
-		this.remotePlayerId = 124;
-		this.gameId = NO_GAME_ID_YET;
+		this.localPlayerId = 123; //very important.  --> identify player 
+		this.gameId = NO_GAME_ID_YET;//very important --> use this for polling.
+		this.localPlayerIsPlayer1 = true;
+
+		this.desiredRemotePlayerId = 124; //not yet important as of dec 2017, the idea could be here that if you want to start a newGame, you want to make sure you play against this opponent only.
+		
 		this.counter = 1;
-		this.databaseGameState = ""; 
+		
 		this.continuePollingForRemoteMove = false;
 		this.currentLocalGameStateString = "";
 		this.remoteMovedCallBackfunction;
+
+		this.remoteGameData = {};
+		
 	}
 
 
@@ -428,41 +437,37 @@ class RemoteContact {
 
 	//---------------------------join existing game by gameId.
 
-	joinGame(gameId, localPlayerIdThatWillBecomeTheRemotePlayerOfThisGame){
-		var playerId = localPlayerIdThatWillBecomeTheRemotePlayerOfThisGame;
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"joinGame"+"&player2=" + playerId + "&gameId=" + gameId;// No question mark needed
-		console.log("try to join game: " + gameId + ". By player: " + playerId);
+	joinGame(gameId){
+		
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"joinGame"+"&player2=" + this.localPlayerId + "&gameId=" + gameId;// No question mark needed
+		console.log("try to join game: " + gameId + ". By player: " + this.localPlayerId);
 		this.callPhpWithAjax(url, this.joinGameFeedback.bind(this));
 		
 		//debug for now:
-		this.gameId = gameId;
+		this.gameId = gameId; 
 		this.currentLocalGameStateString = "";
 		
 	}
 	joinGameFeedback(response){
 		console.log("feedback.");
-		
-		// this.localPlayerId = 123;
-		// this.remotePlayerId = 124;
-		// this.gameId = NO_GAME_ID_YET;
 	}
 
 	//-------------------create a new game in the remote database 
-	initNewGame(localPlayerId, remotePlayerId){
+	initNewGame(localPlayerId, desiredRemotePlayerId){
 		
 		this.localPlayerId = localPlayerId;
-		this.remotePlayerId = remotePlayerId;
+		this.desiredRemotePlayerId = desiredRemotePlayerId;
 
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.remotePlayerId ;// No question mark needed
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.desiredRemotePlayerId ;// No question mark needed
 		console.log("create new game");
 		console.log(url);
 		this.callPhpWithAjax(url, this.newGameCreatedFeedback.bind(this));	
 
 		//debug.
-		//this.gameId = gameIdProvided;
 	}
+
 	newGameCreatedFeedback(response){
-		this.gameId = response;
+		this.gameId = response; 
 		console.log("game created with id: " + response);
 		
 	}
@@ -561,16 +566,15 @@ class RemoteContact {
 	}
 
 	pollResponse(response){
-		this.databaseGameState = response;
-			
-		var remoteGameData = this.interpretResponse(response);
-		console.log(remoteGameData);
-		// var remoteMove  = this.compareGameStates();
+		console.log(response);	
+		var status = this.interpreteResponse(response);
+		
+		var remoteMove  = this.compareGameStates();
 
-		// if (remoteMove != false){
-		// 	this.stopCheckDatabaseForRemoteMoveLoop();
-		// 	this.remoteMovedCallBackfunction(this.storedInstance, this.databaseGameState);
-		// }
+		if (remoteMove != false){
+			this.stopCheckDatabaseForRemoteMoveLoop();
+			this.remoteMovedCallBackfunction(this.storedInstance, this.remoteGameData["gameState"]);
+		}
 
 	}
 
@@ -594,7 +598,10 @@ class RemoteContact {
 	}
 
 
-	interpretResponse(remoteGameData){
+	interpreteResponse(remoteGameData){
+
+
+
 		//telegram with data;
 		//gameId
 		//gameState
@@ -616,15 +623,36 @@ class RemoteContact {
 		// var data = <?= $jsonData ?>;
 		// console.log(data); // or whatever you need to do with the object
 		// </script>
+	
+		var remoteDataArray =  JSON.parse(remoteGameData);
 
-		//return remoteGameData["gameStarted"];
-		return remoteGameData;
+		//return remoteDataArray.gameStarted + "   " + remoteDataArray["gameStarted"];
+		this.remoteGameData = remoteDataArray;
+		// console.log(remoteDataArray);
+		console.log( this.remoteGameData["gameId"]);
+
+		if (this.remoteGameData["playerId1"] == this.remoteGameData["playerId2"]){
+
+			console.log("ASSERT ERROR: two times the same player. You make this too hard for me. Please chose another opponent then yourself. id:" + this.remoteGameData["playerId2"] );
+			return false;
+		}else if(this.remoteGameData["playerId1"] == this.localPlayerId){
+			this.localPlayerIsPlayer1 = true;
+		}else if(this.remoteGameData["playerId2"] == this.localPlayerId){
+			this.localPlayerIsPlayer1 = false;
+
+		}else{
+			console.log("response from a game where this playerId is not one of the players. is it set up correctly? Is the right gameId provided?");
+		}
+
+
+		//return  remoteDataArray["gameId"];
 		
 		
 	}
 
 	compareGameStates() {
-		var remote = this.databaseGameState.split(",");
+		var remoteGameState = this.remoteGameData["gameState"];
+		var remote = remoteGameState.split(",");
 		var local = this.currentLocalGameStateString.split(",");
 		var remoteMoved = false;
 		var remoteMove = "";
@@ -688,8 +716,8 @@ class RemoteContact {
 		
 	}
 
-	getLastReceivedGameState(){
-		return this.databaseGameState;
-	}
+	
+		
+	
 }
 

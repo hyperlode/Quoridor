@@ -29,9 +29,10 @@
 	
 		printf("polling for change...<br>");
 		$gameId = $_GET["gameId"];
-		$result = sqlGetGameState($conn, $gameId);
 		ob_end_clean();
 		ob_start();
+		$result = sqlGetGameState($conn, $gameId);
+		
 		
 		//$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
 		
