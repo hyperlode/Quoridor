@@ -563,18 +563,15 @@ class RemoteContact {
 	pollResponse(response){
 		this.databaseGameState = response;
 			
-		var remoteGameAnalitcs = this.interpretResponse();
-		
-		var remoteMove  = this.compareGameStates();
+		var remoteGameData = this.interpretResponse(response);
+		console.log(remoteGameData);
+		// var remoteMove  = this.compareGameStates();
 
-		if (remoteMove != false){
-			this.stopCheckDatabaseForRemoteMoveLoop();
-			this.remoteMovedCallBackfunction(this.storedInstance, this.databaseGameState);
-		}
-	//	this.databaseGameState = response;
-		//console.log(response);
-		//console.log(this);
-		//console.log("lode");
+		// if (remoteMove != false){
+		// 	this.stopCheckDatabaseForRemoteMoveLoop();
+		// 	this.remoteMovedCallBackfunction(this.storedInstance, this.databaseGameState);
+		// }
+
 	}
 
 
@@ -620,7 +617,8 @@ class RemoteContact {
 		// console.log(data); // or whatever you need to do with the object
 		// </script>
 
-
+		//return remoteGameData["gameStarted"];
+		return remoteGameData;
 		
 		
 	}
@@ -654,7 +652,7 @@ class RemoteContact {
 			console.log("opponent made a move")
 			console.log()
 			if (remote.length != local.length +1 ){
-				console.log("ASSERT ERROR, game state remote does not reflext one extra move.");
+				console.log("ASSERT ERROR, game state remote does not reflect one extra move.");
 				console.log(remote);
 				console.log(local);
 

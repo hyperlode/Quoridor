@@ -29,10 +29,10 @@
 	
 		printf("polling for change...<br>");
 		$gameId = $_GET["gameId"];
-		
 		$result = sqlGetGameState($conn, $gameId);
 		ob_end_clean();
 		ob_start();
+		
 		//$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
 		
 		echo $result;
@@ -214,10 +214,31 @@
 		}
 	}
 
+
+
+	// $returnString = "";
+	// if ($result = $conn->query($sql) ) {	
+	
+	// 	while ($row = $result->fetch_assoc()) {
+	// 		//echo "%s", $row["gameState"];
+	// 		// $test = "%s",$row["gameState"]; //ERROR!!!!
+	// 		//$test = $row["gameId"]; 
+	// 		$returnString .=$row["gameId"] . ",";
+			
+	// 	}
+	// 	$result->close();
+		
+	// } else {
+	// 	echo "Error return value: " . $sql . "<br>" . $conn->error;
+	// }	
+
+
 	function sqlGetGameState ($conn, $gameId){
 		//http://php.net/manual/en/class.mysqli-result.php
-		$sql = "SELECT gameState FROM activeGames WHERE gameId =".$gameId;
-		//$returnString = "";
+		//$sql = "SELECT gameState FROM activeGames WHERE gameId =".$gameId;
+		$sql = "SELECT * FROM activeGames WHERE gameId =".$gameId;
+		
+		$returnString = "";
 		$jsonData = "";
 		if ($result = $conn->query($sql) ) {	
 			
@@ -230,10 +251,15 @@
 			
 			// fetch all results into an array
 			$response = array();
-			while($row = mysql_fetch_assoc($result)) $response[] = $row;
+			while($row = $result->fetch_assoc()){
+				$response = $row;
+				//$returnString .=$row["gameId"] . ",";
+			// echo $row;
+			} 
 
 			// save the JSON encoded array
-			$jsonData = json_encode($response);
+			header('Content-type: application/json');
+			$returnString = json_encode($response);
 			
 			/*
 			while ($row = $result->fetch_assoc()) {
@@ -248,8 +274,9 @@
 		} else {
 			echo "Error return value: " . $sql . "<br>" . $conn->error;
 		}	
-		return $jsonData;
-		//return $returnString;
+		//return $jsonData;
+		return $returnString;
+		
 	}
 
 	function sqlOutputAllRowsIfValueInColumn(){
