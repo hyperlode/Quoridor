@@ -562,6 +562,8 @@ class RemoteContact {
 
 	pollResponse(response){
 		this.databaseGameState = response;
+			
+		var remoteGameAnalitcs = this.interpretResponse();
 		
 		var remoteMove  = this.compareGameStates();
 
@@ -595,7 +597,33 @@ class RemoteContact {
 	}
 
 
+	interpretResponse(remoteGameData){
+		//telegram with data;
+		//gameId
+		//gameState
+		//startingPlayer
+		//player1Id
+		//player2Id
+		//gamestate
+		//timestampGameCreated
+		//timestampPlayer1LastMove
+		//timestampPlayer2LastMove
+		
+		//https://stackoverflow.com/questions/9740775/php-return-array-into-javascript
+		
+		// save the JSON encoded array
+		// $jsonData = json_encode($response); 
+		// In your script, use something like the following to merge that JSON into the JavaScript:
 
+		// <script>
+		// var data = <?= $jsonData ?>;
+		// console.log(data); // or whatever you need to do with the object
+		// </script>
+
+
+		
+		
+	}
 
 	compareGameStates() {
 		var remote = this.databaseGameState.split(",");

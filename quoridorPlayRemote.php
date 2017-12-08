@@ -217,7 +217,8 @@
 	function sqlGetGameState ($conn, $gameId){
 		//http://php.net/manual/en/class.mysqli-result.php
 		$sql = "SELECT gameState FROM activeGames WHERE gameId =".$gameId;
-		$returnString = "";
+		//$returnString = "";
+		$jsonData = "";
 		if ($result = $conn->query($sql) ) {	
 			
 			//http://php.net/manual/en/mysqli.query.php
@@ -226,6 +227,15 @@
 			// 	printf ("%s (%s)<br>", $row[0], $row[1]);
 			// }
 			
+			
+			// fetch all results into an array
+			$response = array();
+			while($row = mysql_fetch_assoc($result)) $response[] = $row;
+
+			// save the JSON encoded array
+			$jsonData = json_encode($response);
+			
+			/*
 			while ($row = $result->fetch_assoc()) {
 				//echo "%s", $row["gameState"];
 				// $test = "%s",$row["gameState"]; //ERROR!!!!
@@ -234,11 +244,12 @@
 				//return "%s", $row["gameState"];
 			}
 			$result->close();
-			
+			*/
 		} else {
 			echo "Error return value: " . $sql . "<br>" . $conn->error;
 		}	
-		return $returnString;
+		return $jsonData;
+		//return $returnString;
 	}
 
 	function sqlOutputAllRowsIfValueInColumn(){
