@@ -29,10 +29,10 @@
 	
 		printf("polling for change...<br>");
 		$gameId = $_GET["gameId"];
+		
+		$result = sqlGetGameState($conn, $gameId);
 		ob_end_clean();
 		ob_start();
-		$result = sqlGetGameState($conn, $gameId);
-		
 		
 		//$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
 		
@@ -64,15 +64,21 @@
 		$gameId = $_GET["gameId"];
 		$player2Id = $_GET["player2"];
 		$result = joinActiveGame($conn,$gameId,$player2Id);
+		// ob_end_clean();
+		// ob_start();
+		// if ($result == true){
+		// 	echo "1";
+		// }else{
+		// 	echo $result;
+		// }
+		// return ob_get_contents();
+
+		$result = sqlGetGameState($conn, $gameId);
 		ob_end_clean();
 		ob_start();
-		if ($result == true){
-			echo "1";
-		}else{
-			echo $result;
-		}
-		
-		return ob_get_contents();
+		echo $result;
+		return  ob_get_contents();
+
 	}else{
 		//printf("unknown action (or none provided) : ". $action ."<br>");
 		ob_end_clean();
@@ -124,7 +130,7 @@
 	
 
 	function joinActiveGame($conn,$gameId,$player2Id){
-		$sql = "UPDATE activeGames SET playerId2 = '".$player2Id."'	WHERE gameId = ".$gameId;
+		$sql = "UPDATE activeGames SET playerId2 = '".$player2Id."', gameStatus = '2' WHERE gameId = ".$gameId;
 		if ($conn->query($sql) === TRUE) {	
 			return true;
 		} else {
@@ -176,8 +182,8 @@
 
 
 	function sqlCreateNewGame($conn,  $player1Id, $player2Id){
-		$sql = "INSERT INTO `activeGames`( `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
-		VALUES (".$player1Id.",".$player2Id.",'notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1);";  //works!
+		$sql = "INSERT INTO `activeGames`( `playerId1`, `playerId2`,`gameStatus`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
+		VALUES (".$player1Id.",".$player2Id.",'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1);";  //works!
 			
 		if ($conn->query($sql) === TRUE) {	
 			////https://www.w3schools.com/php/php_mysql_insert_lastid.asp		
@@ -245,37 +251,18 @@
 			
 			//http://php.net/manual/en/mysqli.query.php
 			echo "executed ok. response (for gameId ".$gameId.") ".$result->num_rows ." <br>";
-			// while ($row = $result->fetch_row()) {
-			// 	printf ("%s (%s)<br>", $row[0], $row[1]);
-			// }
-			
-			
 			// fetch all results into an array
 			$response = array();
 			while($row = $result->fetch_assoc()){
 				$response = $row;
-				//$returnString .=$row["gameId"] . ",";
-			// echo $row;
 			} 
 
 			// save the JSON encoded array
 			header('Content-type: application/json');
 			$returnString = json_encode($response);
-			
-			/*
-			while ($row = $result->fetch_assoc()) {
-				//echo "%s", $row["gameState"];
-				// $test = "%s",$row["gameState"]; //ERROR!!!!
-				$test = $row["gameState"]; 
-				$returnString .=$test;
-				//return "%s", $row["gameState"];
-			}
-			$result->close();
-			*/
 		} else {
 			echo "Error return value: " . $sql . "<br>" . $conn->error;
 		}	
-		//return $jsonData;
 		return $returnString;
 		
 	}
