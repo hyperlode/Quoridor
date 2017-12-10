@@ -70,7 +70,11 @@ class Cafe {
 		// 	startingPlayer = PLAYER2;
 		// }
 		
-		startGameBoard();
+		var localPlayerStarts = true;
+		var startingPlayer = PLAYER1;
+		var player1GoesUpwards = true;
+		
+		instance.remote.setGameProperties(startingPlayer,localPlayerStarts,player1GoesUpwards);
 		
 		var localId = instance.account.getLoggedInUserId();
 		//var debugGameId = instance.debugRemotePlayerIdTextBox.value;
@@ -79,19 +83,10 @@ class Cafe {
 		
 		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID );
 	
-		instance.remote.sendGameStateToRemote("");
+		instance.remote.startCheckDatabaseForRemoteMoveLoop();
+
 
 		//console.log("game id at start:  "+instance.remote.gameId);
-	}
-	
-	
-	startGameBoard(){
-		//when the whole game is set up, this is the moment to start.
-		var localPlayerStarts = true;
-		var startingPlayer = PLAYER1;
-
-		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,true);
-		
 	}
 
 	startAndDisplayMultiPlayerGameQuoridor(instance, startingPlayer, localPlayerStarts, player1GoesUpwards, gameStateString ){
@@ -124,7 +119,6 @@ class Cafe {
 		console.log("join game button clicked");
 		instance.remote.joinGame(joinGameId);
 		
-
 		instance.quoridorManager = new Manager();
 	
 		// var localPlayerStarts = instance.debugLocalPlayerStartsCheckBox.checked;
