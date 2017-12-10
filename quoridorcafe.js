@@ -70,18 +70,19 @@ class Cafe {
 		// 	startingPlayer = PLAYER2;
 		// }
 		
-		var localPlayerStarts = true;
+	
 		var startingPlayer = PLAYER1;
 		var player1GoesUpwards = true;
 		
-		instance.remote.setGameProperties(startingPlayer,localPlayerStarts,player1GoesUpwards);
+		instance.remote.setGameProperties(startingPlayer,player1GoesUpwards);
 		
 		var localId = instance.account.getLoggedInUserId();
 		//var debugGameId = instance.debugRemotePlayerIdTextBox.value;
 		
 		alert("game start: player:" + localId + " and ...wait for opponent to log in." + "debug: game id will be shown in log window.");
 		
-		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID );
+		var localPlayerStarts = true;
+		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID,localPlayerStarts );
 	
 	
 
@@ -132,11 +133,10 @@ class Cafe {
 		// 	startingPlayer = PLAYER2;
 		// }
 		
-		var localPlayerStarts = false;
 		var startingPlayer = PLAYER1;
 		var localPlayerGoesUpwards = true;
 		
-		instance.remote.setGameProperties(startingPlayer,localPlayerStarts,localPlayerGoesUpwards);
+		instance.remote.setGameProperties(startingPlayer,localPlayerGoesUpwards);
 	
 		//instance.quoridorManager = new Manager();
 		
@@ -470,13 +470,12 @@ class RemoteContact {
 	}
 
 
-	setGameProperties(startingPlayer,localPlayerStarts,localPlayerGoesUpwards ){
+	setGameProperties(startingPlayer,localPlayerGoesUpwards ){
 
 	
 
 
 		//should be stored remotely, but this will do for now.
-		this.localPlayerStarts = localPlayerStarts;
 		this.startingPlayer = startingPlayer;
 		this.localPlayerGoesUpwards = localPlayerGoesUpwards;
 	}
@@ -580,12 +579,18 @@ class RemoteContact {
 
 
 	//-------------------create a new game in the remote database 
-	initNewGame(localPlayerId, desiredRemotePlayerId){
+	initNewGame(localPlayerId, desiredRemotePlayerId, localPlayerFirstMove){
 		
 		this.localPlayerId = localPlayerId;
 		this.desiredRemotePlayerId = desiredRemotePlayerId;
 
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.desiredRemotePlayerId ;// No question mark needed
+
+		this.localPlayerFirstMove = localPlayerFirstMove;
+		var firstMoveAsPlayer1DoesFirstMove = 1;
+		if (!localPlayerFirstMove){
+			var firstMoveAsPlayer1DoesFirstMove = 0;		
+		}
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.desiredRemotePlayerId + "&player1FirstMove=" + firstMoveAsPlayer1DoesFirstMove ;// No question mark needed
 		console.log("create new game");
 		console.log(url);
 		this.callPhpWithAjax(url, this.newGameCreatedFeedback.bind(this));	
@@ -755,11 +760,28 @@ class RemoteContact {
 				}
 				var initialGameState = remoteDataArray["gameState"];
 				if( initialGameState == "notyetstarted"){
-					console.log("fjeijfiejieieiiie");
 					initialGameState = "";
 				}
+
+				//check starting player.
+				if (remoteDataArray["player1DoesFirstMove"] == 1){
+					this.localPlayerStarts = this.localPlayerIsPlayer1;
+					console.log("PLAYER1 starts");
+				}else if (remoteDataArray["player1DoesFirstMove"] == 0){
+					this.localPlayerStarts = !this.localPlayerIsPlayer1;
+					console.log("PLAYER2 starts");
+				}else{
+					console.log("assert ERROR undefined starting player");
+				}
+
 				//display quoridor board
+
+				//setGameProperties(startingPlayer,localPlayerStarts,localPlayerGoesUpwards );
+				
 				this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerStarts, player1GoesUpwards, initialGameState);
+				
+				
+				this.currentLocalGameStateString = initialGameState;
 				this.gameStatus = GAME_STATUS_PLAYING;
 			}
 

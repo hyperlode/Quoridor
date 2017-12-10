@@ -42,10 +42,11 @@
 	
 	}elseif ($action == "createGame"){
 		//
-		
+	
 		$player1Id = $_GET["player1"];
 		$player2Id = $_GET["player2"];
-		$result  = sqlCreateNewGame($conn, $player1Id, $player2Id);//$result = 
+		$player1FirstMove = intval($_GET["player1FirstMove"]); //should be 1 or 0 
+		$result  = sqlCreateNewGame($conn, $player1Id, $player2Id, $player1FirstMove);//$result = 
 
 		$gameId = $result;
 			
@@ -88,30 +89,7 @@
 		$resultArray = sqlGetGameState($conn, $gameId);
 
 		$result = json_encode($resultArray);
-		//$result = "lode";
-		// if (count($arrayArray) > 0){
-		// 	//add playerId as player 2
-
-		
-
-		// 	$result = joinActiveGame($conn,$gameId,$player2Id);
-
-		// 	// ob_end_clean();
-		// 	// ob_start();
-		// 	// if ($result == true){
-		// 	// 	echo "1";
-		// 	// }else{
-		// 	// 	echo $result;
-		// 	// }
-		// 	// return ob_get_contents();
-
-		//$result = sqlGetGameState($conn, $gameId);
-
-		// }else{
-		// 	$result = false;
-		// }
-
-
+	
 		ob_end_clean();
 		ob_start();
 	
@@ -228,9 +206,9 @@
 	}
 
 
-	function sqlCreateNewGame($conn,  $player1Id, $player2Id){
+	function sqlCreateNewGame($conn,  $player1Id, $player2Id, $player1FirstMove){
 		$sql = "INSERT INTO `activeGames`( `playerId1`, `playerId2`,`gameStatus`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
-		VALUES (".$player1Id.",".$player2Id.",'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1);";  //works!
+		VALUES (".$player1Id.",".$player2Id.",'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove .");";  //works!
 			
 		if ($conn->query($sql) === TRUE) {	
 			////https://www.w3schools.com/php/php_mysql_insert_lastid.asp		
