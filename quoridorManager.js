@@ -21,12 +21,12 @@ class Manager {
 		this.multiPlayerGame.deleteGame();
 	}
 	
-	startMultiPlayerGame(startPlayer, localPlayerStarts, player1DirectionToTopOfScreen) {
+	startMultiPlayerGame(startPlayer, localPlayerStarts, player1DirectionToTopOfScreen, gameStateAtLoadTime) {
 		//startplayer is constant (see quoridor.js) PLAYER1 or PLAYER2
 		//localplayerStarts is boolean.
 		console.log("startPlayer:"+ startPlayer);
 		console.log("localPlayerStarts:" + localPlayerStarts);
-		this.multiPlayerGame = new Game(this.domElements["board"], this.domElements["stats"], startPlayer,player1DirectionToTopOfScreen);
+		this.multiPlayerGame = new Game(this.domElements["board"], this.domElements["stats"], startPlayer,player1DirectionToTopOfScreen,gameStateAtLoadTime);
 		
 		// if (startPlayer == PLAYER2){
 			

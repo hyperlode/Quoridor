@@ -90,7 +90,8 @@ class Cafe {
 	}
 
 	startAndDisplayMultiPlayerGameQuoridor(instance, startingPlayer, localPlayerStarts, player1GoesUpwards, gameStateString ){
-		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,player1GoesUpwards);
+		console.log("starting board, gamestatstring: " + gameStateString);
+		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,player1GoesUpwards,gameStateString);
 	}
 
 	doRemoteMove(instance, gameState){
@@ -130,16 +131,16 @@ class Cafe {
 		
 		var localPlayerStarts = false;
 		var startingPlayer = PLAYER1;
-		var player1GoesUpwards = false;
+		var localPlayerGoesUpwards = true;
 		
-		instance.remote.setGameProperties(startingPlayer,localPlayerStarts,player1GoesUpwards);
+		instance.remote.setGameProperties(startingPlayer,localPlayerStarts,localPlayerGoesUpwards);
 	
 		//instance.quoridorManager = new Manager();
 		
 
 		//instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,player1GoesUpwards);
 	
-		instance.remote.startCheckDatabaseForRemoteMoveLoop();
+		
 
 	}
 
@@ -448,7 +449,7 @@ class RemoteContact {
 
 		this.localPlayerStarts = false;
 		this.startingPlayer = PLAYER1;
-		this.player1GoesUpwards = false;
+		this.localPlayerGoesUpwards = false;
 
 
 
@@ -466,11 +467,15 @@ class RemoteContact {
 	}
 
 
-	setGameProperties(startingPlayer,localPlayerStarts,player1GoesUpwards ){
+	setGameProperties(startingPlayer,localPlayerStarts,localPlayerGoesUpwards ){
+
+	
+
+
 		//should be stored remotely, but this will do for now.
 		this.localPlayerStarts = localPlayerStarts;
 		this.startingPlayer = startingPlayer;
-		this.player1GoesUpwards = player1GoesUpwards;
+		this.localPlayerGoesUpwards = localPlayerGoesUpwards;
 	}
 
 	setLocalPlayerId(id){
@@ -490,22 +495,85 @@ class RemoteContact {
 	//---------------------------join existing game by gameId.
 
 	joinGame(gameId){
+		//step one: check if possible.
+		console.log("checkit");
 		
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"joinGame"+"&player2=" + this.localPlayerId + "&gameId=" + gameId;// No question mark needed
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+gameId;// No question mark needed
+		this.callPhpWithAjax(url,this.joinGameFeedback.bind(this));
+	
+
+
+	}
+
+	joinGameFeedback(responseJSON){
+		
+		console.log(responseJSON);	
+		var remoteDataArray =  JSON.parse(responseJSON);
+		// var remoteStatus = this.processResponse(remoteDataArray);
+		console.log(remoteDataArray);
+		var gameId = remoteDataArray["gameId"];
+		var remotePlayer1 = remoteDataArray["playerId1"];
+		var remotePlayer2 = remoteDataArray["playerId2"];
+
+		if (remoteDataArray.length == 0){
+
+			console.log("game not found... gameId provided: " + gameId);
+			return false;
+		}
+		if (this.localPlayerId == remotePlayer1 && this.localPlayerId == remotePlayer2){
+			console.log("ASSERT ERROR: game with id" +remoteDataArray["gameId"] +" has two will not join the game.");
+			return false;
+		}
+		
+		if (this.localPlayerId == remotePlayer1 ){
+			this.joinGameExecute(gameId,1);
+		}else if (this.localPlayerId == remotePlayer2){
+			this.joinGameExecute(gameId,2);
+		}else if (remotePlayer1 == NO_PLAYER_DUMMY_ID){
+			this.joinGameExecute(gameId,1);
+		}else if (remotePlayer2 == NO_PLAYER_DUMMY_ID){
+			this.joinGameExecute(gameId,2);
+		}else{
+			console.log("ASSERT ERROR: this game is not available for this player. There must be a free spot, or it must be a continuation of a previous game. ids: " );
+			
+		}
+
+
+
+	}
+
+	joinGameExecute(gameId, playerNumber){
+	//joinGame(gameId){
+		//game can also be joined if it was made earlier on...
+		//so first check if the game id exists, and if the player id's are both filled in. 
+
+		//var playerNumber = 1; //1 or 2.
+
+		//add localplayer as player2
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"joinGame"+"&playerId=" + this.localPlayerId + "&gameId=" + gameId+ "&playerNumber=" + playerNumber;// No question mark needed
 		console.log("try to join game: " + gameId + ". By player: " + this.localPlayerId);
-		this.callPhpWithAjax(url, this.joinGameFeedback.bind(this));
+		this.callPhpWithAjax(url, this.joinGameExecuteFeedback.bind(this));
 		
 		//debug for now:
 		this.gameId = gameId; 
 		this.currentLocalGameStateString = "";
 		
 	}
-	joinGameFeedback(remoteGameDataJSON){
+	joinGameExecuteFeedback(remoteGameDataJSON){
 		//response should be JSON
-		console.log("feedback.");
+		console.log(remoteGameDataJSON);
 		var remoteGameData =  JSON.parse(remoteGameDataJSON);
 		this.initialSetLocalToMirrorRemoteGame(remoteGameData);
+
+		//
+		this.startCheckDatabaseForRemoteMoveLoop();	
+		
 	}
+
+
+
+
+
 
 
 	//-------------------create a new game in the remote database 
@@ -639,7 +707,30 @@ class RemoteContact {
 			if (this.gameStatus == GAME_STATUS_INITIALIZING || this.gameStatus == GAME_STATUS_NO_STATUS_YET){
 				//first feedback from "playing game". possible already with opponent move. 
 				console.log("starting local game. ");
-				this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerStarts,  this.player1GoesUpwards, remoteDataArray["gameState"]);
+
+				//define rotation of board
+				var player1GoesUpwards = false;
+				if ( this.localPlayerIsPlayer1){
+					if (this.localPlayerGoesUpwards){
+						player1GoesUpwards = true;
+						console.log("a");
+					}else{
+						player1GoesUpwards = false;
+						console.log("b");
+					}
+				}else{
+					if (this.localPlayerGoesUpwards){
+						player1GoesUpwards = false;
+						console.log("c");
+					}else{
+						player1GoesUpwards = true;
+						console.log("d");
+					}
+				}
+				
+				var player1GoesUpwards = false;
+
+				this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerStarts, player1GoesUpwards, remoteDataArray["gameState"]);
 				this.gameStatus = GAME_STATUS_PLAYING;
 			}
 

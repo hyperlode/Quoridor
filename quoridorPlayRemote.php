@@ -26,14 +26,15 @@
 		echo sqlUpdateRecordToGameState($conn , $gameId, $gameState);
 		return  ob_get_contents();
 	}elseif ($action == "poll"){
-	
-		printf("polling for change...<br>");
+		
+		
+		printf("poll game id");
 		$gameId = $_GET["gameId"];
 		
-		$result = sqlGetGameState($conn, $gameId);
+		$resultArray = sqlGetGameState($conn, $gameId);
+		$result = json_encode($resultArray);
 		ob_end_clean();
 		ob_start();
-		
 		//$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
 		
 		echo $result;
@@ -62,20 +63,59 @@
 	}elseif ($action == "joinGame"){
 		echo "joingame php test";
 		$gameId = $_GET["gameId"];
-		$player2Id = $_GET["player2"];
-		$result = joinActiveGame($conn,$gameId,$player2Id);
-		// ob_end_clean();
-		// ob_start();
-		// if ($result == true){
-		// 	echo "1";
-		// }else{
-		// 	echo $result;
-		// }
-		// return ob_get_contents();
+		$playerId = $_GET["playerId"];
+		$playerNumber = $_GET["playerNumber"]; // 1 for player 1, 2 for player 2
 
-		$result = sqlGetGameState($conn, $gameId);
+	
+	
+		if ($playerNumber == "1"){
+			$resultArray = joinActiveGameAsPlayer1($conn,$gameId,$playerId);
+			echo "player 1";
+		}elseif($playerNumber == "2"){
+			$resultArray = joinActiveGameAsPlayer2($conn,$gameId,$playerId);
+			echo "player 2";
+		}else{
+			echo "wrong playernumber ";
+		}
+		
+		$resultArray = sqlGetGameState($conn, $gameId);
+
+		// if($resultArray["playerId2"] == $player2Id){
+		// 	//player 2 already defined
+		// };
+
+		// if($resultArray["playerId1"] == $player2Id){
+		// 	//player 1 is player2id.	
+		// };
+		
+		$result = json_encode($resultArray);
+		//$result = "lode";
+		// if (count($arrayArray) > 0){
+		// 	//add playerId as player 2
+
+		
+
+		// 	$result = joinActiveGame($conn,$gameId,$player2Id);
+
+		// 	// ob_end_clean();
+		// 	// ob_start();
+		// 	// if ($result == true){
+		// 	// 	echo "1";
+		// 	// }else{
+		// 	// 	echo $result;
+		// 	// }
+		// 	// return ob_get_contents();
+
+		//$result = sqlGetGameState($conn, $gameId);
+
+		// }else{
+		// 	$result = false;
+		// }
+
+
 		ob_end_clean();
 		ob_start();
+	
 		echo $result;
 		return  ob_get_contents();
 
@@ -127,10 +167,18 @@
 
 
 
-	
+	function joinActiveGameAsPlayer2($conn,$gameId,$playerId){
+		$sql = "UPDATE activeGames SET playerId2 = '".$playerId."', gameStatus = '2' WHERE gameId = ".$gameId;
+		if ($conn->query($sql) === TRUE) {	
+			return true;
+		} else {
+			echo "Error: " . $sql . "<br>" . $conn->error;
+			return false;
+		}
+	}
 
-	function joinActiveGame($conn,$gameId,$player2Id){
-		$sql = "UPDATE activeGames SET playerId2 = '".$player2Id."', gameStatus = '2' WHERE gameId = ".$gameId;
+	function joinActiveGameAsPlayer1($conn,$gameId,$playerId){
+		$sql = "UPDATE activeGames SET playerId1 = '".$playerId."', gameStatus = '2' WHERE gameId = ".$gameId;
 		if ($conn->query($sql) === TRUE) {	
 			return true;
 		} else {
@@ -259,11 +307,12 @@
 
 			// save the JSON encoded array
 			header('Content-type: application/json');
-			$returnString = json_encode($response);
+			//
+			//$returnString = json_encode($response);
 		} else {
 			echo "Error return value: " . $sql . "<br>" . $conn->error;
 		}	
-		return $returnString;
+		return $response;
 		
 	}
 
