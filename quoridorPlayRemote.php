@@ -46,11 +46,18 @@
 		$player1Id = $_GET["player1"];
 		$player2Id = $_GET["player2"];
 		$result  = sqlCreateNewGame($conn, $player1Id, $player2Id);//$result = 
+
+		$gameId = $result;
+			
+		$resultArray = sqlGetGameState($conn, $gameId);
+		$result = json_encode($resultArray);
+
 		ob_end_clean();
 		ob_start();
 		echo $result;
 		//echo $result;
 		return  ob_get_contents();
+
 	}elseif ($action == "listOfGames"){
 		ob_end_clean();
 		ob_start();
@@ -80,14 +87,6 @@
 		
 		$resultArray = sqlGetGameState($conn, $gameId);
 
-		// if($resultArray["playerId2"] == $player2Id){
-		// 	//player 2 already defined
-		// };
-
-		// if($resultArray["playerId1"] == $player2Id){
-		// 	//player 1 is player2id.	
-		// };
-		
 		$result = json_encode($resultArray);
 		//$result = "lode";
 		// if (count($arrayArray) > 0){

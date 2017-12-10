@@ -83,7 +83,7 @@ class Cafe {
 		
 		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID );
 	
-		instance.remote.startCheckDatabaseForRemoteMoveLoop();
+	
 
 
 		//console.log("game id at start:  "+instance.remote.gameId);
@@ -91,6 +91,9 @@ class Cafe {
 
 	startAndDisplayMultiPlayerGameQuoridor(instance, startingPlayer, localPlayerStarts, player1GoesUpwards, gameStateString ){
 		console.log("starting board, gamestatstring: " + gameStateString);
+		if (gameStateString == "notyetstarted"){
+			gameStateString = "";
+		}
 		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,player1GoesUpwards,gameStateString);
 	}
 
@@ -590,10 +593,29 @@ class RemoteContact {
 		//debug.
 	}
 
-	newGameCreatedFeedback(response){
-		this.gameId = response; 
-		console.log("game created with id: " + response);
-		
+	newGameCreatedFeedback(responseJSON){
+
+		console.log("new game created raw response: " + responseJSON);	
+		var remoteDataArray =  JSON.parse(responseJSON);
+		// var remoteStatus = this.processResponse(remoteDataArray);
+		console.log(remoteDataArray);
+		var gameId = remoteDataArray["gameId"];
+		var remotePlayer1 = remoteDataArray["playerId1"];
+		var remotePlayer2 = remoteDataArray["playerId2"];
+
+		this.gameId = gameId; 
+		if (remotePlayer2 == NO_PLAYER_DUMMY_ID){
+			this.gameStatus = GAME_STATUS_INITIALIZING;
+			this.remotePlayerId = remotePlayer2;
+			console.log("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + "no opponenent yet. Wait for it.");
+			
+		}else{
+			this.gameStatus = GAME_STATUS_PLAYING;
+			console.log("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + " Opponent id (666 is no opponent yet): " + remotePlayer2);
+		}
+
+
+		this.startCheckDatabaseForRemoteMoveLoop();
 	}
 
 	//---------------list all the available games from the database
@@ -677,6 +699,7 @@ class RemoteContact {
 
 	checkDatabaseForRemoteMoveLoop(){
 	
+		//console.log("start remote check loop");
 		if (this.continuePollingForRemoteMove){
 			var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"poll"+"&gameId="+this.gameId;// No question mark needed
 			this.callPhpWithAjax(url,this.pollResponse.bind(this));
@@ -694,8 +717,11 @@ class RemoteContact {
 		var remoteDataArray =  JSON.parse(responseJSON);
 		var remoteStatus = this.processResponse(remoteDataArray);
 		
+		
 		//local game action:
-		if (remoteStatus == GAME_STATUS_PLAYING){
+		if (remoteStatus == GAME_STATUS_NO_STATUS_YET){
+			console.log("waiting for remote database game init.");
+		}else if (remoteStatus == GAME_STATUS_PLAYING){
 
 			//verify remote data
 			if(!this.verifyRemoteGameData(remoteDataArray)){
@@ -713,24 +739,27 @@ class RemoteContact {
 				if ( this.localPlayerIsPlayer1){
 					if (this.localPlayerGoesUpwards){
 						player1GoesUpwards = true;
-						console.log("a");
+						console.log("player1GoesUpwards = true;");
 					}else{
 						player1GoesUpwards = false;
-						console.log("b");
+						console.log("player1GoesUpwards = false;");
 					}
 				}else{
 					if (this.localPlayerGoesUpwards){
 						player1GoesUpwards = false;
-						console.log("c");
+						console.log("local player is player 2  , player1GoesUpwards = false; ");
 					}else{
 						player1GoesUpwards = true;
-						console.log("d");
+						console.log("local player is player 2  , player1GoesUpwards = true; ");
 					}
 				}
-				
-				var player1GoesUpwards = false;
-
-				this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerStarts, player1GoesUpwards, remoteDataArray["gameState"]);
+				var initialGameState = remoteDataArray["gameState"];
+				if( initialGameState == "notyetstarted"){
+					console.log("fjeijfiejieieiiie");
+					initialGameState = "";
+				}
+				//display quoridor board
+				this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerStarts, player1GoesUpwards, initialGameState);
 				this.gameStatus = GAME_STATUS_PLAYING;
 			}
 
@@ -761,7 +790,7 @@ class RemoteContact {
 			
 		}
 
-		//startup of the local game board.
+		
 
 
 	}
@@ -817,10 +846,20 @@ class RemoteContact {
 		//return remoteDataArray.gameStarted + "   " + remoteDataArray["gameStarted"];
 		//remoteDataArray = remoteDataArray;
 		// console.log(remoteDataArray);
-		console.log( remoteDataArray["gameId"]);
+		//console.log( remoteDataArray["gameId"]);
 		console.log( remoteDataArray);
 		var returnStatus = GAME_STATUS_ERROR;
-		if (remoteDataArray["gameStatus"] == REMOTE_GAME_STATUS_INITIALIZING){
+
+		if (remoteDataArray.length == 0){
+			console.log(this.gameStatus)	;
+			if (this.gameStatus == GAME_STATUS_NO_STATUS_YET){
+				console.log("Waiting for first database response...");
+				returnStatus = GAME_STATUS_NO_STATUS_YET;
+			}else{
+				console.log("no valid array found");
+				returnStatus = GAME_STATUS_ERROR;
+			}
+		}else 	if (remoteDataArray["gameStatus"] == REMOTE_GAME_STATUS_INITIALIZING){
 			//console.log();
 			//console.log(remoteDataArray["playerId2"]);
 			console.log("wait for opponent to join game.");
@@ -855,7 +894,7 @@ class RemoteContact {
 			returnStatus = GAME_STATUS_PLAYING;
 		}else{
 			var returnStatus = GAME_STATUS_ERROR;
-			console.log("aiaiai probme");
+			console.log("game status error.");
 		}
 
 		// }else if (remoteDataArray["gameStatus"] == ){
