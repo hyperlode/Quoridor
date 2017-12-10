@@ -60,11 +60,13 @@
 		return  ob_get_contents();
 
 	}elseif ($action == "listOfGames"){
+		
+		$gameStatusFilter = $_GET["gameStatusFilter"];
+		
+		$result = getListOfActiveGames($conn,$gameStatusFilter);
 		ob_end_clean();
 		ob_start();
-		
-		//return;
-		$result = getListOfActiveGames($conn);
+		$result = json_encode($result);
 		echo $result;
 		return  ob_get_contents();
 
@@ -184,20 +186,33 @@
 		return $returnString;
 	}
 */
-	function getListOfActiveGames($conn) {
-		$sql = "SELECT * FROM activeGames WHERE playerId2 = 666";
+	function getListOfActiveGames($conn, $gameStatusFilter) {
+		$sql = "SELECT * FROM activeGames WHERE gameStatus = ".$gameStatusFilter;
 		//$sql = "SELECT gameState FROM activeGames WHERE gameId = 666";
-		$returnString = "";
+		//$returnString = "";
 		if ($result = $conn->query($sql) ) {	
-		
+			
+			// while ($row = $result->fetch_assoc()) {
+			// 	//echo "%s", $row["gameState"];
+			// 	// $test = "%s",$row["gameState"]; //ERROR!!!!
+			// 	//$test = $row["gameId"]; 
+			// 	$returnString .=$row["gameId"] . ",";
+				
+			// }
+			// $result->close();
+			$rows = array();
+
 			while ($row = $result->fetch_assoc()) {
-				//echo "%s", $row["gameState"];
-				// $test = "%s",$row["gameState"]; //ERROR!!!!
-				//$test = $row["gameId"]; 
-				$returnString .=$row["gameId"] . ",";
+				$rows[] = $row; 
 				
 			}
 			$result->close();
+
+			
+
+			//print json_encode($rows);
+			return $rows;
+			
 			
 		} else {
 			echo "Error return value: " . $sql . "<br>" . $conn->error;

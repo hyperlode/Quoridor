@@ -131,9 +131,9 @@ class Cafe {
 
 	}
 
-	debugInitMultiPlayerGame(instance){
+	listGames(instance){
 		//alert ("nothing here, click the remote game start button.");
-		instance.remote.listOfGames();
+		instance.remote.listOfGames(1);
 	}
 
 
@@ -228,8 +228,8 @@ class Cafe {
 		
 		
 		
-		this.initializeMultiPlayerGameDebug = addButtonToExecuteGeneralFunction(debugControlsDiv, "getActiveGamesList", "getActiveGamesList", "getActiveGamesList", this.debugInitMultiPlayerGame, this);
-		this.initializeMultiPlayerGameDebug.style.visibility = 'visible';
+		this.listGamesButtom = addButtonToExecuteGeneralFunction(debugControlsDiv, "getActiveGamesList", "getActiveGamesList", "getActiveGamesList", this.listGames, this);
+		this.listGamesButtom.style.visibility = 'visible';
 
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "de willem gaataddierallemaaloplossenzeg", "debugCmdText", "debugCmdText", 20);
 
@@ -606,24 +606,46 @@ class RemoteContact {
 
 	//---------------list all the available games from the database
 	
-	listOfGames(){
-		
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"listOfGames";// No question mark needed
+	listOfGames(remoteGameStatusFilter){
+		//remotegamestatus --> see: REMOTE_GAME_STATUS_....
+		this.remoteGameStatusFilter = remoteGameStatusFilter;
+
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"listOfGames" + "&gameStatusFilter=" + remoteGameStatusFilter;
 		console.log("list of games");
 		this.callPhpWithAjax(url, this.listOfGamesCallBack.bind(this));	
 	}
 
-	listOfGamesCallBack(responseText){
-		//console.log("list of games.ffff");
-		//console.log(responseText);
-		var responseArray = responseText.split(",");
-		var outputString = "";
-
-		for (var i = 0; i < responseArray.length; i+=1) {
+	listOfGamesCallBack(responseJSON){
 		
-			outputString +=  " game id: " + responseArray[i]   + "<br>";
+		var remoteDataArray =  JSON.parse(responseJSON);
+		//console.log(remoteDataArray);
+		var htmlString = ""
+
+		if(this.remoteGameStatusFilter == REMOTE_GAME_STATUS_INITIALIZING){
+			htmlString += "List of unstarted games to join:<br>"
+		}else if(this.remoteGameStatusFilter == REMOTE_GAME_STATUS_PLAYING){
+			htmlString += "List of already started games:<br>"
+		}else if(this.remoteGameStatusFilter == REMOTE_GAME_STATUS_ERROR){
+			htmlString += "List of erroneous games:<br>"
+		}else if(this.remoteGameStatusFilter == REMOTE_GAME_STATUS_ARCHIVED){
+			htmlString += "List of archived games:<br>"
+		}else{
+			htmlString += "unknown game status list: <br>"
 		}
-		document.getElementById(LISTEDGAMES_DIV_LIST).innerHTML = outputString;
+
+		for (var i=0;i<remoteDataArray.length;i+=1){
+			htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
+		}
+		
+
+		// var responseArray = responseText.split(",");
+		// var outputString = "";
+
+		// for (var i = 0; i < responseArray.length; i+=1) {
+		
+		// 	outputString +=  " game id: " + responseArray[i]   + "<br>";
+		// }
+		 document.getElementById(LISTEDGAMES_DIV_LIST).innerHTML = htmlString;
 	}
 	
 
