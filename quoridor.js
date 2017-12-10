@@ -306,6 +306,49 @@ Game.prototype.getRotatedMove = function(verboseMove){
 // 	}
 // }
 
+
+
+Game.prototype.multiPlayerStartGame = function(startingPlayerIsLocal, startGameState){
+	//two thing to consider: which player is the local/remote player,
+	//which player is starting?
+	startGameState = (typeof startGameState !== 'undefined') ?  startGameState : false; //if wanted, a begin situation may be loaded as a gameStateString i.e. "n,s,n,a2,e4"
+	
+	if (startingPlayerIsLocal ){
+		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
+		console.log("local player starts");
+	}else{
+		this.gameStatus = MULTIPLAYER_REMOTE_PLAYING;
+		console.log("remote player starts");
+	}
+
+	this.moveCounterAtGameLoad = 0;
+
+
+	if (startGameState != false){
+		var movesHistoryFromString = startGameState.split(",");
+		var buildUpMoveHistory =  movesHistoryFromString[0];
+		for (var i =0; i<movesHistoryFromString.length;i++){
+			console.log("------------------" + movesHistoryFromString[i]);
+		
+			console.log(buildUpMoveHistory);
+			if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
+				this.playTurnByVerboseNotation(movesHistoryFromString[i]);
+				this.multiPlayerSubmitLocalMove();
+			}else if(this.gameStatus == MULTIPLAYER_REMOTE_PLAYING){
+				this.multiPlayerRemoteMove(buildUpMoveHistory);
+			}
+			if(i+1< movesHistoryFromString.length){
+				buildUpMoveHistory += "," + movesHistoryFromString[i+1];
+			}
+		}
+
+	}
+
+
+	
+	
+}
+
 Game.prototype.multiPlayerSubmitLocalMove = function(){
 	if (this.gameStatus != MULTIPLAYER_LOCAL_PLAYING){
 		console.log("remote players turn. move not submitted.");
@@ -315,30 +358,6 @@ Game.prototype.multiPlayerSubmitLocalMove = function(){
 	//change game status.
 	this.gameStatus = MULTIPLAYER_REMOTE_PLAYING;
 	return this.moveHistoryToString();
-}
-
-Game.prototype.multiPlayerStartGame = function(startingPlayerIsLocal){
-	//two thing to consider: which player is the local/remote player,
-	//which player is starting?
-
-	if (startingPlayerIsLocal ){
-		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
-		console.log("local player starts");
-	}else{
-		this.gameStatus = MULTIPLAYER_REMOTE_PLAYING;
-		console.log("remote player starts");
-	}
-	this.moveCounterAtGameLoad = 0;
-	
-}
-
-Game.prototype.multiPlayerLoadBoard = function(gameString, startingPlayerIsLocal, ){
-	
-	this.eraseBoard();
-	var movesHistoryFromString = gameString.split(",");
-	for (var i =0; i<movesHistoryFromString.length;i++){
-		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
-	}
 }
 
 Game.prototype.multiPlayerRemoteMove = function(gameString){
@@ -355,6 +374,9 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	//check moveshistory for correctness.
 	var receivedGame = gameString.split(",");
 	var remoteMove = receivedGame.pop();
+	console.log(receivedGame);
+	console.log(this.recordingOfGameInProgress);
+
 	var isGameStateRemoteCorrectHistory = utilities.arraysEqual(receivedGame, this.recordingOfGameInProgress);
 	if (isGameStateRemoteCorrectHistory!= true){
 		console.log("wrong remote game state. awaiting correct move.");

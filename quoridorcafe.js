@@ -869,7 +869,6 @@ class RemoteContact {
 		//remoteDataArray = remoteDataArray;
 		// console.log(remoteDataArray);
 		//console.log( remoteDataArray["gameId"]);
-		console.log( remoteDataArray);
 		var returnStatus = GAME_STATUS_ERROR;
 
 		if (remoteDataArray.length == 0){
@@ -1076,13 +1075,9 @@ class RemoteContact {
 			
 		}else if(remote.length == local.length){
 			console.log("waiting for opponent to make a move");
-			console.log(utilities.arraysEqual(remote,local));
+			console.log("remote: " + remote);
+			console.log("local: " + local);
 		
-			console.log(remote);
-			console.log(local);
-		
-			console.log(remote.length);
-			console.log(local.length);
 			//returnStatus = GAME_STATUS_PLAYING_NO_CHANGE;
 			returnStatus = false;
 
