@@ -1,4 +1,4 @@
-var logonText = "ifjefffff";
+var logonText = "Welcome in Quoridor Cafe The big wall.";
 
 
 var ACCOUNT_DIV = "loginArea";
@@ -63,32 +63,22 @@ class Cafe {
 
 		instance.quoridorManager = new Manager();
 	
-		// var localPlayerStarts = instance.debugLocalPlayerStartsCheckBox.checked;
-
-		// var startingPlayer = PLAYER1;
-		// if (!instance.debugLocalPlayerMovesUpCheckBox.checked) {
-		// 	startingPlayer = PLAYER2;
-		// }
 		
-	
-		var startingPlayer = PLAYER1;
-		var player1GoesUpwards = true;
+		var localPlayerGoesUpwards = instance.debugLocalPlayerMovesUpCheckBox.checked;
 		
-		instance.remote.setGameProperties(startingPlayer,player1GoesUpwards);
+		instance.remote.setGameProperties(localPlayerGoesUpwards);
 		
 		var localId = instance.account.getLoggedInUserId();
 		//var debugGameId = instance.debugRemotePlayerIdTextBox.value;
 		
 		alert("game start: player:" + localId + " and ...wait for opponent to log in." + "debug: game id will be shown in log window.");
 		
-		var localPlayerStarts = true;
+		var localPlayerStarts = instance.debugPlayer1StartsCheckbox.checked;
 		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID,localPlayerStarts );
 	
-	
-
-
-		//console.log("game id at start:  "+instance.remote.gameId);
 	}
+
+	
 
 	startAndDisplayMultiPlayerGameQuoridor(instance, startingPlayer, localPlayerStarts, player1GoesUpwards, gameStateString ){
 		console.log("starting board, gamestatstring: " + gameStateString);
@@ -126,17 +116,11 @@ class Cafe {
 		
 		instance.quoridorManager = new Manager();
 	
-		// var localPlayerStarts = instance.debugLocalPlayerStartsCheckBox.checked;
-
-		// var startingPlayer = PLAYER1;
-		// if (!instance.debugLocalPlayerMovesUpCheckBox.checked) {
-		// 	startingPlayer = PLAYER2;
-		// }
 		
-		var startingPlayer = PLAYER1;
-		var localPlayerGoesUpwards = true;
 		
-		instance.remote.setGameProperties(startingPlayer,localPlayerGoesUpwards);
+		var localPlayerGoesUpwards = instance.debugLocalPlayerMovesUpCheckBox.checked;
+		
+		instance.remote.setGameProperties(localPlayerGoesUpwards);
 	
 		//instance.quoridorManager = new Manager();
 		
@@ -252,8 +236,8 @@ class Cafe {
 
 		this.debugRemotePlayerIdTextBox = addTextBox(debugControlsDiv, "13", "debugRemotePlayerIdTextBox", "debugRemotePlayerIdTextBox", 10);
 
-		this.debugLocalPlayerStartsCheckBox = addCheckBox(debugControlsDiv, "localPlayerStarts", "localPlayerStarts", true, "Local Player Starts");
-		this.debugLocalPlayerMovesUpCheckBox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Local Player is blue (move up)");
+		this.debugPlayer1StartsCheckbox = addCheckBox(debugControlsDiv, "PLAYER1 starts", "PLAYER1 starts", true, "PLAYER1 (=game initializer, blue) starts");
+		this.debugLocalPlayerMovesUpCheckBox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Display Local Player moves up on the board.");
 		this.debugNoServerSetup = addCheckBox(debugControlsDiv, "debugNoServerUse", "debugNoServerUse", false, "debug without server");
 	}
 }
@@ -470,13 +454,10 @@ class RemoteContact {
 	}
 
 
-	setGameProperties(startingPlayer,localPlayerGoesUpwards ){
-
-	
-
+	setGameProperties(localPlayerGoesUpwards ){
 
 		//should be stored remotely, but this will do for now.
-		this.startingPlayer = startingPlayer;
+		//this.startingPlayer = startingPlayer;
 		this.localPlayerGoesUpwards = localPlayerGoesUpwards;
 	}
 
@@ -600,10 +581,10 @@ class RemoteContact {
 
 	newGameCreatedFeedback(responseJSON){
 
-		console.log("new game created raw response: " + responseJSON);	
+		//console.log("new game created raw response: " + responseJSON);	
 		var remoteDataArray =  JSON.parse(responseJSON);
 		// var remoteStatus = this.processResponse(remoteDataArray);
-		console.log(remoteDataArray);
+		console.log( remoteDataArray); //"remote Game Data: " +
 		var gameId = remoteDataArray["gameId"];
 		var remotePlayer1 = remoteDataArray["playerId1"];
 		var remotePlayer2 = remoteDataArray["playerId2"];
@@ -612,7 +593,7 @@ class RemoteContact {
 		if (remotePlayer2 == NO_PLAYER_DUMMY_ID){
 			this.gameStatus = GAME_STATUS_INITIALIZING;
 			this.remotePlayerId = remotePlayer2;
-			console.log("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + "no opponenent yet. Wait for it.");
+			console.log("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + " No opponenent yet. Wait for it.");
 			
 		}else{
 			this.gameStatus = GAME_STATUS_PLAYING;
@@ -718,7 +699,7 @@ class RemoteContact {
 	}
 
 	pollResponse(responseJSON){
-		console.log(responseJSON);	
+		//console.log(responseJSON);	
 		var remoteDataArray =  JSON.parse(responseJSON);
 		var remoteStatus = this.processResponse(remoteDataArray);
 		
@@ -775,50 +756,34 @@ class RemoteContact {
 				}
 
 				//display quoridor board
-
-				//setGameProperties(startingPlayer,localPlayerStarts,localPlayerGoesUpwards );
-				
 				this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerStarts, player1GoesUpwards, initialGameState);
-				
-				
+								
 				this.currentLocalGameStateString = initialGameState;
 				this.gameStatus = GAME_STATUS_PLAYING;
+				return true;
 			}
 
 
 			//check for remote move.
-
-			
 			var opponentMovedOneMove = this.compareGameStates(remoteDataArray)
-			console.log("compare states status: " + opponentMovedOneMove);
+			console.log("compare states status, did opponent made move? : " + opponentMovedOneMove);
 			if (opponentMovedOneMove){
 				// returnStatus
 				// this.remoteMove
 				this.stopCheckDatabaseForRemoteMoveLoop();
 				this.remoteMovedCallBackfunction(this.storedInstance, remoteDataArray["gameState"]);
 			}
-		
 			return true;
 		}else if (remoteStatus == GAME_REGISTER_LOCAL_PLAYER){
 			console.log("register local player");
-			
-			
 		}else if (remoteStatus == GAME_STATUS_INITIALIZING){
 			//give command to startup the boards 
-			console.log("game init.... ");
+			console.log("game status: initializing. Wait for all players to join, before showing the board. ");
 			//--> not yet ok, this would imply that there must be a move first, while that's impossible if there is not yet a board visible. 
 		}else if (remoteStatus == GAME_STATUS_ERROR){
 			console.log("error in database response. The game seems not to be valid. " +remoteDataArray );
-			
 		}
-
-		
-
-
 	}
-
-
-
 
 	callPhpWithAjax(url,functionToCallWhenDone){
 		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
@@ -883,7 +848,7 @@ class RemoteContact {
 		}else 	if (remoteDataArray["gameStatus"] == REMOTE_GAME_STATUS_INITIALIZING){
 			//console.log();
 			//console.log(remoteDataArray["playerId2"]);
-			console.log("wait for opponent to join game.");
+			//console.log("wait for opponent to join game.");
 			returnStatus = GAME_STATUS_INITIALIZING;
 
 			// if (! this.localPlayerIsRemotelySet(remoteDataArray )){
@@ -1059,17 +1024,8 @@ class RemoteContact {
 		if (remote[0]!="" && remote[0]!="notyetstarted" &&  local [0]==""  ){
 			local = [];
 			console.log("first move opponent. remote: "+ remote  + " local: " + local);
-			// returnStatus = GAME_STATUS_NO_MOVES_YET;
-
 		}
 
-		// if (remote[0]=="" || remote[0]=="notyetstarted" &&  local [0]==""  ){
-		// 	local = [];
-		// 	console.log("first move opponent. remote: "+ remote  + " local: " + local);
-		// 	returnStatus = GAME_STATUS_NO_MOVES_YET;
-
-		// }
-		
 		if (remote.length< local.length){
 			console.log ("not yet updated");
 			

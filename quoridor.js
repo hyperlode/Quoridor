@@ -259,7 +259,7 @@ Game.prototype.moveHistoryToString= function(){
 	return this.recordingOfGameInProgress.toString();
 }
 
-
+//---------------------GAMESTATE ROTATION-------------------------------------------------
 Game.prototype.rotateGameState= function(gameStateString){
 	//auxilariy function to rotate the gamestate like the letters and numbers of the lines would be rotated.
 	var gameStateArray = gameStateString.split(",");
@@ -297,16 +297,8 @@ Game.prototype.getRotatedMove = function(verboseMove){
 	console.log("ASSERT ERROR: verbose move not found.: " + verboseMove);
 	return false;
 }	
-	
-// Game.prototype.loadBoard = function(gameString){
-// 	this.eraseBoard();
-// 	var movesHistoryFromString = gameString.split(",");
-// 	for (var i =0; i<movesHistoryFromString.length;i++){
-// 		this.playTurnByVerboseNotation(movesHistoryFromString[i]);
-// 	}
-// }
 
-
+//---------------------MULTIPLAYER-------------------------------------------------
 
 Game.prototype.multiPlayerStartGame = function(startingPlayerIsLocal, startGameState){
 	//two thing to consider: which player is the local/remote player,
@@ -324,13 +316,11 @@ Game.prototype.multiPlayerStartGame = function(startingPlayerIsLocal, startGameS
 	this.moveCounterAtGameLoad = 0;
 
 
+	//replay a provided game as a load game.
 	if (startGameState != false){
 		var movesHistoryFromString = startGameState.split(",");
 		var buildUpMoveHistory =  movesHistoryFromString[0];
 		for (var i =0; i<movesHistoryFromString.length;i++){
-			console.log("------------------" + movesHistoryFromString[i]);
-		
-			console.log(buildUpMoveHistory);
 			if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
 				this.playTurnByVerboseNotation(movesHistoryFromString[i]);
 				this.multiPlayerSubmitLocalMove();
@@ -341,12 +331,8 @@ Game.prototype.multiPlayerStartGame = function(startingPlayerIsLocal, startGameS
 				buildUpMoveHistory += "," + movesHistoryFromString[i+1];
 			}
 		}
-
+		console.log("game loaded. local history: "+ this.recordingOfGameInProgress + "game status (4 local, 5 remote turn): "+ this.gameStatus);
 	}
-
-
-	
-	
 }
 
 Game.prototype.multiPlayerSubmitLocalMove = function(){
@@ -362,9 +348,7 @@ Game.prototype.multiPlayerSubmitLocalMove = function(){
 
 Game.prototype.multiPlayerRemoteMove = function(gameString){
 	//gamestring is always the total game like it was + the extra move of the remote player. 
-	
-
-	//check if remote players turn
+		//check if remote players turn
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
 		alert("ASSERT ERROR: local players turn, remote tries to move, move not executed.")
 		console.log("ASSERT ERROR: local players turn, remote tries to move, move not executed.")
@@ -374,15 +358,12 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	//check moveshistory for correctness.
 	var receivedGame = gameString.split(",");
 	var remoteMove = receivedGame.pop();
-	console.log(receivedGame);
-	console.log(this.recordingOfGameInProgress);
-
+	
 	var isGameStateRemoteCorrectHistory = utilities.arraysEqual(receivedGame, this.recordingOfGameInProgress);
 	if (isGameStateRemoteCorrectHistory!= true){
 		console.log("wrong remote game state. awaiting correct move.");
 		return false;
 	}
-
 	
 	//execute extra move. + check remote move valid
 	var moveExecuted = this.playTurnByVerboseNotation(remoteMove);
@@ -403,50 +384,8 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 }
 
 
-Game.prototype.wallToVerboseNotation = function(cellId, directionIsNorthToSouth){
-	var row = 8 - Math.floor(cellId/9);
-	var rowString = String.fromCharCode(48 + row);
-	var col = cellId%9;
-	var colLetter = String.fromCharCode(97 + col);
-	
-	if (directionIsNorthToSouth){
-		return colLetter + rowString;
-	}else{
-		return rowString + colLetter;
-	}
-}
 
-Game.prototype.pawnDirectionToVerboseNotation = function(direction){
-	if (direction<0 ||direction >12){
-		console.log("ASSERT ERROR: direction oustide limits...");
-		return false;
-	}
-	return DIRECTIONS_VERBOSE[direction];
-}
-
-Game.prototype.interpreteVerboseNotation = function (verboseNotation){
-	//sends back an array.[type of move, argument1, argument 2] (arguments depending on type of move.)
-	
-	//command handler
-	//check gave up
-	if (verboseNotation == "x" || verboseNotation == "X"){
-		return [GAVEUP_MOVE,false]
-	}
-	
-	//check pawnmove
-	moveTranslated = this.pawnVerboseNotationToDirection(verboseNotation);
-	if (moveTranslated != ILLEGAL_DIRECTION){
-		return [PAWN_MOVE,moveTranslated,false];
-	}
-	
-	//check wallmove.
-	var moveTranslated = this.board.wallNotationToCellAndOrientation(verboseNotation);
-	if (moveTranslated != false){
-		return [WALL_MOVE,moveTranslated[0],moveTranslated[1]];
-	}
-	console.log("ASSERT ERROR no valid notation found");
-	return [ILLEGAL_MOVE,false,false];
-}
+//-----------------------------------------PLAYING A MOVE------------------------
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	// console.log("verbose Move:" + verboseNotation);	
@@ -539,6 +478,52 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	//console.log( "rotated history string: " + this.rotateGameState(this.moveHistoryToString() ) );
 	return true;
 }
+
+Game.prototype.wallToVerboseNotation = function(cellId, directionIsNorthToSouth){
+	var row = 8 - Math.floor(cellId/9);
+	var rowString = String.fromCharCode(48 + row);
+	var col = cellId%9;
+	var colLetter = String.fromCharCode(97 + col);
+	
+	if (directionIsNorthToSouth){
+		return colLetter + rowString;
+	}else{
+		return rowString + colLetter;
+	}
+}
+
+Game.prototype.pawnDirectionToVerboseNotation = function(direction){
+	if (direction<0 ||direction >12){
+		console.log("ASSERT ERROR: direction oustide limits...");
+		return false;
+	}
+	return DIRECTIONS_VERBOSE[direction];
+}
+
+Game.prototype.interpreteVerboseNotation = function (verboseNotation){
+	//sends back an array.[type of move, argument1, argument 2] (arguments depending on type of move.)
+	
+	//command handler
+	//check gave up
+	if (verboseNotation == "x" || verboseNotation == "X"){
+		return [GAVEUP_MOVE,false]
+	}
+	
+	//check pawnmove
+	moveTranslated = this.pawnVerboseNotationToDirection(verboseNotation);
+	if (moveTranslated != ILLEGAL_DIRECTION){
+		return [PAWN_MOVE,moveTranslated,false];
+	}
+	
+	//check wallmove.
+	var moveTranslated = this.board.wallNotationToCellAndOrientation(verboseNotation);
+	if (moveTranslated != false){
+		return [WALL_MOVE,moveTranslated[0],moveTranslated[1]];
+	}
+	console.log("ASSERT ERROR no valid notation found");
+	return [ILLEGAL_MOVE,false,false];
+}
+
 
 Game.prototype.undoLastWall= function(player){
 	//walls in game are the svg elements
