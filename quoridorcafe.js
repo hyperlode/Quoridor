@@ -306,12 +306,12 @@ class Cafe {
 		this.player1StartsCheckbox = addCheckBox(this.remoteGameControlsDiv, "PLAYER1 starts", "PLAYER1 starts", true, "I (who initiates the game) make the first move.");
 		addBr(this.remoteGameControlsDiv);
 		
-		this.listGamesButtom = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Show the available multiplayer games", "getActiveGamesList", "getActiveGamesList", this.listGames, this);
+		this.listGamesButtom = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of available multiplayer games with their id number.", "getActiveGamesList", "getActiveGamesList", this.listGames, this);
 		this.listGamesButtom.style.visibility = 'visible';
 		
 		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "join Game with id provided -->", "joinGame", "joinGame", this.joinRemoteGame, this);
 		this.joinRemoteGameButton.style.visibility = 'visible';
-		this.remoteGameIdTextBox = addTextBox(this.remoteGameControlsDiv, "ganeId", "remoteGameIdTextBox", "remoteGameIdTextBox", 10);
+		this.remoteGameIdTextBox = addTextBox(this.remoteGameControlsDiv, "gameId", "remoteGameIdTextBox", "remoteGameIdTextBox", 10);
 		addBr(this.remoteGameControlsDiv);
 		
 		
