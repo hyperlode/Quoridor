@@ -5,6 +5,8 @@ var ACCOUNT_DIV = "loginArea";
 var ACCOUNT_DIV_STATUS = "loginAreaStatus";
 var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
 var LISTEDGAMES_DIV_LIST = "listedGames";
+var AVAILABLE_GAMES_ON_SERVERS_DIV = "availableGamesOnServer";
+
 var GAME_CHECK_SERVER_INTERVAL = 3000;
 var REFRESH_UPDATE_RATE = 3000; 
 var NO_PLAYER_DUMMY_ID = 666;
@@ -50,7 +52,12 @@ class Cafe {
 		this.remote.setRemoteMovedCallback(this, this.doRemoteMove);
 		this.remote.setStartLocalBoardCallback(this, this.startAndDisplayMultiPlayerGameQuoridor);
 
+		this.showingGamesList = false;
+		var listElement = document.getElementById(AVAILABLE_GAMES_ON_SERVERS_DIV);
+		listElement.style.display = 'none';
+		
 	}
+
 	remoteGameStart(instance) {
 		console.log("start remote game");
 
@@ -71,7 +78,10 @@ class Cafe {
 		instance.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
 		document.getElementById(instance.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'hidden';
 		instance.submitLocalMoveButton.style.visibility = 'visible';
-		
+		instance.setGamesListVisibility(false);
+
+
+
 		var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
 		instance.remote.setGameProperties(localPlayerGoesUpwards);
 		
@@ -139,12 +149,29 @@ class Cafe {
 		instance.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
 		document.getElementById(instance.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'hidden';
 		instance.submitLocalMoveButton.style.visibility = 'visible';
+		instance.setGamesListVisibility(false);
 	}
 
 	listGames(instance){
-		//alert ("nothing here, click the remote game start button.");
+		//check all available games for joining...
 		instance.remote.listOfGames(1);
+		
+		instance.setGamesListVisibility(!instance.showingGamesList);
+			
 	}
+
+	setGamesListVisibility(isVisible){
+		var listElement = document.getElementById(AVAILABLE_GAMES_ON_SERVERS_DIV);
+		if(!isVisible){
+			listElement.style.display = 'none';
+			this.showingGamesList = false;
+		}else{
+			listElement.style.display = 'block';
+			this.showingGamesList = true;
+		}
+	}
+
+
 
 	remoteGameStop(instance) {
 		console.log("stop remote game");
@@ -313,15 +340,15 @@ class Account {
 		};
 		xmlhttp.open("GET", url, true); //don't use false as third argument, apparently, synchronous is going to freeze stuff...
 		xmlhttp.send();
-		//this.listOfLoggedInUsers();
 	}
+
 	setupLoginField() {
 		//create html elements (
 		var elementToAttachTo = document.getElementById(ACCOUNT_DIV);
 		//addBr(elementToAttachTo);
 		this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "logout", "logoutbutton", "logoutbutton", this.userLogout, this);
-		this.usernameTextBox = addTextBox(elementToAttachTo, "u", "usernameTextBox", "usernameTextBox", 20);
-		this.pwdTextBox = addTextBox(elementToAttachTo, "p", "pwdTextBox", "pwdTextBox", 20);
+		this.usernameTextBox = addTextBox(elementToAttachTo, "username", "usernameTextBox", "usernameTextBox", 20);
+		this.pwdTextBox = addTextBox(elementToAttachTo, "password", "pwdTextBox", "pwdTextBox", 20);
 		this.loginButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "login", "loginbutton", "loginbutton", this.userLogin, this);
 		this.registerButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "register", "registerbutton", "registerbutton", this.userRegister, this);
 		this.loginName = "";
@@ -400,34 +427,40 @@ class Account {
 		this.loadDoc(url, this.listOfLoggedInUsersCallBack);
 		//console.log("all logged in players listed up");
 	}
-	listOfLoggedInUsersCallBack(instance, xlmhttp) {
-		var responseArray = xlmhttp.responseText.split(",");
-		var outputString = "";
 
-		for (var i = 0; i < responseArray.length; i+=2) {
-			// console.log(i); 
-			outputString += responseArray[i] + " - id: " + responseArray[i+1] + "<br>";
+	listOfLoggedInUsersCallBack(instance, xlmhttp) {
+		var responseJSON = xlmhttp.responseText;
+		var remoteDataArray =  JSON.parse(responseJSON);
+		
+		console.log(remoteDataArray);
+		//var responseArray = response.split(",");
+		var outputString = "Name:Id of registered users: ";
+
+		//for (var i = 0; i < responseArray.length; i+=2) {
+		for (var i = 0; i < remoteDataArray.length; i+=1) {
+
+			outputString += " " + remoteDataArray[i]["uUsername"] + ": " + remoteDataArray[i]["userId"] + "***"; 
+			//outputString += responseArray[i] + " - id: " + responseArray[i+1] + ", ";
 		}
 		document.getElementById(LOGGEDINUSERS_DIV_LIST).innerHTML = outputString;
 	}
 
-
-	//LIST OF GAMES
-	//userLoginButtonClicked(instance){
-		
-	//
-
 	//LOG IN
 	userLogin(instance) {
-		var url = "quoridorlogin.php?username=" + instance.usernameTextBox.value + "&password=" + instance.pwdTextBox.value + "";
-		// console.log("user login button clicked");
+
+		var userName = instance.usernameTextBox.value;
+		if (userName == "username"){
+			alert("Please enter a valid username and password.");
+			return false;
+		}
+		var url = "quoridorlogin.php?username=" + userName + "&password=" + instance.pwdTextBox.value + "";
 		instance.loadDoc(url, instance.userLoginCallBack);
 	}
 	userLoginCallBack(instance, xlmhttp) {
 		//returns error, or userId.
 
 		if (xlmhttp.responseText == "Wrong username-password combination.") {
-			loggedIn = false;
+			instance.loggedIn = false;
 			console.log("Wrong username-password combination.");
 		
 		}else{
@@ -445,7 +478,12 @@ class Account {
 
 	//REGISTRATION 
 	userRegister(instance) {
-		var url = "quoridornewuser.php?username=" + instance.usernameTextBox.value + "&password=" + instance.pwdTextBox.value + "";
+		var userName = instance.usernameTextBox.value;
+		if (userName == "username"){
+			alert("Please enter a valid username and password.");
+			return false;
+		}
+		var url = "quoridornewuser.php?username=" + userName + "&password=" + instance.pwdTextBox.value + "";
 		// console.log("user login button clicked");
 		instance.loadDoc(url, instance.userRegisterCallBack);
 	}
@@ -690,12 +728,6 @@ class RemoteContact {
 		console.log(this);
 		this.currentLocalGameStateString = gameStateString;
 
-		//this.multiPlayerGame.deleteGame();
-	// var url = "http://lode.ameije.com/sandbox.php?q=666&action=read";// No question mark needed
-		//	var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php";// No question mark needed
-		//	quoridorlogin.php?username="+ instance.usernameTextBox.value + "&password="+ instance.pwdTextBox.value + "";
-
-		//var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState=n,s,n";// No question mark needed
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ this.currentLocalGameStateString+"&action="+"submit"+"&gameId="+this.gameId;// No question mark needed
 		console.log(url);
 		this.callPhpWithAjax(url, this.submitResponse.bind(this));	
@@ -704,16 +736,10 @@ class RemoteContact {
 
 	submitResponse(instance,result){
 		//feedback result from submitting the move to the database.
-		document.getElementById("debugServerFeedback").innerHTML = result;
+		//document.getElementById("debugServerFeedback").innerHTML = result;
 	}
 
-	// checkIfGameIdExists(id){
 
-	// }
-
-
-
-	
 
 	// ------------------check for remote move.
 

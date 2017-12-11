@@ -14,26 +14,37 @@
 
 	$SimpleUsers = new SimpleUsers();
 	$users = $SimpleUsers->getUsers();
+
+
+	ob_end_clean();
+	ob_start();
+	$users = json_encode($users);
+	echo $users;
+	return  ob_get_contents();
+
+
 	// $loggedInUserNames = array();
 	// foreach ($SimpleUsers->userdata as $key => $value)
-    foreach ($users as $user)
-	{
-		// if( $SimpleUsers->logged_in ) {
-		   // array_push( $SimpleUsers->userdata["uUsername"]);
-		   echo $user["uUsername"];
-		   echo ",";
-		   echo $user["userId"];
-		   echo ",";
+    // foreach ($users as $user)
+	// {
+	// 	// if( $SimpleUsers->logged_in ) {
+	// 	   // array_push( $SimpleUsers->userdata["uUsername"]);
+	// 	   echo $user["uUsername"];
+	// 	   echo ",";
+	// 	   echo $user["userId"];
+	// 	   echo ",";
 		   
-		   // echo "<br>";
-			// exit;
-		// }
-		//else{
-		//	echo 0;
-		//	exit;
-		//}
-	}
+	// 	   // echo "<br>";
+	// 		// exit;
+	// 	// }
+	// 	//else{
+	// 	//	echo 0;
+	// 	//	exit;
+	// 	//}
+	// }
 	
-	echo "last,element";
+	//echo "last,element";
 	
 ?>
+
+
