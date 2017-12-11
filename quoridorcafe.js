@@ -509,7 +509,7 @@ class RemoteContact {
 		this.localPlayerIsPlayer1 = true;
 		
 
-		this.localPlayerStarts = false;
+		this.localPlayerFirstMove = false;
 		this.startingPlayer = PLAYER1;
 		this.localPlayerGoesUpwards = false;
 
@@ -769,7 +769,7 @@ class RemoteContact {
 	}
 
 	pollResponse(responseJSON){
-		//console.log(responseJSON);	
+		// console.log(responseJSON);	
 		var remoteDataArray =  JSON.parse(responseJSON);
 		var remoteStatus = this.processResponse(remoteDataArray);
 		
@@ -786,6 +786,7 @@ class RemoteContact {
 			};		
 
 			//if local state is still "initializing, this is the time to display. the board."
+			//basically startup edge.
 			if (this.gameStatus == GAME_STATUS_INITIALIZING || this.gameStatus == GAME_STATUS_NO_STATUS_YET){
 				//first feedback from "playing game". possible already with opponent move. 
 				console.log("starting local game. ");
@@ -816,30 +817,48 @@ class RemoteContact {
 
 				//check starting player.
 				if (remoteDataArray["player1DoesFirstMove"] == 1){
-					this.localPlayerStarts = this.localPlayerIsPlayer1;
+					this.localPlayerFirstMove = this.localPlayerIsPlayer1;
 					console.log("PLAYER1 starts");
 				}else if (remoteDataArray["player1DoesFirstMove"] == 0){
-					this.localPlayerStarts = !this.localPlayerIsPlayer1;
+					this.localPlayerFirstMove = !this.localPlayerIsPlayer1;
 					console.log("PLAYER2 starts");
 				}else{
 					console.log("assert ERROR undefined starting player");
 				}
 
 				// display quoridor board
-				this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerStarts, player1GoesUpwards, initialGameState);
+				this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerFirstMove, player1GoesUpwards, initialGameState);
 								
 				this.currentLocalGameStateString = initialGameState;
 				this.gameStatus = GAME_STATUS_PLAYING;
 				return true;
 			}
 
+			//Check if local player's turn.
+			//when game starts, a poll is done to see if the opponent has joined. problem is, if a local move is requiered, that it is also stuck in this poll loop.
+			
+			var evenNumberOfTurns = this.numberOfMovesPlayed()%2 == 0;
+			// console.log(evenNumberOfTurns);
+			// console.log(this.numberOfMovesPlayed()%2);
+			// console.log(this.localPlayerFirstMove);
 
+			if (this.localPlayerFirstMove && evenNumberOfTurns){
+				//local player turn. so no more checking for remote.
+				this.stopCheckDatabaseForRemoteMoveLoop();
+				console.log("local player turn. so no more checking for remote.");
+				return true;
+			}else if (!this.localPlayerFirstMove && !evenNumberOfTurns) {
+				this.stopCheckDatabaseForRemoteMoveLoop();
+				console.log(" odd number of turns. local player turn. so no more checking for remote.");
+				return true;
+			}
+			
 			//check for remote move.
 			var opponentMovedOneMove = this.compareGameStates(remoteDataArray)
-			console.log("compare states status, did opponent made move? : " + opponentMovedOneMove);
+			//console.log("compare states status, did opponent made move? : " + opponentMovedOneMove);
 			if (opponentMovedOneMove){
 				// returnStatus
-				// this.remoteMove
+				console.log("opponent moved");
 				this.stopCheckDatabaseForRemoteMoveLoop();
 				this.remoteMovedCallBackfunction(this.storedInstance, remoteDataArray["gameState"]);
 			}
@@ -853,6 +872,20 @@ class RemoteContact {
 		}else if (remoteStatus == GAME_STATUS_ERROR){
 			console.log("error in database response. The game seems not to be valid. " +remoteDataArray );
 		}
+	}
+
+	numberOfMovesPlayed(){
+		//console.log(this.currentLocalGameStateString);
+		var movesArray = this.currentLocalGameStateString.split(",");
+		var numberOfMovesPlayed = movesArray.length;
+		//console.log( this.currentLocalGameStateString.split(","));
+		
+		if (numberOfMovesPlayed == 1 && (movesArray[0]=="" || movesArray[0]=="notyetmoved")){
+			numberOfMovesPlayed = 0;
+		}
+
+		
+		return numberOfMovesPlayed;
 	}
 
 	callPhpWithAjax(url,functionToCallWhenDone){
@@ -1020,7 +1053,7 @@ class RemoteContact {
 
 	verifyRemoteGameData(remoteGameData){
 		//if game is going, always verify every poll.
-		console.log(remoteGameData);
+//		console.log(remoteGameData);
 		var remotePlayer1Id  = parseInt(remoteGameData["playerId1"]); 
 		var remotePlayer2Id  = parseInt(remoteGameData["playerId2"]); 
 	
@@ -1101,8 +1134,8 @@ class RemoteContact {
 			
 		}else if(remote.length == local.length){
 			console.log("waiting for opponent to make a move");
-			console.log("remote: " + remote);
-			console.log("local: " + local);
+			//console.log("remote: " + remote);
+			//console.log("local: " + local);
 		
 			//returnStatus = GAME_STATUS_PLAYING_NO_CHANGE;
 			returnStatus = false;
