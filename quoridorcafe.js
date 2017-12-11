@@ -6,6 +6,7 @@ var ACCOUNT_DIV_STATUS = "loginAreaStatus";
 var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
 var LISTEDGAMES_DIV_LIST = "listedGames";
 var AVAILABLE_GAMES_ON_SERVERS_DIV = "availableGamesOnServer";
+var CAFE_STATUS_DIV = "cafeStatus";
 
 var GAME_CHECK_SERVER_INTERVAL = 3000;
 var REFRESH_UPDATE_RATE = 3000; 
@@ -51,16 +52,26 @@ class Cafe {
 		//this.continuePollingForRemoteMove = false;
 		this.remote.setRemoteMovedCallback(this, this.doRemoteMove);
 		this.remote.setStartLocalBoardCallback(this, this.startAndDisplayMultiPlayerGameQuoridor);
-
+		this.remote.setUpdateStatusFieldCallback(this.updateStatusField);
+		
+		
 		this.showingGamesList = false;
 		var listElement = document.getElementById(AVAILABLE_GAMES_ON_SERVERS_DIV);
 		listElement.style.display = 'none';
+		
+		
+		this.updateStatusField("Welcome to the quoridor cafe.");
+		
 		
 	}
 
 	remoteGameStart(instance) {
 		console.log("start remote game");
-
+		
+		alert("Reminder: Do not forget to press the button submitLocalMove after each move you make! ");
+		
+		instance.clearStatusField();
+		
 		instance.localGameControlsDiv.style.display = 'none';
 
 		// instance.startLocalGameButton.style.visibility = 'hidden';
@@ -88,7 +99,7 @@ class Cafe {
 		var localId = instance.account.getLoggedInUserId();
 		//var debugGameId = instance.remoteGameIdTextBox.value;
 		
-		alert("game start: player:" + localId + " and ...wait for opponent to log in." + "debug: game id will be shown in log window.");
+		//alert("game start: player:" + localId + " and ...wait for opponent to log in." + "debug: game id will be shown in log window.");
 		
 		var localPlayerStarts = instance.player1StartsCheckbox.checked;
 		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID,localPlayerStarts );
@@ -124,6 +135,10 @@ class Cafe {
 
 	joinRemoteGame(instance){
 
+		alert("Reminder: Do not forget to press the button submitLocalMove after each move you make! ");
+	
+		instance.clearStatusField();
+		
 		//get game id from field.
 		//check for remote game with this id
 		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
@@ -208,8 +223,14 @@ class Cafe {
 		//check locally if remote has moved.		
 	}
 
-
-
+	clearStatusField(){
+		document.getElementById(CAFE_STATUS_DIV).innerHTML = "";
+	}
+	updateStatusField(updateString){
+		document.getElementById(CAFE_STATUS_DIV).innerHTML = document.getElementById(CAFE_STATUS_DIV).innerHTML +"<br>"+ updateString;
+	}
+	
+	
 	debugNewCommand(instance) {
 		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
 		var joinGameId = instance.remoteGameIdTextBox.value;
@@ -523,7 +544,7 @@ class RemoteContact {
 		this.continuePollingForRemoteMove = false;
 		this.currentLocalGameStateString = "";
 		this.remoteMovedCallBackfunction;
-
+		this.updateCafeStatusField;
 		this.remoteGameData = {};
 		
 	}
@@ -540,8 +561,14 @@ class RemoteContact {
 		this.localPlayerId = id;
 	}
 	setRemoteMovedCallback(instance ,callbackFunction){
-		this.storedInstance = instance;
+		this.cafeInstance = instance;
 		this.remoteMovedCallBackfunction = callbackFunction;
+	}
+	
+	setUpdateStatusFieldCallback(callbackFunction){
+		//this.cafeInstance = instance;
+		this.updateCafeStatusField = callbackFunction;
+		
 	}
 
 	setStartLocalBoardCallback(instance ,callbackFunction){
@@ -572,10 +599,13 @@ class RemoteContact {
 		if (remoteDataArray.length == 0){
 
 			console.log("game not found... gameId provided: " + gameId);
+			this.updateCafeStatusField("game not found... gameId provided: " + gameId);
 			return false;
 		}
 		if (this.localPlayerId == remotePlayer1 && this.localPlayerId == remotePlayer2){
 			console.log("ASSERT ERROR: game with id" +remoteDataArray["gameId"] +" has two players already (and the local player id is not one of them) will not join the game.");
+			this.updateCafeStatusField("No joining possible. (game full)");
+		
 			return false;
 		}
 		
@@ -589,6 +619,7 @@ class RemoteContact {
 			this.joinGameExecute(gameId,2);
 		}else{
 			console.log("ASSERT ERROR: this game is not available for this player. There must be a free spot, or it must be a continuation of a previous game. ids: " );
+			this.updateCafeStatusField("No joining possible. (check gameId and playeId)");
 		}
 	}
 
@@ -602,6 +633,9 @@ class RemoteContact {
 		//add localplayer as player2
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"joinGame"+"&playerId=" + this.localPlayerId + "&gameId=" + gameId+ "&playerNumber=" + playerNumber;// No question mark needed
 		console.log("try to join game: " + gameId + ". By player: " + this.localPlayerId);
+		
+		this.updateCafeStatusField("joining game: " + gameId + ". By player: " + this.localPlayerId);
+		
 		this.callPhpWithAjax(url, this.joinGameExecuteFeedback.bind(this));
 		
 		//debug for now:
@@ -615,6 +649,8 @@ class RemoteContact {
 		var remoteGameData =  JSON.parse(remoteGameDataJSON);
 		this.initialSetLocalToMirrorRemoteGame(remoteGameData);
 		this.startCheckDatabaseForRemoteMoveLoop();	
+		this.updateCafeStatusField("joining successful");
+		
 		
 	}
 
@@ -624,7 +660,8 @@ class RemoteContact {
 		
 		this.localPlayerId = localPlayerId;
 		this.desiredRemotePlayerId = desiredRemotePlayerId;
-
+		
+		this.updateCafeStatusField("game start: player:" + localPlayerId + " and ...wait for opponent to log in." + "debug: game id will be shown in log window.");
 
 		this.localPlayerFirstMove = localPlayerFirstMove;
 		var firstMoveAsPlayer1DoesFirstMove = 1;
@@ -654,10 +691,13 @@ class RemoteContact {
 			this.gameStatus = GAME_STATUS_INITIALIZING;
 			this.remotePlayerId = remotePlayer2;
 			console.log("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + " No opponenent yet. Wait for it.");
+			this.updateCafeStatusField("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + " No opponenent yet. Wait for it.");
+			
 			
 		}else{
 			this.gameStatus = GAME_STATUS_PLAYING;
 			console.log("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + " Opponent id (666 is no opponent yet): " + remotePlayer2);
+			this.updateCafeStatusField("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + " Opponent id (666 is no opponent yet): " + remotePlayer2);
 		}
 
 
@@ -790,6 +830,7 @@ class RemoteContact {
 			if (this.gameStatus == GAME_STATUS_INITIALIZING || this.gameStatus == GAME_STATUS_NO_STATUS_YET){
 				//first feedback from "playing game". possible already with opponent move. 
 				console.log("starting local game. ");
+				this.initialSetLocalToMirrorRemoteGame(remoteDataArray);
 
 				//define rotation of board
 				var player1GoesUpwards = false;
@@ -831,7 +872,11 @@ class RemoteContact {
 								
 				this.currentLocalGameStateString = initialGameState;
 				this.gameStatus = GAME_STATUS_PLAYING;
+				
+				this.updateCafeStatusField("game start. GameId: " + this.gameId+", your player id: "+ this.localPlayerId + ", opponent playerId: " + this.remotePlayerId);
 				return true;
+				
+				
 			}
 
 			//Check if local player's turn.
@@ -860,7 +905,7 @@ class RemoteContact {
 				// returnStatus
 				console.log("opponent moved");
 				this.stopCheckDatabaseForRemoteMoveLoop();
-				this.remoteMovedCallBackfunction(this.storedInstance, remoteDataArray["gameState"]);
+				this.remoteMovedCallBackfunction(this.cafeInstance, remoteDataArray["gameState"]);
 			}
 			return true;
 		}else if (remoteStatus == GAME_REGISTER_LOCAL_PLAYER){
