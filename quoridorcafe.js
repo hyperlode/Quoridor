@@ -54,7 +54,7 @@ class Cafe {
 	remoteGameStart(instance) {
 		console.log("start remote game");
 
-		instance.localGameControlsDiv.style.visibility = 'hidden';
+		instance.localGameControlsDiv.style.display = 'none';
 
 		// instance.startLocalGameButton.style.visibility = 'hidden';
 		// instance.stopLocalGameButton.style.visibility = 'hidden';
@@ -123,7 +123,7 @@ class Cafe {
 		console.log("attempt to join game with id: " + joinGameId);
 		var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
 		instance.remote.setGameProperties(localPlayerGoesUpwards);
-		instance.localGameControlsDiv.style.visibility = 'hidden';
+		instance.localGameControlsDiv.style.display = 'none';
 		
 		// instance.startLocalGameButton.style.visibility = 'hidden';
 		// instance.stopLocalGameButton.style.visibility = 'hidden';
@@ -148,7 +148,7 @@ class Cafe {
 
 	remoteGameStop(instance) {
 		console.log("stop remote game");
-		instance.localGameControlsDiv.style.visibility = 'visible';
+		instance.localGameControlsDiv.style.display = 'block';
 		// instance.startLocalGameButton.style.visibility = 'visible';
 		// instance.stopLocalGameButton.style.visibility = 'hidden';
 		// instance.restartLocalGameButton.style.visibility = 'hidden';
@@ -207,13 +207,14 @@ class Cafe {
 		instance.startRemoteGameButton.style.visibility = 'visible';
 		instance.startRemoteGameButton.style.visibility = 'hidden';
 		instance.joinRemoteGameButton.style.visibility = 'hidden';
-		instance.remoteGameControlsDiv.style.visibility = 'hidden';
+
+		instance.remoteGameControlsDiv.style.display = 'none';
 		//instance.stopRemoteGameButton.style.visibility = 'visible';
 		instance.quoridorManager = new Manager();
 		instance.quoridorManager.startNewLocalGame();
 	}
 	localGameStop(instance) {
-		instance.remoteGameControlsDiv.style.visibility = 'visible';
+		instance.remoteGameControlsDiv.style.display = 'block';
 		console.log("stop local game");
 		instance.startLocalGameButton.style.visibility = 'visible';
 		instance.stopLocalGameButton.style.visibility = 'hidden';
@@ -258,6 +259,8 @@ class Cafe {
 		addBr(this.remoteGameControlsDiv);
 		
 		this.listGamesButtom = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Show the available multiplayer games", "getActiveGamesList", "getActiveGamesList", this.listGames, this);
+		this.listGamesButtom.style.visibility = 'visible';
+		
 		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "join Game", "joinGame", "joinGame", this.joinRemoteGame, this);
 		this.joinRemoteGameButton.style.visibility = 'visible';
 		this.remoteGameIdTextBox = addTextBox(this.remoteGameControlsDiv, "13", "remoteGameIdTextBox", "remoteGameIdTextBox", 10);
@@ -269,7 +272,6 @@ class Cafe {
 		var debugControlsDiv = document.getElementById("debugControls");
 		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "debug poll...", "sendDebug", "sendDebug", this.debugNewCommand, this);
 		this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
-		this.listGamesButtom.style.visibility = 'visible';
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "debug", "debugCmdText", "debugCmdText", 20);
 		this.debugNoServerSetup = addCheckBox(debugControlsDiv, "debugNoServerUse", "debugNoServerUse", false, "debug without server");
 		this.localPlayerMovesUpCheckbox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Display Local Player moves up on the board.");
