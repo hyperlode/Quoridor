@@ -309,9 +309,9 @@ class Cafe {
 		this.listGamesButtom = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Show the available multiplayer games", "getActiveGamesList", "getActiveGamesList", this.listGames, this);
 		this.listGamesButtom.style.visibility = 'visible';
 		
-		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "join Game", "joinGame", "joinGame", this.joinRemoteGame, this);
+		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "join Game with id provided -->", "joinGame", "joinGame", this.joinRemoteGame, this);
 		this.joinRemoteGameButton.style.visibility = 'visible';
-		this.remoteGameIdTextBox = addTextBox(this.remoteGameControlsDiv, "13", "remoteGameIdTextBox", "remoteGameIdTextBox", 10);
+		this.remoteGameIdTextBox = addTextBox(this.remoteGameControlsDiv, "ganeId", "remoteGameIdTextBox", "remoteGameIdTextBox", 10);
 		addBr(this.remoteGameControlsDiv);
 		
 		
