@@ -40,6 +40,22 @@ document.addEventListener("DOMContentLoaded", function() {
 	// getAllUsers();	
 });
 
+document.onkeydown = function(evt) {
+    evt = evt || window.event;
+    var charCode = evt.keyCode || evt.which;
+	var charStr = String.fromCharCode(charCode);
+	console.log(event.keyCode === 13);//enter button
+	console.log(charStr + " " + event.keyCode);
+
+	if (event.keyCode === 13){
+		//call button. 
+		document.getElementById("submitMoveDebug").click();
+
+
+	}
+	
+};
+
 class Cafe {
 	constructor() {
 		//users login and credentials stuff
@@ -68,7 +84,7 @@ class Cafe {
 	remoteGameStart(instance) {
 		console.log("start remote game");
 		
-		alert("Reminder: Do not forget to press the button submitLocalMove after each move you make! ");
+		alert("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
 		
 		instance.clearStatusField();
 		
@@ -135,7 +151,7 @@ class Cafe {
 
 	joinRemoteGame(instance){
 
-		alert("Reminder: Do not forget to press the button submitLocalMove after each move you make! ");
+		alert("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
 	
 		instance.clearStatusField();
 		
