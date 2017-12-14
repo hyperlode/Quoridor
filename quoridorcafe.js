@@ -44,8 +44,8 @@ document.onkeydown = function(evt) {
     evt = evt || window.event;
     var charCode = evt.keyCode || evt.which;
 	var charStr = String.fromCharCode(charCode);
-	console.log(event.keyCode === 13);//enter button
-	console.log(charStr + " " + event.keyCode);
+//	console.log(event.keyCode === 13);//enter button
+//	console.log(charStr + " " + event.keyCode);
 
 	if (event.keyCode === 13){
 		//call button. 
@@ -151,14 +151,30 @@ class Cafe {
 
 	joinRemoteGame(instance){
 
-		alert("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
-	
+		
+		var radios = document.getElementsByName('gameIdSelection');
+		// document.getEle
+		var selectedGameId;
+		if (radios.length == 0){
+			alert("Select a game from the available games list [Toggle list of available games] button, if none available, start a new game with the [start remote game] button.");
+			return false;
+		}
+
+		for (var i = 0; i < radios.length; i++) {
+			if (radios[i].type === 'radio' && radios[i].checked) {
+				// get value, set checked flag or do whatever you need to
+				selectedGameId = radios[i].value;       
+			}
+		}
+
 		instance.clearStatusField();
+		alert(" Selected game: "+ selectedGameId +"\nReminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
 		
 		//get game id from field.
 		//check for remote game with this id
 		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
-		var joinGameId = instance.remoteGameIdTextBox.value;
+		//var joinGameId = instance.remoteGameIdTextBox.value;
+		var joinGameId = selectedGameId;
 		
 		instance.remote.joinGame(joinGameId);	
 		console.log("attempt to join game with id: " + joinGameId);
@@ -325,10 +341,9 @@ class Cafe {
 		this.listGamesButtom = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of available multiplayer games with their id number.", "getActiveGamesList", "getActiveGamesList", this.listGames, this);
 		this.listGamesButtom.style.visibility = 'visible';
 		
-		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "join Game with id provided -->", "joinGame", "joinGame", this.joinRemoteGame, this);
+		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "join Selected Game>", "joinGame", "joinGame", this.joinRemoteGame, this);
 		this.joinRemoteGameButton.style.visibility = 'visible';
-		this.remoteGameIdTextBox = addTextBox(this.remoteGameControlsDiv, "gameId", "remoteGameIdTextBox", "remoteGameIdTextBox", 10);
-		addBr(this.remoteGameControlsDiv);
+
 		
 		
 		//debug field
@@ -339,7 +354,8 @@ class Cafe {
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "debug", "debugCmdText", "debugCmdText", 20);
 		this.debugNoServerSetup = addCheckBox(debugControlsDiv, "debugNoServerUse", "debugNoServerUse", false, "debug without server");
 		this.localPlayerMovesUpCheckbox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Display Local Player moves up on the board.");
-		
+		this.remoteGameIdTextBox = addTextBox(debugControlsDiv, "gameId", "remoteGameIdTextBox", "remoteGameIdTextBox", 10);
+		addBr(this.remoteGameControlsDiv);
 	}
 }
 
@@ -734,8 +750,8 @@ class RemoteContact {
 	listOfGamesCallBack(responseJSON){
 		
 		var remoteDataArray =  JSON.parse(responseJSON);
-		//console.log(remoteDataArray);
-		var htmlString = ""
+		console.log(remoteDataArray);
+		var htmlString = "<form action=''>";
 
 		if(this.remoteGameStatusFilter == REMOTE_GAME_STATUS_INITIALIZING){
 			htmlString += "List of unstarted games to join:<br>"
@@ -750,9 +766,10 @@ class RemoteContact {
 		}
 
 		for (var i=0;i<remoteDataArray.length;i+=1){
-			htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
+			// htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
+			htmlString += "<input type='radio' name='gameIdSelection' value='" + remoteDataArray[i]["gameId"] + "'> "+ remoteDataArray[i]["gameId"] +", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
 		}
-		
+		htmlString += "</form>";
 
 		// var responseArray = responseText.split(",");
 		// var outputString = "";
