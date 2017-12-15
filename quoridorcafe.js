@@ -50,8 +50,6 @@ document.onkeydown = function(evt) {
 	if (event.keyCode === 13){
 		//call button. 
 		document.getElementById("submitMoveDebug").click();
-
-
 	}
 	
 };
@@ -63,6 +61,9 @@ class Cafe {
 		console.log(logonText);
 		this.account.listOfLoggedInUsers();
 		this.remote = new RemoteContact();
+
+
+		this.remote.setAccountInstance(this.account);
 		//create html elements
 		this.setupButtonField();
 		//this.continuePollingForRemoteMove = false;
@@ -175,7 +176,7 @@ class Cafe {
 		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
 		//var joinGameId = instance.remoteGameIdTextBox.value;
 		var joinGameId = selectedGameId;
-		
+
 		instance.remote.joinGame(joinGameId);	
 		console.log("attempt to join game with id: " + joinGameId);
 		var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
@@ -369,10 +370,28 @@ class Account {
 		this.loggedIn = false;
 		this.loggedInUserId = NO_LOGGED_IN_USER_DUMMY_ID;
 		this.loggedInUserName = "noname";
+		this.allRegisteredUsersNameToId = [];
+		this.allRegisteredUsersIdToName = [];
+
 	}
 
 	getLoggedInUserId(){
 		return this.loggedInUserId;
+	}
+
+	getNameFromId(id){
+
+		if (id == NO_PLAYER_DUMMY_ID){
+			return "GHOST";
+		}else if (id == NO_LOGGED_IN_USER_DUMMY_ID){
+			return "[notloggedinplayer]";
+
+		}
+		return this.allRegisteredUsersIdToName[id];
+	}
+
+	getIdFromName(name){
+		return this.allRegisteredUsersNameToId[name];
 	}
 
 	loadDoc(url, cFunction) {
@@ -484,7 +503,10 @@ class Account {
 	listOfLoggedInUsersCallBack(instance, xlmhttp) {
 		var responseJSON = xlmhttp.responseText;
 		var remoteDataArray =  JSON.parse(responseJSON);
-		
+
+		instance.allRegisteredUsersIdToName = [];
+		instance.allRegisteredUsersNameToId = [];
+
 		console.log(remoteDataArray);
 		//var responseArray = response.split(",");
 		var outputString = "Name:Id of registered users: ";
@@ -492,10 +514,13 @@ class Account {
 		//for (var i = 0; i < responseArray.length; i+=2) {
 		for (var i = 0; i < remoteDataArray.length; i+=1) {
 
-			outputString += " " + remoteDataArray[i]["uUsername"] + ": " + remoteDataArray[i]["userId"] + "***"; 
+			outputString += " " + remoteDataArray[i]["uUsername"] + ": " + remoteDataArray[i]["userId"] + ","; 
 			//outputString += responseArray[i] + " - id: " + responseArray[i+1] + ", ";
+			instance.allRegisteredUsersIdToName[remoteDataArray[i]["userId"]]= remoteDataArray[i]["uUsername"] ;
+			instance.allRegisteredUsersNameToId[remoteDataArray[i]["uUsername"]]= remoteDataArray[i]["userId"] ;
 		}
 		document.getElementById(LOGGEDINUSERS_DIV_LIST).innerHTML = outputString;
+		
 	}
 
 	//LOG IN
@@ -581,6 +606,9 @@ class RemoteContact {
 		
 	}
 
+	setAccountInstance(account){
+		this.accountInstance = account;
+	}
 
 	setGameProperties(localPlayerGoesUpwards ){
 
@@ -608,7 +636,6 @@ class RemoteContact {
 		this.startLocalBoardCallBackfunction = callbackFunction;
 	}
 	
-
 	//---------------------------join existing game by gameId.
 
 	joinGame(gameId){
@@ -767,7 +794,11 @@ class RemoteContact {
 
 		for (var i=0;i<remoteDataArray.length;i+=1){
 			// htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
-			htmlString += "<input type='radio' name='gameIdSelection' value='" + remoteDataArray[i]["gameId"] + "'> "+ remoteDataArray[i]["gameId"] +", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
+			htmlString += "<input type='radio' name='gameIdSelection' value='" + 
+				remoteDataArray[i]["gameId"] + "'> gameNumber: "+ remoteDataArray[i]["gameId"] +
+				", "+ this.accountInstance.getNameFromId(remoteDataArray[i]["playerId1"]) + 
+				" versus "+ this.accountInstance.getNameFromId(remoteDataArray[i]["playerId2"]) + 
+				"<br>" ;
 		}
 		htmlString += "</form>";
 
