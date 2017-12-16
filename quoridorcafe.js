@@ -89,25 +89,8 @@ class Cafe {
 		
 		instance.clearStatusField();
 		
-		instance.localGameControlsDiv.style.display = 'none';
-
-		// instance.startLocalGameButton.style.visibility = 'hidden';
-		// instance.stopLocalGameButton.style.visibility = 'hidden';
-		// instance.restartLocalGameButton.style.visibility = 'hidden';
 		
-		instance.stopRemoteGameButton.style.visibility = 'visible';
-		instance.listGamesButtom.style.visibility = 'hidden';
-		instance.startRemoteGameButton.style.visibility = 'hidden';
-		instance.joinRemoteGameButton.style.visibility = 'hidden';
-		instance.remoteGameIdTextBox.style.visibility = 'hidden';
-		instance.player1StartsCheckbox.style.visibility = 'hidden';
-		instance.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
-		document.getElementById(instance.player1StartsCheckbox.id+"_label").style.visibility = 'hidden';
-		instance.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
-		document.getElementById(instance.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'hidden';
-		instance.submitLocalMoveButton.style.visibility = 'visible';
-		instance.setGamesListVisibility(false);
-
+		instance.setVisibilityControlsRemoteStarted();
 
 
 		var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
@@ -123,7 +106,60 @@ class Cafe {
 	
 	}
 
+	joinRemoteGame(instance){
+		
+				
+				var radios = document.getElementsByName('gameIdSelection');
+				// document.getEle
+				var selectedGameId;
+				if (radios.length == 0){
+					alert("Select a game from the available games list [Toggle list of available games] button, if none available, start a new game with the [start remote game] button.");
+					return false;
+				}
+		
+				for (var i = 0; i < radios.length; i++) {
+					if (radios[i].type === 'radio' && radios[i].checked) {
+						// get value, set checked flag or do whatever you need to
+						selectedGameId = radios[i].value;       
+					}
+				}
+		
+				instance.clearStatusField();
+				alert(" Selected game: "+ selectedGameId +"\nReminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
+				
+				//get game id from field.
+				//check for remote game with this id
+				instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
+				//var joinGameId = instance.remoteGameIdTextBox.value;
+				var joinGameId = selectedGameId;
+		
+				instance.remote.joinGame(joinGameId);	
+				console.log("attempt to join game with id: " + joinGameId);
+				var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
+				instance.remote.setGameProperties(localPlayerGoesUpwards);
+				
+				instance.setVisibilityControlsRemoteStarted();
+			}
 	setVisibilityControlsRemoteStarted(){
+
+		instance.localGameControlsDiv.style.display = 'none';
+		
+
+		instance.stopRemoteGameButton.style.visibility = 'visible';
+		instance.listGamesButtom.style.visibility = 'hidden';
+		instance.startRemoteGameButton.style.visibility = 'hidden';
+		instance.joinRemoteGameButton.style.visibility = 'hidden';
+		instance.remoteGameIdTextBox.style.visibility = 'hidden';
+
+		instance.player1StartsCheckbox.style.visibility = 'hidden';
+		document.getElementById(instance.player1StartsCheckbox.id+"_label").style.visibility = 'hidden';
+		instance.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
+		document.getElementById(instance.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'hidden';
+		instance.submitLocalMoveButton.style.visibility = 'visible';
+		instance.setGamesListVisibility(false);
+
+		instance.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
+		
 
 	}
 	
@@ -150,55 +186,7 @@ class Cafe {
 		//console.log("schip");
 	}
 
-	joinRemoteGame(instance){
-
-		
-		var radios = document.getElementsByName('gameIdSelection');
-		// document.getEle
-		var selectedGameId;
-		if (radios.length == 0){
-			alert("Select a game from the available games list [Toggle list of available games] button, if none available, start a new game with the [start remote game] button.");
-			return false;
-		}
-
-		for (var i = 0; i < radios.length; i++) {
-			if (radios[i].type === 'radio' && radios[i].checked) {
-				// get value, set checked flag or do whatever you need to
-				selectedGameId = radios[i].value;       
-			}
-		}
-
-		instance.clearStatusField();
-		alert(" Selected game: "+ selectedGameId +"\nReminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
-		
-		//get game id from field.
-		//check for remote game with this id
-		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
-		//var joinGameId = instance.remoteGameIdTextBox.value;
-		var joinGameId = selectedGameId;
-
-		instance.remote.joinGame(joinGameId);	
-		console.log("attempt to join game with id: " + joinGameId);
-		var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
-		instance.remote.setGameProperties(localPlayerGoesUpwards);
-		instance.localGameControlsDiv.style.display = 'none';
-		
-		// instance.startLocalGameButton.style.visibility = 'hidden';
-		// instance.stopLocalGameButton.style.visibility = 'hidden';
-		// instance.restartLocalGameButton.style.visibility = 'hidden';
-		
-		instance.stopRemoteGameButton.style.visibility = 'visible';
-		instance.listGamesButtom.style.visibility = 'hidden';
-		instance.startRemoteGameButton.style.visibility = 'hidden';
-		instance.joinRemoteGameButton.style.visibility = 'hidden';
-		instance.remoteGameIdTextBox.style.visibility = 'hidden';
-		instance.player1StartsCheckbox.style.visibility = 'hidden';
-		document.getElementById(instance.player1StartsCheckbox.id+"_label").style.visibility = 'hidden';
-		instance.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
-		document.getElementById(instance.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'hidden';
-		instance.submitLocalMoveButton.style.visibility = 'visible';
-		instance.setGamesListVisibility(false);
-	}
+	
 
 	listGames(instance){
 		//check all available games for joining...
@@ -339,10 +327,10 @@ class Cafe {
 		this.player1StartsCheckbox = addCheckBox(this.remoteGameControlsDiv, "PLAYER1 starts", "PLAYER1 starts", true, "I (who initiates the game) make the first move.");
 		addBr(this.remoteGameControlsDiv);
 		
-		this.listGamesButtom = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of available multiplayer games with their id number.", "getActiveGamesList", "getActiveGamesList", this.listGames, this);
+		this.listGamesButtom = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of available games.", "getActiveGamesList", "getActiveGamesList", this.listGames, this);
 		this.listGamesButtom.style.visibility = 'visible';
 		
-		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "join Selected Game>", "joinGame", "joinGame", this.joinRemoteGame, this);
+		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Join Selected Game", "joinGame", "joinGame", this.joinRemoteGame, this);
 		this.joinRemoteGameButton.style.visibility = 'visible';
 
 		
@@ -382,7 +370,7 @@ class Account {
 	getNameFromId(id){
 
 		if (id == NO_PLAYER_DUMMY_ID){
-			return "GHOST";
+			return "[no player assigned]";
 		}else if (id == NO_LOGGED_IN_USER_DUMMY_ID){
 			return "[notloggedinplayer]";
 
@@ -636,6 +624,13 @@ class RemoteContact {
 		this.startLocalBoardCallBackfunction = callbackFunction;
 	}
 	
+
+
+	getPlayerNameFromId(id){
+		//console.log(this.accountInstance.getNameFromId(id));
+		return this.accountInstance.getNameFromId(id);
+
+	}
 	//---------------------------join existing game by gameId.
 
 	joinGame(gameId){
@@ -796,8 +791,8 @@ class RemoteContact {
 			// htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
 			htmlString += "<input type='radio' name='gameIdSelection' value='" + 
 				remoteDataArray[i]["gameId"] + "'> gameNumber: "+ remoteDataArray[i]["gameId"] +
-				", "+ this.accountInstance.getNameFromId(remoteDataArray[i]["playerId1"]) + 
-				" versus "+ this.accountInstance.getNameFromId(remoteDataArray[i]["playerId2"]) + 
+				", "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId1"]) + 
+				" versus "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId2"]) + 
 				"<br>" ;
 		}
 		htmlString += "</form>";
