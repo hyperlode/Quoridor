@@ -199,6 +199,7 @@ function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen,star
 	this.svgLineSegments = [];
 	this.svgCellsAsPawnShapes = []
 	this.buildUpOptions(this.statsDiv);
+
 	
 	this.board = new Board();
 	
@@ -214,10 +215,30 @@ function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen,star
 	this.buildUpBoard(this.boardDiv, this.boardRotation);
 	this.outputPawns();
 	
+	this.playersBlinkingEnabled = [false,false];
+	this.playersPawnActivatedColours = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED];
+	this.playersBlinkingColour = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1,BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2];
+	this.playersBlinkingSpeedMillis = [PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS,PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS]; //half period blinking
+	
+	//set blinking properties to "not blinking (same colours for blink and non blink"
+	this.setPlayerBlinkingProperties(PLAYER1,PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS,BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);
+	this.setPlayerBlinkingProperties(PLAYER2,PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS,BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);
+
+
+	
+	this.setBlinkingBehaviour(PLAYER1, true);
+	this.setBlinkingBehaviour(PLAYER2, true);
+	
+
 	this.play_song();
 	
 	//administration
 	this.playerAtMove = startingPlayer;
+
+	this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, this.playersBlinkingColour[this.playerAtMove]);
+	this.setPlayerBlinkingProperties((this.playerAtMove-1)*-1, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, this.playersPawnActivatedColours[(this.playerAtMove-1)*-1]);
+	
+
 	this.recordingOfGameInProgress = [];
 	this.moveCounter = 0;
 	this.gameStatus = SETUP;
@@ -229,6 +250,9 @@ function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen,star
 	this.shortestPathPerPlayer;
 	this.outputBoard();
 	this.gameStatus = PLAYING;
+
+	//multiplayer
+	var movedLocallyButNotYetSubmitted = false;
 
 	//set up special start state
 	if (startGameState != false){
@@ -342,7 +366,12 @@ Game.prototype.multiPlayerSubmitLocalMove = function(){
 		return this.moveHistoryToString();
 	}
 	//change game status.
+
 	this.gameStatus = MULTIPLAYER_REMOTE_PLAYING;
+	this.movedLocallyButNotYetSubmitted = false;
+	this.setPlayerBlinkingProperties(this.playerAtMove,PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS,BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);
+	this.setPlayerBlinkingProperties((this.playerAtMove-1)*-1, this.playersBlinkingSpeedMillis[(this.playerAtMove-1)*-1], this.playersPawnActivatedColours[(this.playerAtMove-1)*-1] );
+	//this.setBlinkingBehaviour((this.playerAtMove-1)*-1, false);	
 	return this.moveHistoryToString();
 }
 
@@ -463,9 +492,26 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	if (this.board.isThereAWinner()[0]){
 		console.log("The winner of the game is player %d",this.board.isThereAWinner()[1]+1);
 		this.gameStatus = FINISHED;
-	}else{
+	}else if (this.gameStatus == PLAYING){
 		//prepare for next move.
+		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, this.playersPawnActivatedColours[this.playerAtMove]);	
+
 		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
+		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);	
+		
+		// this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
+		
+
+
+		this.moveCounter++;
+	}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
+		//multiplayer game, move has to be submitted.
+		this.setPlayerBlinkingProperties(this.playerAtMove, 200, "red");	
+
+		this.movedLocallyButNotYetSubmitted = true;
+		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
+		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);	
+		
 		this.moveCounter++;
 	}
 		
@@ -473,7 +519,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.recordingOfGameInProgress.push(verboseNotation);
 	this.outputGameStats();
 	this.outputBoard();
-
+	
 	console.log("game move history: " + this.moveHistoryToString());
 	//console.log( "rotated history string: " + this.rotateGameState(this.moveHistoryToString() ) );
 	return true;
@@ -749,23 +795,61 @@ Game.prototype.indicateActivePlayer = function(){
 	//set time for calling blinker.
 	//on and off blinkers keep calling each other, until other player's turn. 
 	//note that when it is the other player's turn, blinking doesn't start awkwardly (doesn't go "off" right away.)
-	window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(this.playerAtMove)}.bind(this),PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS); 
+	window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(this.playerAtMove)}.bind(this),this.blinkingSpeedMillis); 
 }
 
-Game.prototype.blinkOFFActivatedPlayerCallBack = function(activePlayerMemory){
-	if (activePlayerMemory ==this.playerAtMove){ 
-		this.svgPawns[activePlayerMemory].setAttribute("fill",BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);
-		window.setTimeout(function (){this.blinkONActivatedPlayerCallBack(activePlayerMemory)}.bind(this),PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS); 
+
+
+//-------PAWN BLINKING
+
+Game.prototype.setBlinkingBehaviour= function (player,enable){
+	//player PLAYER1 or PLAYER2
+	//debugger;
+	this.playersBlinkingEnabled[player] = enable;
+
+	if (enable){
+		console.log("fiejfiefstart blickn");
+		this.blinkONActivatedPlayerCallBack(player);
 	}
 }
 
-Game.prototype.blinkONActivatedPlayerCallBack = function(activePlayerMemory){
-	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED];
-	this.svgPawns[activePlayerMemory].setAttribute("fill",colours[activePlayerMemory]);
-	if (activePlayerMemory ==this.playerAtMove){
-		window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(activePlayerMemory)}.bind(this),PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS); 
+Game.prototype.setPlayerBlinkingProperties= function(blinkingPlayer, blinkingSpeedMillis, blinkingColour){
+
+
+	this.playersBlinkingSpeedMillis[blinkingPlayer] = (typeof blinkingSpeedMillis !== 'undefined') ?  blinkingSpeedMillis : PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS;
+	console.log("set blink player colour i listbefore: " + this.playersBlinkingColour[blinkingPlayer]);
+	this.playersBlinkingColour[blinkingPlayer] = (typeof blinkingColour !== 'undefined') ?  blinkingColour : BOARD_CELL_PAWNCIRCLE_COLOR_BLINK;
+	console.log("set blink player colour i list: " + this.playersBlinkingColour[blinkingPlayer]);
+	
+}
+
+Game.prototype.blinkONActivatedPlayerCallBack = function(player){
+	//sets normal colour to pawn
+	//console.log("set blink player: " + player);
+//	console.log("set blink player colour: " + this.playersBlinkingColour[player]);
+	
+	//console.log(this);
+	this.svgPawns[player].setAttribute("fill",this.playersPawnActivatedColours[player]);
+	if (this.playersBlinkingEnabled[player]){
+		window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(player)}.bind(this),this.playersBlinkingSpeedMillis[player]); 
 	}
 }
+
+Game.prototype.blinkOFFActivatedPlayerCallBack = function(player){
+	//sets blinking colour to pawn
+		this.svgPawns[player].setAttribute("fill",this.playersBlinkingColour[player]);
+		window.setTimeout(function (){this.blinkONActivatedPlayerCallBack(player)}.bind(this),this.playersBlinkingSpeedMillis[player]); 
+	
+}
+
+
+
+
+
+
+
+
+
 
 
 Game.prototype.mouseClickCellAsPawnCircleElement = function (callerElement){
