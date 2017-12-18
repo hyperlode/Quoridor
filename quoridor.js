@@ -510,7 +510,11 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 
 		this.movedLocallyButNotYetSubmitted = true;
 		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
-		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);	
+
+		//this.setBlinkingBehaviour(this.playerAtMove, false);
+		//this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);	
+		
+
 		
 		this.moveCounter++;
 	}
@@ -687,7 +691,10 @@ Game.prototype.outputBoard = function(){
 	this.outputWalls();
 	this.outputShortestPath(this.playerAtMove);
 	this.outputPawns();
-	this.indicateActivePlayer();
+	//this.indicateActivePlayer();
+
+
+
 	this.setCellAsCircleElementsPlayerFinishLines();
 }
 
@@ -781,6 +788,7 @@ Game.prototype.outputShortestPath = function(player){
 	}
 }
 
+/*
 Game.prototype.indicateActivePlayer = function(){
 	var colours = [BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED, BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED];
 	if (this.playerAtMove == PLAYER1){
@@ -795,32 +803,29 @@ Game.prototype.indicateActivePlayer = function(){
 	//set time for calling blinker.
 	//on and off blinkers keep calling each other, until other player's turn. 
 	//note that when it is the other player's turn, blinking doesn't start awkwardly (doesn't go "off" right away.)
-	window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(this.playerAtMove)}.bind(this),this.blinkingSpeedMillis); 
+	//window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(this.playerAtMove)}.bind(this),this.blinkingSpeedMillis); 
 }
 
-
+*/
 
 //-------PAWN BLINKING
 
 Game.prototype.setBlinkingBehaviour= function (player,enable){
 	//player PLAYER1 or PLAYER2
 	//debugger;
-	this.playersBlinkingEnabled[player] = enable;
-
-	if (enable){
-		console.log("fiejfiefstart blickn");
+	if (!this.playersBlinkingEnabled[player]){
+		//make sure to only run when not blinking (we don't want mulitple instances of this. results in frantical flickering)
+		this.playersBlinkingEnabled[player] = enable;
 		this.blinkONActivatedPlayerCallBack(player);
+		
 	}
 }
 
 Game.prototype.setPlayerBlinkingProperties= function(blinkingPlayer, blinkingSpeedMillis, blinkingColour){
-
-
 	this.playersBlinkingSpeedMillis[blinkingPlayer] = (typeof blinkingSpeedMillis !== 'undefined') ?  blinkingSpeedMillis : PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS;
-	console.log("set blink player colour i listbefore: " + this.playersBlinkingColour[blinkingPlayer]);
+	//console.log("set blink player colour i listbefore: " + this.playersBlinkingColour[blinkingPlayer]);
 	this.playersBlinkingColour[blinkingPlayer] = (typeof blinkingColour !== 'undefined') ?  blinkingColour : BOARD_CELL_PAWNCIRCLE_COLOR_BLINK;
-	console.log("set blink player colour i list: " + this.playersBlinkingColour[blinkingPlayer]);
-	
+	//console.log("set blink player colour i list: " + this.playersBlinkingColour[blinkingPlayer]);
 }
 
 Game.prototype.blinkONActivatedPlayerCallBack = function(player){
@@ -831,6 +836,9 @@ Game.prototype.blinkONActivatedPlayerCallBack = function(player){
 	//console.log(this);
 	this.svgPawns[player].setAttribute("fill",this.playersPawnActivatedColours[player]);
 	if (this.playersBlinkingEnabled[player]){
+		if (player == PLAYER1){
+			console.log(player + " ...."+ this.playersBlinkingSpeedMillis[player]);
+		}
 		window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(player)}.bind(this),this.playersBlinkingSpeedMillis[player]); 
 	}
 }
@@ -839,14 +847,7 @@ Game.prototype.blinkOFFActivatedPlayerCallBack = function(player){
 	//sets blinking colour to pawn
 		this.svgPawns[player].setAttribute("fill",this.playersBlinkingColour[player]);
 		window.setTimeout(function (){this.blinkONActivatedPlayerCallBack(player)}.bind(this),this.playersBlinkingSpeedMillis[player]); 
-	
 }
-
-
-
-
-
-
 
 
 
