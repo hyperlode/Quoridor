@@ -140,25 +140,26 @@ class Cafe {
 				
 				instance.setVisibilityControlsRemoteStarted();
 			}
+
 	setVisibilityControlsRemoteStarted(){
 
-		instance.localGameControlsDiv.style.display = 'none';
+		this.localGameControlsDiv.style.display = 'none';
 		
 
-		instance.stopRemoteGameButton.style.visibility = 'visible';
-		instance.listGamesButtom.style.visibility = 'hidden';
-		instance.startRemoteGameButton.style.visibility = 'hidden';
-		instance.joinRemoteGameButton.style.visibility = 'hidden';
-		instance.remoteGameIdTextBox.style.visibility = 'hidden';
+		this.stopRemoteGameButton.style.visibility = 'visible';
+		this.listGamesButtom.style.visibility = 'hidden';
+		this.startRemoteGameButton.style.visibility = 'hidden';
+		this.joinRemoteGameButton.style.visibility = 'hidden';
+		this.remoteGameIdTextBox.style.visibility = 'hidden';
 
-		instance.player1StartsCheckbox.style.visibility = 'hidden';
-		document.getElementById(instance.player1StartsCheckbox.id+"_label").style.visibility = 'hidden';
-		instance.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
-		document.getElementById(instance.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'hidden';
-		instance.submitLocalMoveButton.style.visibility = 'visible';
-		instance.setGamesListVisibility(false);
+		this.player1StartsCheckbox.style.visibility = 'hidden';
+		document.getElementById(this.player1StartsCheckbox.id+"_label").style.visibility = 'hidden';
+		this.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
+		document.getElementById(this.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'hidden';
+		this.submitLocalMoveButton.style.visibility = 'visible';
+		this.setGamesListVisibility(false);
 
-		instance.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
+		this.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
 		
 
 	}

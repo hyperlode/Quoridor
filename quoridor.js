@@ -378,6 +378,7 @@ Game.prototype.multiPlayerSubmitLocalMove = function(){
 Game.prototype.multiPlayerRemoteMove = function(gameString){
 	//gamestring is always the total game like it was + the extra move of the remote player. 
 		//check if remote players turn
+
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
 		alert("ASSERT ERROR: local players turn, remote tries to move, move not executed.")
 		console.log("ASSERT ERROR: local players turn, remote tries to move, move not executed.")
@@ -509,12 +510,13 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		this.setPlayerBlinkingProperties(this.playerAtMove, 200, "red");	
 
 		this.movedLocallyButNotYetSubmitted = true;
-		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
-
-		//this.setBlinkingBehaviour(this.playerAtMove, false);
-		//this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);	
+		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0	
+		this.moveCounter++;
+	}else if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING){
+		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, this.playersPawnActivatedColours[this.playerAtMove]);	
 		
-
+		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
+		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);	
 		
 		this.moveCounter++;
 	}
@@ -836,9 +838,9 @@ Game.prototype.blinkONActivatedPlayerCallBack = function(player){
 	//console.log(this);
 	this.svgPawns[player].setAttribute("fill",this.playersPawnActivatedColours[player]);
 	if (this.playersBlinkingEnabled[player]){
-		if (player == PLAYER1){
-			console.log(player + " ...."+ this.playersBlinkingSpeedMillis[player]);
-		}
+		// if (player == PLAYER1){
+			// console.log(player + " ...."+ this.playersBlinkingSpeedMillis[player]);
+		// }
 		window.setTimeout(function (){this.blinkOFFActivatedPlayerCallBack(player)}.bind(this),this.playersBlinkingSpeedMillis[player]); 
 	}
 }
