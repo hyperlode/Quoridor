@@ -62,10 +62,18 @@
 	}elseif ($action == "listOfGames"){
 		
 		$gameStatusFilter = $_GET["gameStatusFilter"];
+		$playerIdFilter = $_GET["playerIdFilter"];
 		
-		$result = getListOfActiveGames($conn,$gameStatusFilter);
+		echo $playerIdFilter;
+		if ($playerIdFilter == 666){
+			
+			$result = getListOfActiveGames($conn,$gameStatusFilter);
+		}else{
+			$result = getListOfGames($conn,$gameStatusFilter,$playerIdFilter);
+		}
 		ob_end_clean();
 		ob_start();
+		
 		$result = json_encode($result);
 		echo $result;
 		return  ob_get_contents();
@@ -186,6 +194,25 @@
 		return $returnString;
 	}
 */
+
+
+	function getListOfGames($conn, $gameStatusFilter, $playerIdFilter){
+		//$sql = "SELECT * FROM activeGames WHERE gameStatus = ".$gameStatusFilter." AND (playerId1 = ".$playerIdFilter." OR playerId2 = ".$playerIdFilter.")"  ;
+		$sql = "SELECT * FROM activeGames WHERE (playerId1 = ".$playerIdFilter." OR playerId2 = ".$playerIdFilter.")"  ;
+		if ($result = $conn->query($sql) ) {	
+			$rows = array();
+
+			while ($row = $result->fetch_assoc()) {
+				$rows[] = $row; 
+			}
+			$result->close();
+			return $rows;
+		} else {
+			echo "Error return value: " . $sql . "<br>" . $conn->error;
+		}	
+		return $returnString;
+	}
+
 	function getListOfActiveGames($conn, $gameStatusFilter) {
 		$sql = "SELECT * FROM activeGames WHERE gameStatus = ".$gameStatusFilter;
 		//$sql = "SELECT gameState FROM activeGames WHERE gameId = 666";

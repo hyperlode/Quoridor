@@ -30,6 +30,7 @@ var REMOTE_GAME_STATUS_ERROR = 0;
 var REMOTE_GAME_STATUS_INITIALIZING = 1; 
 var REMOTE_GAME_STATUS_PLAYING = 2; 
 var REMOTE_GAME_STATUS_ARCHIVED = 3; 
+var REMOTE_GAME_STATUS_ALL = 4; //dont care about status 
 
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -147,7 +148,7 @@ class Cafe {
 		
 
 		this.stopRemoteGameButton.style.visibility = 'visible';
-		this.listGamesButtom.style.visibility = 'hidden';
+		this.listFreeSpotGamesButton.style.visibility = 'hidden';
 		this.startRemoteGameButton.style.visibility = 'hidden';
 		this.joinRemoteGameButton.style.visibility = 'hidden';
 		this.remoteGameIdTextBox.style.visibility = 'hidden';
@@ -189,14 +190,22 @@ class Cafe {
 
 	
 
-	listGames(instance){
+	listGamesWithFreeSpot(instance){
 		//check all available games for joining...
-		instance.remote.listOfGames(1);
+		instance.remote.listOfGames(REMOTE_GAME_STATUS_INITIALIZING, NO_PLAYER_DUMMY_ID);
 		
 		instance.setGamesListVisibility(!instance.showingGamesList);
 			
 	}
 
+	listGamesWithPlayerId(instance){
+		//check all available games for joining...
+		instance.remote.listOfGames(REMOTE_GAME_STATUS_ALL,instance.account.getLoggedInUserId());
+		
+		instance.setGamesListVisibility(!instance.showingGamesList);
+			
+	}
+	
 	setGamesListVisibility(isVisible){
 		var listElement = document.getElementById(AVAILABLE_GAMES_ON_SERVERS_DIV);
 		if(!isVisible){
@@ -218,7 +227,7 @@ class Cafe {
 		// instance.restartLocalGameButton.style.visibility = 'hidden';
 
 		instance.stopRemoteGameButton.style.visibility = 'hidden';
-		instance.listGamesButtom.style.visibility = 'visible';
+		instance.listFreeSpotGamesButton.style.visibility = 'visible';
 		instance.startRemoteGameButton.style.visibility = 'visible';
 		instance.joinRemoteGameButton.style.visibility = 'visible';
 		instance.remoteGameIdTextBox.style.visibility = 'visible';
@@ -328,8 +337,12 @@ class Cafe {
 		this.player1StartsCheckbox = addCheckBox(this.remoteGameControlsDiv, "PLAYER1 starts", "PLAYER1 starts", true, "I (who initiates the game) make the first move.");
 		addBr(this.remoteGameControlsDiv);
 		
-		this.listGamesButtom = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of available games.", "getActiveGamesList", "getActiveGamesList", this.listGames, this);
-		this.listGamesButtom.style.visibility = 'visible';
+		this.listFreeSpotGamesButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of available games.", "getActiveGamesList", "getActiveGamesList", this.listGamesWithFreeSpot, this);
+		this.listFreeSpotGamesButton.style.visibility = 'visible';
+		
+		this.listPlayerIdGamesButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of games where I play.", "getGamesListWithPlayerId", "getGamesListWithPlayerId", this.listGamesWithPlayerId, this);
+		this.listPlayerIdGamesButton.style.visibility = 'visible';
+		
 		
 		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Join Selected Game", "joinGame", "joinGame", this.joinRemoteGame, this);
 		this.joinRemoteGameButton.style.visibility = 'visible';
@@ -761,17 +774,20 @@ class RemoteContact {
 
 	//---------------list all the available games from the database
 	
-	listOfGames(remoteGameStatusFilter){
+	listOfGames(remoteGameStatusFilter, playerIdFilter){
+		playerIdFilter = (typeof playerIdFilter !== 'undefined') ?  playerIdFilter : NO_PLAYER_DUMMY_ID;
+		
+		
 		//remotegamestatus --> see: REMOTE_GAME_STATUS_....
 		this.remoteGameStatusFilter = remoteGameStatusFilter;
 
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"listOfGames" + "&gameStatusFilter=" + remoteGameStatusFilter;
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"listOfGames" + "&gameStatusFilter=" + remoteGameStatusFilter +"&playerIdFilter=" + playerIdFilter;
 		console.log("list of games");
 		this.callPhpWithAjax(url, this.listOfGamesCallBack.bind(this));	
 	}
 
 	listOfGamesCallBack(responseJSON){
-		
+		console.log(responseJSON);
 		var remoteDataArray =  JSON.parse(responseJSON);
 		console.log(remoteDataArray);
 		var htmlString = "<form action=''>";
