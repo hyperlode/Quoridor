@@ -86,10 +86,16 @@ class Cafe {
 	remoteGameStart(instance) {
 		console.log("start remote game");
 		
+		if (instance.account.getLoggedInUserId() == NO_LOGGED_IN_USER_DUMMY_ID){
+			alert("Please log in or register first. ");
+			return;
+		}
+		
 		alert("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
 		
 		instance.clearStatusField();
 		
+		updateStatusField("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
 		
 		instance.setVisibilityControlsRemoteStarted();
 
@@ -108,39 +114,43 @@ class Cafe {
 	}
 
 	joinRemoteGame(instance){
+
+		if (instance.account.getLoggedInUserId() == NO_LOGGED_IN_USER_DUMMY_ID){
+			alert("Please log in or register first. ");
+			return;
+		}
 		
-				
-				var radios = document.getElementsByName('gameIdSelection');
-				// document.getEle
-				var selectedGameId;
-				if (radios.length == 0){
-					alert("Select a game from the available games list [Toggle list of available games] button, if none available, start a new game with the [start remote game] button.");
-					return false;
-				}
-		
-				for (var i = 0; i < radios.length; i++) {
-					if (radios[i].type === 'radio' && radios[i].checked) {
-						// get value, set checked flag or do whatever you need to
-						selectedGameId = radios[i].value;       
-					}
-				}
-		
-				instance.clearStatusField();
-				alert(" Selected game: "+ selectedGameId +"\nReminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
-				
-				//get game id from field.
-				//check for remote game with this id
-				instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
-				//var joinGameId = instance.remoteGameIdTextBox.value;
-				var joinGameId = selectedGameId;
-		
-				instance.remote.joinGame(joinGameId);	
-				console.log("attempt to join game with id: " + joinGameId);
-				var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
-				instance.remote.setGameProperties(localPlayerGoesUpwards);
-				
-				instance.setVisibilityControlsRemoteStarted();
+		var radios = document.getElementsByName('gameIdSelection');
+		// document.getEle
+		var selectedGameId;
+		if (radios.length == 0){
+			alert("Select a game from the available games list [Toggle list of available games] button, if none available, start a new game with the [start remote game] button.");
+			return false;
+		}
+
+		for (var i = 0; i < radios.length; i++) {
+			if (radios[i].type === 'radio' && radios[i].checked) {
+				// get value, set checked flag or do whatever you need to
+				selectedGameId = radios[i].value;       
 			}
+		}
+
+		instance.clearStatusField();
+		alert(" Selected game: "+ selectedGameId +"\nReminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
+		
+		//get game id from field.
+		//check for remote game with this id
+		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
+		//var joinGameId = instance.remoteGameIdTextBox.value;
+		var joinGameId = selectedGameId;
+
+		instance.remote.joinGame(joinGameId);	
+		console.log("attempt to join game with id: " + joinGameId);
+		var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
+		instance.remote.setGameProperties(localPlayerGoesUpwards);
+		
+		instance.setVisibilityControlsRemoteStarted();
+	}
 
 	setVisibilityControlsRemoteStarted(){
 
@@ -759,7 +769,7 @@ class RemoteContact {
 			this.gameStatus = GAME_STATUS_INITIALIZING;
 			this.remotePlayerId = remotePlayer2;
 			console.log("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + " No opponenent yet. Wait for it.");
-			this.updateCafeStatusField("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + " No opponenent yet. Wait for it.");
+			this.updateCafeStatusField("game created with id: " + this.gameId + " local player id: "+ this.localPlayerId + " No opponenent yet. Gameboard will be displayed when opponent joins. Wait for it.");
 			
 			
 		}else{
