@@ -1,5 +1,6 @@
 <?php
 	// $servername = "lode.ameije.com";
+	include("credentialsNotInGit.php"); //get passwords and login credentials.
 	
 	//output buffer, will store in output buffer, this needs to be returned manually.
 	ob_start();
@@ -124,14 +125,19 @@
 	//set gamestate of game with game id.
 	
 	function connectToDataBase() {
-		$servername = "50.62.176.142"; //found in "remote Mysql" page of godaddy dashboard.
-		$username = "superlode";
-		$password = "sl8afval";
-		$databasename = "ameijeData";
+		// $servername = "50.62.176.142"; //found in "remote Mysql" page of godaddy dashboard.
+		// $username = "superlode";
+		// $password = "dummy dummy no passwords in git please."; 
+		// $databasename = "ameijeData";
 		
-		// Create connection
-		$connn = new mysqli($servername, $username, $password,$databasename);
-	
+		// // Create connection
+		// $connn = new mysqli($servername, $username, $password,$databasename);
+		
+		$connn = new mysqli($GLOBALS["mysql_hostname"], $GLOBALS["mysql_username"], $GLOBALS["mysql_password"], $GLOBALS["mysql_database"]);
+		if( $this->mysqli->connect_error ){
+			throw new Exception("MySQL connection could not be established, are  credentials set correctly in the file on the server? This file is not in the source control: ".$this->mysqli->connect_error);
+		}
+		
 		// Check connection
 		if ($connn->connect_error) {
 			die("Connection failed: " . $connn->connect_error);
