@@ -94,7 +94,7 @@ class Cafe {
 		
 		instance.clearStatusField();
 		
-		updateStatusField("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
+		instance.updateStatusField("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
 		
 		instance.setVisibilityControlsRemoteStarted();
 
