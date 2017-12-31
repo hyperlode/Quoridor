@@ -60,7 +60,6 @@ class Cafe {
 		//users login and credentials stuff
 		this.account = new Account();
 		console.log(logonText);
-		this.account.listOfLoggedInUsers();
 		this.remote = new RemoteContact();
 
 
@@ -272,6 +271,12 @@ class Cafe {
 	}
 	
 	
+	
+	listOfLoggedInUsers(){
+		this.account.listOfLoggedInUsers();
+		
+	}
+	
 	debugNewCommand(instance) {
 		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
 		var joinGameId = instance.remoteGameIdTextBox.value;
@@ -363,7 +368,12 @@ class Cafe {
 		addBr(this.remoteGameControlsDiv);
 		var debugControlsDiv = document.getElementById("debugControls");
 		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "debug poll...", "sendDebug", "sendDebug", this.debugNewCommand, this);
+		
 		this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
+		
+		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "See registered players", "listUsers", "listUsers", this.listOfLoggedInUsers.bind(this));
+		
+		
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "debug", "debugCmdText", "debugCmdText", 20);
 		this.debugNoServerSetup = addCheckBox(debugControlsDiv, "debugNoServerUse", "debugNoServerUse", false, "debug without server");
 		this.localPlayerMovesUpCheckbox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Display Local Player moves up on the board.");
@@ -525,7 +535,7 @@ class Account {
 
 		console.log(remoteDataArray);
 		//var responseArray = response.split(",");
-		var outputString = "Name:Id of registered users: ";
+		var outputString = "Namde:Id of registered users: ";
 
 		//for (var i = 0; i < responseArray.length; i+=2) {
 		for (var i = 0; i < remoteDataArray.length; i+=1) {

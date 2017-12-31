@@ -221,7 +221,10 @@ function addButtonToExecuteGeneralFunction(elementToAttachTo,caption,name, id, f
 	button.name = name;
 	button.id = id;
 	
-	if (arg.constructor === Array){
+	if (arg == undefined){
+		button.addEventListener('click', function(){
+		func(); });
+	}else if (arg.constructor === Array){
 		if (arg.length == 2){
 		//debugger;
 				button.addEventListener('click', function(){
