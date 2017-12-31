@@ -10,6 +10,7 @@ var BOARD_ROTATION_DEGREES = 0; //0 is default
 var PRINT_ASSERT_ERRORS = false;
 var GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS = 700;
 var PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS = 2000/2;
+var PLAYER_PAWN_BLINK_NOT_SUBMITTED_HALF_PERIOD_MILLIS = 500/2;
 
 var BOARD_WIDTH = 1000;
 var BOARD_HEIGHT = 1500;
@@ -42,6 +43,7 @@ var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_1_ACTIVATED = "paleturquoise"; //"deepsky
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2 = "peachpuff";
 var BOARD_CELL_PAWNCIRCLE_COLOR_PLAYER_2_ACTIVATED  = "peachpuff"; //"salmon";
 var BOARD_CELL_PAWNCIRCLE_COLOR_BLINK = "white";
+var BOARD_CELL_PAWNCIRCLE_COLOR_NOT_SUBMITTED_BLINK = "red";
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_2= BOARD_BACKGROUND_COLOR; //BOARD_PAWN_2_COLOR   //this is the highlighting of the finish locations
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_1= BOARD_BACKGROUND_COLOR; //BOARD_PAWN_1_COLOR //this is the highlighting of the finish locations
 var BOARD_CELL_PAWNCIRCLE_FINISH_COLOR_PLAYER_TRANSPARENCY = 0.4;
@@ -105,10 +107,32 @@ document.onkeypress = function(evt) {
     evt = evt || window.event;
     var charCode = evt.keyCode || evt.which;
     var charStr = String.fromCharCode(charCode);
-    console.log(charStr);
+    console.log("charCode, char: " + charCode + ", " + charStr);
+	
+	if (evt.keyCode == 27) { // escape key maps to keycode `27`
+        // <DO YOUR WORK HERE
+		console.log("escape");
+    }
+	
+	
+};
+*/
+document.onkeydown = function(evt) {
+    evt = evt || window.event;
+    var charCode = evt.keyCode || evt.which;
+    var charStr = String.fromCharCode(charCode);
+    console.log("charCode, char: " + charCode + ", " + charStr);
+	
+	if (evt.keyCode == 27) { // escape key maps to keycode `27`
+        // <DO YOUR WORK HERE
+		console.log("escape");
+    }
+	
+	
 };
 
-*/
+
+/**/
 
 
 
@@ -506,12 +530,13 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 
 		this.moveCounter++;
 	}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
-		//multiplayer game, move has to be submitted.
-		this.setPlayerBlinkingProperties(this.playerAtMove, 200, "red");	
+		//multiplayer game, move has to be submitted. special flashing
+		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_NOT_SUBMITTED_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_NOT_SUBMITTED_BLINK);	
 
 		this.movedLocallyButNotYetSubmitted = true;
 		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0	
 		this.moveCounter++;
+		
 	}else if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING){
 		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, this.playersPawnActivatedColours[this.playerAtMove]);	
 		
@@ -1112,7 +1137,7 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
 	
 	if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
-		console.log("remote palyeing");
+		console.log("Remote player playing. No undo possible.");
 		// var tmp = this.moveCounterAtGameLoad;
 		// this.eraseBoard();
 		// this.moveCounterAtGameLoad = tmp;
@@ -1122,15 +1147,17 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 			// this.playTurnByVerboseNotation(saveGame[moveNumber]);
 		// }
 	}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING ){
-		console.log("local palyeing");
+		console.log("Local player playing. Undo one step possible.");
 		var tmp = this.moveCounterAtGameLoad;
 		this.eraseBoard();
 		this.moveCounterAtGameLoad = tmp;
-		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
-		
+		this.gameStatus = PLAYING;
 		for (var moveNumber = 0; moveNumber<  moveEndNumber; moveNumber++){
 			this.playTurnByVerboseNotation(saveGame[moveNumber]);
 		}
+		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
+		
+		
 		
 	}else if (this.gameStatus == REPLAY){
 		var saveGameForReplay = JSON.parse(JSON.stringify(this.replaySaveMoves));
