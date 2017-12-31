@@ -520,14 +520,14 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	}else if (this.gameStatus == PLAYING){
 		//prepare for next move.
 		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, this.playersPawnActivatedColours[this.playerAtMove]);	
-
 		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
 		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);	
-		
-		// this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
-		
-
-
+		this.moveCounter++;
+	}else if(this.gameStatus == REPLAY){
+		//prepare for next move.
+		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, this.playersPawnActivatedColours[this.playerAtMove]);	
+		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
+		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_BLINK);	
 		this.moveCounter++;
 	}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
 		//multiplayer game, move has to be submitted. special flashing
@@ -648,7 +648,7 @@ Game.prototype.outputGameStats= function(){
 		htmlString += 'Blue Player starts the game.'
 	} else if (this.gameStatus == FINISHED){
 		htmlString += ''+ PLAYER_NAMES[this.playerAtMove] + ' player won!';
-	}else if (this.gameStatus == PLAYING){
+	}else if (this.gameStatus == PLAYING || this.gameStatus == MULTIPLAYER_LOCAL_PLAYING  || this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
 		var redMovesToFinish = this.board.shortestPathPerPlayer[1].length-1;
 		var blueMovesToFinish = this.board.shortestPathPerPlayer[0].length-1;
 		htmlString += 'Estimated number of moves to finish:';
@@ -1256,12 +1256,7 @@ Game.prototype.replay = function (instance){
 }
 
 Game.prototype.stopReplay = function (instance){
-	// Manager.prototype.replayGameString = function (gameString){
-	// this.startNewGame();
-	// this.replayGame = new GameReplay (this.localGame, gameString);
-	
-// }
-	//instanceGameStatus= instance.gameStatusMemory ;
+
 	rewindGameToPosition(this.recordingOfGameInProgress.length-1)
 	
 }
