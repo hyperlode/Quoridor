@@ -432,7 +432,11 @@ class Account {
 		//addBr(elementToAttachTo);
 		this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "logout", "logoutbutton", "logoutbutton", this.userLogout, this);
 		this.usernameTextBox = addTextBox(elementToAttachTo, "username", "usernameTextBox", "usernameTextBox", 20);
-		this.pwdTextBox = addTextBox(elementToAttachTo, "password", "pwdTextBox", "pwdTextBox", 20);
+		this.pwdTextBox = addTextBox(elementToAttachTo, "password", "password", "pwdTextBox", 20);
+		this.pwdTextBox.type = "password";
+		
+		
+		
 		this.loginButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "login", "loginbutton", "loginbutton", this.userLogin, this);
 		this.registerButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "register", "registerbutton", "registerbutton", this.userRegister, this);
 		this.loginName = "";

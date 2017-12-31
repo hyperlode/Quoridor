@@ -1,6 +1,6 @@
 <?php
 	// $servername = "lode.ameije.com";
-	include("credentialsNotInGit.php"); //get passwords and login credentials.
+	include("./credentialsNotInGit.php"); //get passwords and login credentials.
 	
 	//output buffer, will store in output buffer, this needs to be returned manually.
 	ob_start();
@@ -134,7 +134,7 @@
 		// $connn = new mysqli($servername, $username, $password,$databasename);
 		
 		$connn = new mysqli($GLOBALS["mysql_hostname"], $GLOBALS["mysql_username"], $GLOBALS["mysql_password"], $GLOBALS["mysql_database"]);
-		if( $this->mysqli->connect_error ){
+		if( $connn->mysqli->connect_error ){
 			throw new Exception("MySQL connection could not be established, are  credentials set correctly in the file on the server? This file is not in the source control: ".$this->mysqli->connect_error);
 		}
 		
