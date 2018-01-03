@@ -442,6 +442,7 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 //-----------------------------------------PLAYING A MOVE------------------------
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
+	// console.log(this.gameStatus);
 	// console.log("verbose Move:" + verboseNotation);	
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
 		console.log("multiplayer move. local");
@@ -458,10 +459,14 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	}else if (this.gameStatus == REPLAY){
 		console.log("replay mode. automatic.");
 		
+	}else if (this.gameStatus == FINISHED){
+		alert("FINISHED! no more moves possible.");
+		return false;
 	}else if (this.gameStatus != PLAYING){
 		//todo, catches every situation!!!!!
 		console.log("game finished, restart to replay.  status: %d", this.gameStatus	);
 		return false;
+	
 	}else if (this.gameStatus == PLAYING){
 		//pass
 	}else{
@@ -478,7 +483,8 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	var undoWallValid= false; //check if the move can be undone.
 	if (moveData[0] == GAVEUP_MOVE){
 		console.log ("player %s gave up... (not implemented yet...) (%s)", PLAYER_NAMES[this.playerAtMove], verboseNotation);
-		validMove = false;
+		this.gameStatus = FINISHED;
+		validMove = true;
 	}else if (moveData[0] == PAWN_MOVE){
 		var success = this.movePawnByVerboseNotation(this.playerAtMove,verboseNotation);
 		if (!success){
@@ -502,13 +508,13 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		return false;
 	}
 	
+	//check validity of board.
 	if (!this.board.isCurrentBoardLegal()){
-		console.log("undo move");
-		alert("move not allowed, there must be a path to at least one of the squares on the other side of the board for both players!");
+		alert("move not allowed, there must be a path to at least one of the squares on the other side of the board for both players! Move will not be executed.");
 		if (undoWallValid){
 			this.undoLastWall(this.playerAtMove);
 		}else{
-			console.log("ASSERT ERROR: we have an illegal board situation without having placed a wall. This is not yet covered. Not undone, board corrupted.");
+			console.log("ASSERT ERROR: we have an illegal board situation (it was not about placing a wall). This is not yet implemented. Not undone, board corrupted.");
 		}
 		return false;
 	}
@@ -517,7 +523,15 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	if (this.board.isThereAWinner()[0]){
 		console.log("The winner of the game is player %d",this.board.isThereAWinner()[1]+1);
 		this.gameStatus = FINISHED;
-	}else if (this.gameStatus == PLAYING){
+	}
+
+	//check game state.
+	if (this.gameStatus == FINISHED){
+		//game end (could be because a player gave up).
+		//alert( "Player {} lost the game".format(PLAYER_NAMES[this.playerAtMove]));
+		alert( "Player " +PLAYER_NAMES[this.playerAtMove] + " lost the game");
+		
+ 	}else if (this.gameStatus == PLAYING){
 		//prepare for next move.
 		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS, this.playersPawnActivatedColours[this.playerAtMove]);	
 		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0
@@ -555,6 +569,12 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	//console.log( "rotated history string: " + this.rotateGameState(this.moveHistoryToString() ) );
 	return true;
 }
+
+
+Game.prototype.resignGame = function (){
+	this.playTurnByVerboseNotation("X");
+}
+
 
 Game.prototype.wallToVerboseNotation = function(cellId, directionIsNorthToSouth){
 	var row = 8 - Math.floor(cellId/9);
@@ -1098,12 +1118,12 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 	}
 }
 
-Game.prototype.undoButtonClicked = function(GameInstance){
+Game.prototype.undoButtonClicked = function(){
 	//	console.log("undo button clicked.");
 	//	console.log(GameInstance);
 	// debugger;
 
-	GameInstance.undoNumberOfSteps(1);
+	this.undoNumberOfSteps(1);
 }
 
 Game.prototype.rewindGameTextClicked = function(GameInstance, moveEndNumber){
@@ -1121,18 +1141,21 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 	//moveNumber 1 is first move
 	
 	
-	// if (this.gameStatus == MULTIPLAYER_PLAYING && this.moveCounter <= this.moveCounterAtGameLoad){
-		
+	
 		
 	if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
 		alert("remote player is busy playing. no fiddling around!");
 		return;
-	}
-	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING && moveEndNumber < this.moveCounterAtGameLoad){
+	}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING && moveEndNumber < this.moveCounterAtGameLoad){
 		console.log("not allowed to go back further than game load in multiplayer,");
 		alert("not allowed to go back further than game load in multiplayer");
 		return;
+	} else if (this.gameStatus == FINISHED){
+		this.gameStatus = PLAYING;
 	}
+
+	
+
 	
 	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
 	
@@ -1226,8 +1249,9 @@ Game.prototype.buildUpOptions = function(domElement){
 	//addButtonToExecuteGeneralFunction(domElement,"undooo","lode", "lloodd", this.clickTest,"arg");
 	
 	//https://stackoverflow.com/questions/2190850/create-a-custom-callback-in-javascript
-	addButtonToExecuteGeneralFunction(domElement,"Undo","lode", "lloodd", this.undoButtonClicked,this);
+	addButtonToExecuteGeneralFunction(domElement,"Undo","unooMove", "undoMove", this.undoButtonClicked.bind(this),this);
 	addButtonToExecuteGeneralFunction(domElement,"Display Notation","displayNotation", "displayNotation", this.toggleNotation,this);
+	addButtonToExecuteGeneralFunction(domElement,"Active Player Give Up!","resignGame", "resignGame", this.resignGame.bind(this),this);
 	addButtonToExecuteGeneralFunction(domElement,"Replay","replayGame", "replayGame", this.replay,this);
 	
 	//addButtonToExecuteGeneralFunction(domElement,"cutie pie","fefe", "wwww", this.testPhp,this);
