@@ -421,6 +421,8 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	
 	//execute extra move. + check remote move valid
 	var moveExecuted = this.playTurnByVerboseNotation(remoteMove);
+	// var moveExecuted = this.localGameMakeMove(remoteMove);	
+	
 	if (!moveExecuted){
 		console.log("remote move not executed, is the move syntax correct?: " + remoteMove );
 		return false;
@@ -438,6 +440,10 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 }
 
 
+Game.prototype.localGameMakeMove=function(moveVerboseNotation){
+	this.beep();
+	return this.playTurnByVerboseNotation(moveVerboseNotation);
+}
 
 //-----------------------------------------PLAYING A MOVE------------------------
 
@@ -956,7 +962,7 @@ Game.prototype.mouseCellAsPawnCircleElement = function (callerElement, isHoverin
 			return false;
 		}
 
-		this.playTurnByVerboseNotation(this.pawnDirectionToVerboseNotation(directionOfNeighbour));
+		this.localGameMakeMove(this.pawnDirectionToVerboseNotation(directionOfNeighbour));
 	}	
 	return true;
 }
@@ -1107,7 +1113,7 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 
 		if(this.board.placeWall (PLAYER1, startCellId, isNorthSouthOriented, true)){
 			var verboseNotationWallPlacement = this.wallToVerboseNotation(startCellId, isNorthSouthOriented);
-			this.playTurnByVerboseNotation(verboseNotationWallPlacement);
+			this.localGameMakeMove(verboseNotationWallPlacement);
 		}
 	}else{	
 		//colorize line
