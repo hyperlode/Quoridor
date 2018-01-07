@@ -411,9 +411,10 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 
 	//check moveshistory for correctness.
 	var receivedGame = gameString.split(",");
-	var remoteMove = receivedGame.pop();
-	
-	var isGameStateRemoteCorrectHistory = utilities.arraysEqual(receivedGame, this.recordingOfGameInProgress);
+
+	var remoteMove = receivedGame.pop(); //separate last move 
+		
+	var isGameStateRemoteCorrectHistory = utilities.arraysEqual(receivedGame, this.recordingOfGameInProgress); //history (except for last move) should be eqaul.
 	if (isGameStateRemoteCorrectHistory!= true){
 		console.log("wrong remote game state. awaiting correct move.");
 		return false;
@@ -432,20 +433,26 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	//only one move is allowed to be made.
 	this.moveCounterAtGameLoad = this.moveCounter;
 
-	//change the player to local
-	this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
 	
+	if (this.gameStatus == FINISHED){
+		alert("the game is finished. Most probably because opponent gave up! New game should be started!");
+		
+	}else{
+		//change the player to local
+		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
+	}	
 	//send feedback.
 	return true;
 }
 
+
+//-----------------------------------------PLAYING A MOVE------------------------
 
 Game.prototype.localGameMakeMove=function(moveVerboseNotation){
 	this.beep();
 	return this.playTurnByVerboseNotation(moveVerboseNotation);
 }
 
-//-----------------------------------------PLAYING A MOVE------------------------
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	// console.log(this.gameStatus);

@@ -59,11 +59,14 @@ class Cafe {
 	constructor() {
 		//users login and credentials stuff
 		this.account = new Account();
+		this.account.listOfLoggedInUsers();
+		
 		console.log(logonText);
 		this.remote = new RemoteContact();
 
 
 		this.remote.setAccountInstance(this.account);
+		
 		//create html elements
 		this.setupButtonField();
 		//this.continuePollingForRemoteMove = false;
@@ -272,9 +275,9 @@ class Cafe {
 	
 	
 	
-	listOfLoggedInUsers(){
-		this.account.listOfLoggedInUsers();
-		
+	displayUsers(){
+		//this.account.listOfLoggedInUsers();
+		this.account.listOfUsersToElement();
 	}
 	
 	debugNewCommand(instance) {
@@ -371,7 +374,7 @@ class Cafe {
 		
 		this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
 		
-		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "See registered players", "listUsers", "listUsers", this.listOfLoggedInUsers.bind(this));
+		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "See registered players", "listUsers", "listUsers", this.displayUsers.bind(this));
 		
 		
 		this.debugCommandTextBox = addTextBox(debugControlsDiv, "debug", "debugCmdText", "debugCmdText", 20);
@@ -402,7 +405,7 @@ class Account {
 	}
 
 	getNameFromId(id){
-
+		console.log(id);
 		if (id == NO_PLAYER_DUMMY_ID){
 			return "[no player assigned]";
 		}else if (id == NO_LOGGED_IN_USER_DUMMY_ID){
@@ -532,21 +535,33 @@ class Account {
 
 		instance.allRegisteredUsersIdToName = [];
 		instance.allRegisteredUsersNameToId = [];
-
+		instance.allUserIds = [];
 		console.log(remoteDataArray);
 		//var responseArray = response.split(",");
-		var outputString = "Namde:Id of registered users: ";
-
+		
 		//for (var i = 0; i < responseArray.length; i+=2) {
 		for (var i = 0; i < remoteDataArray.length; i+=1) {
 
-			outputString += " " + remoteDataArray[i]["uUsername"] + ": " + remoteDataArray[i]["userId"] + ","; 
+	//		outputString += " " + remoteDataArray[i]["username"] + ": " + remoteDataArray[i]["userId"] + ","; 
 			//outputString += responseArray[i] + " - id: " + responseArray[i+1] + ", ";
+			instance.allUserIds.push(remoteDataArray[i]["userId"]);
 			instance.allRegisteredUsersIdToName[remoteDataArray[i]["userId"]]= remoteDataArray[i]["uUsername"] ;
-			instance.allRegisteredUsersNameToId[remoteDataArray[i]["uUsername"]]= remoteDataArray[i]["userId"] ;
+			instance.allRegisteredUsersNameToId[remoteDataArray[i]["username"]]= remoteDataArray[i]["userId"] ;
+		}
+		
+	}
+	
+	
+	//return listOfUsers as string
+	listOfUsersToElement(){
+		var outputString = "Name:Id of registered users: ";
+		
+		for (var i = 0; i < this.allUserIds.length; i+=1) {
+			var id = this.allUserIds[i];
+
+			outputString += " " + this.allRegisteredUsersIdToName[id] + ": " + id + ","; 
 		}
 		document.getElementById(LOGGEDINUSERS_DIV_LIST).innerHTML = outputString;
-		
 	}
 
 	//LOG IN
@@ -829,6 +844,8 @@ class RemoteContact {
 		}
 
 		for (var i=0;i<remoteDataArray.length;i+=1){
+			console.log(remoteDataArray[i]);
+			console.log(remoteDataArray[i]["playerId1"]);
 			// htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
 			htmlString += "<input type='radio' name='gameIdSelection' value='" + 
 				remoteDataArray[i]["gameId"] + "'> gameNumber: "+ remoteDataArray[i]["gameId"] +
