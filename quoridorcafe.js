@@ -70,8 +70,8 @@ class Cafe {
 		//create html elements
 		this.setupButtonField();
 		//this.continuePollingForRemoteMove = false;
-		this.remote.setRemoteMovedCallback(this, this.doRemoteMove);
-		this.remote.setStartLocalBoardCallback(this, this.startAndDisplayMultiPlayerGameQuoridor);
+		this.remote.setRemoteMovedCallback(this.doRemoteMove.bind(this));
+		this.remote.setStartLocalBoardCallback( this.startAndDisplayMultiPlayerGameQuoridor.bind(this));
 		this.remote.setUpdateStatusFieldCallback(this.updateStatusField);
 		
 		
@@ -178,26 +178,24 @@ class Cafe {
 	}
 	
 
-	startAndDisplayMultiPlayerGameQuoridor(instance, startingPlayer, localPlayerStarts, player1GoesUpwards, gameStateString ){
+	startAndDisplayMultiPlayerGameQuoridor(startingPlayer, localPlayerStarts, player1GoesUpwards, gameStateString ){
 		
-		instance.quoridorManager = new Manager();
+		this.quoridorManager = new Manager();
 
 		console.log("starting board, gamestatstring: " + gameStateString);
 		if (gameStateString == "notyetstarted"){
 			gameStateString = "";
 		}
-		instance.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,player1GoesUpwards,gameStateString);
+		this.quoridorManager.startMultiPlayerGame(startingPlayer, localPlayerStarts,player1GoesUpwards,gameStateString);
 	}
 
-	doRemoteMove(instance, gameState){
+	doRemoteMove( gameState){
 		//console.log(this);  --> points to remote
-		//console.log(instance); --> points to this cafe
-		var success = instance.quoridorManager.submitRemoteMove(gameState);
+		var success = this.quoridorManager.submitRemoteMove(gameState);
 		if (!success){
-			//instance.remote.startCheckDatabaseForRemoteMoveLoop();
 			console.log("ASSERT ERROR Wrong move.  todo: deal with it.");
 		}
-		//console.log("schip");
+		
 	}
 
 	
@@ -660,26 +658,20 @@ class RemoteContact {
 	setLocalPlayerId(id){
 		this.localPlayerId = id;
 	}
-	setRemoteMovedCallback(instance ,callbackFunction){
-		this.cafeInstance = instance;
+	setRemoteMovedCallback(callbackFunction){
 		this.remoteMovedCallBackfunction = callbackFunction;
 	}
 	
 	setUpdateStatusFieldCallback(callbackFunction){
-		//this.cafeInstance = instance;
 		this.updateCafeStatusField = callbackFunction;
 		
 	}
 
-	setStartLocalBoardCallback(instance ,callbackFunction){
-		this.storedInstance2 = instance;
+	setStartLocalBoardCallback(callbackFunction){
 		this.startLocalBoardCallBackfunction = callbackFunction;
 	}
 	
-
-
 	getPlayerNameFromId(id){
-		//console.log(this.accountInstance.getNameFromId(id));
 		return this.accountInstance.getNameFromId(id);
 
 	}
@@ -984,7 +976,8 @@ class RemoteContact {
 				}
 
 				// display quoridor board
-				this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerFirstMove, player1GoesUpwards, initialGameState);
+				//this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerFirstMove, player1GoesUpwards, initialGameState);
+				this.startLocalBoardCallBackfunction(this.startingPlayer, this.localPlayerFirstMove, player1GoesUpwards, initialGameState);
 								
 				this.currentLocalGameStateString = initialGameState;
 				this.gameStatus = GAME_STATUS_PLAYING;
@@ -1021,7 +1014,7 @@ class RemoteContact {
 				// returnStatus
 				console.log("opponent moved");
 				this.stopCheckDatabaseForRemoteMoveLoop();
-				this.remoteMovedCallBackfunction(this.cafeInstance, remoteDataArray["gameState"]);
+				this.remoteMovedCallBackfunction( remoteDataArray["gameState"]);
 			}
 			return true;
 		}else if (remoteStatus == GAME_REGISTER_LOCAL_PLAYER){
