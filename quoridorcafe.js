@@ -3,7 +3,7 @@ var logonText = "Welcome in Quoridor Cafe The big wall.";
 
 var ACCOUNT_DIV = "loginArea";
 var ACCOUNT_DIV_STATUS = "loginAreaStatus";
-var LOGGEDINUSERS_DIV_LIST = "loggedinusers";
+var USERS_DIV_LIST = "loggedinusers";
 var LISTEDGAMES_DIV_LIST = "listedGames";
 var AVAILABLE_GAMES_ON_SERVERS_DIV = "availableGamesOnServer";
 var CAFE_STATUS_DIV = "cafeStatus";
@@ -59,7 +59,7 @@ class Cafe {
 	constructor() {
 		//users login and credentials stuff
 		this.account = new Account();
-		this.account.listOfLoggedInUsers();
+		this.account.listOfUsers();
 		
 		console.log(logonText);
 		this.remote = new RemoteContact();
@@ -85,39 +85,39 @@ class Cafe {
 		
 	}
 
-	remoteGameStart(instance) {
+	remoteGameStart() {
 		console.log("start remote game");
 		
-		if (instance.account.getLoggedInUserId() == NO_LOGGED_IN_USER_DUMMY_ID){
+		if (this.account.getLoggedInUserId() == NO_LOGGED_IN_USER_DUMMY_ID){
 			alert("Please log in or register first. ");
 			return;
 		}
 		
 		alert("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
 		
-		instance.clearStatusField();
+		this.clearStatusField();
 		
-		instance.updateStatusField("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
+		this.updateStatusField("Reminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
 		
-		instance.setVisibilityControlsRemoteStarted();
+		this.setVisibilityControlsRemoteStarted();
 
 
-		var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
-		instance.remote.setGameProperties(localPlayerGoesUpwards);
+		var localPlayerGoesUpwards = this.localPlayerMovesUpCheckbox.checked;
+		this.remote.setGameProperties(localPlayerGoesUpwards);
 		
-		var localId = instance.account.getLoggedInUserId();
-		//var debugGameId = instance.remoteGameIdTextBox.value;
+		var localId = this.account.getLoggedInUserId();
+		//var debugGameId = this.remoteGameIdTextBox.value;
 		
 		//alert("game start: player:" + localId + " and ...wait for opponent to log in." + "debug: game id will be shown in log window.");
 		
-		var localPlayerStarts = instance.player1StartsCheckbox.checked;
-		instance.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID,localPlayerStarts );
+		var localPlayerStarts = this.player1StartsCheckbox.checked;
+		this.remote.initNewGame(localId, NO_PLAYER_DUMMY_ID,localPlayerStarts );
 	
 	}
 
-	joinRemoteGame(instance){
+	joinRemoteGame(){
 
-		if (instance.account.getLoggedInUserId() == NO_LOGGED_IN_USER_DUMMY_ID){
+		if (this.account.getLoggedInUserId() == NO_LOGGED_IN_USER_DUMMY_ID){
 			alert("Please log in or register first. ");
 			return;
 		}
@@ -137,21 +137,21 @@ class Cafe {
 			}
 		}
 
-		instance.clearStatusField();
+		this.clearStatusField();
 		alert(" Selected game: "+ selectedGameId +"\nReminder: Do not forget to press the button submitLocalMove or press ENTER after each move you make! ");
 		
 		//get game id from field.
 		//check for remote game with this id
-		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
-		//var joinGameId = instance.remoteGameIdTextBox.value;
+		this.remote.setLocalPlayerId( this.account.getLoggedInUserId());
+		//var joinGameId = this.remoteGameIdTextBox.value;
 		var joinGameId = selectedGameId;
 
-		instance.remote.joinGame(joinGameId);	
+		this.remote.joinGame(joinGameId);	
 		console.log("attempt to join game with id: " + joinGameId);
-		var localPlayerGoesUpwards = instance.localPlayerMovesUpCheckbox.checked;
-		instance.remote.setGameProperties(localPlayerGoesUpwards);
+		var localPlayerGoesUpwards = this.localPlayerMovesUpCheckbox.checked;
+		this.remote.setGameProperties(localPlayerGoesUpwards);
 		
-		instance.setVisibilityControlsRemoteStarted();
+		this.setVisibilityControlsRemoteStarted();
 	}
 
 	setVisibilityControlsRemoteStarted(){
@@ -202,19 +202,19 @@ class Cafe {
 
 	
 
-	listGamesWithFreeSpot(instance){
+	listGamesWithFreeSpot(){
 		//check all available games for joining...
-		instance.remote.listOfGames(REMOTE_GAME_STATUS_INITIALIZING, NO_PLAYER_DUMMY_ID);
+		this.remote.listOfGames(REMOTE_GAME_STATUS_INITIALIZING, NO_PLAYER_DUMMY_ID);
 		
-		instance.setGamesListVisibility(!instance.showingGamesList);
+		this.setGamesListVisibility(!this.showingGamesList);
 			
 	}
 
-	listGamesWithPlayerId(instance){
+	listGamesWithPlayerId(){
 		//check all available games for joining...
-		instance.remote.listOfGames(REMOTE_GAME_STATUS_ALL,instance.account.getLoggedInUserId());
+		this.remote.listOfGames(REMOTE_GAME_STATUS_ALL,this.account.getLoggedInUserId());
 		
-		instance.setGamesListVisibility(!instance.showingGamesList);
+		this.setGamesListVisibility(!this.showingGamesList);
 			
 	}
 	
@@ -231,37 +231,37 @@ class Cafe {
 
 
 
-	remoteGameStop(instance) {
+	remoteGameStop() {
 		console.log("stop remote game");
-		instance.localGameControlsDiv.style.display = 'block';
-		// instance.startLocalGameButton.style.visibility = 'visible';
-		// instance.stopLocalGameButton.style.visibility = 'hidden';
-		// instance.restartLocalGameButton.style.visibility = 'hidden';
+		this.localGameControlsDiv.style.display = 'block';
+		// this.startLocalGameButton.style.visibility = 'visible';
+		// this.stopLocalGameButton.style.visibility = 'hidden';
+		// this.restartLocalGameButton.style.visibility = 'hidden';
 
-		instance.stopRemoteGameButton.style.visibility = 'hidden';
-		instance.listFreeSpotGamesButton.style.visibility = 'visible';
-		instance.startRemoteGameButton.style.visibility = 'visible';
-		instance.joinRemoteGameButton.style.visibility = 'visible';
-		instance.remoteGameIdTextBox.style.visibility = 'visible';
-		instance.player1StartsCheckbox.style.visibility = 'visible';
-		instance.localPlayerMovesUpCheckbox.style.visibility = 'visible';
-		document.getElementById(instance.player1StartsCheckbox.id+"_label").style.visibility = 'visible';
-		instance.localPlayerMovesUpCheckbox.style.visibility = 'visible';
-		document.getElementById(instance.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'visible';
-		instance.submitLocalMoveButton.style.visibility = 'hidden';
+		this.stopRemoteGameButton.style.visibility = 'hidden';
+		this.listFreeSpotGamesButton.style.visibility = 'visible';
+		this.startRemoteGameButton.style.visibility = 'visible';
+		this.joinRemoteGameButton.style.visibility = 'visible';
+		this.remoteGameIdTextBox.style.visibility = 'visible';
+		this.player1StartsCheckbox.style.visibility = 'visible';
+		this.localPlayerMovesUpCheckbox.style.visibility = 'visible';
+		document.getElementById(this.player1StartsCheckbox.id+"_label").style.visibility = 'visible';
+		this.localPlayerMovesUpCheckbox.style.visibility = 'visible';
+		document.getElementById(this.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'visible';
+		this.submitLocalMoveButton.style.visibility = 'hidden';
 
 
 
-		instance.quoridorManager.stopMultiPlayerGame();
+		this.quoridorManager.stopMultiPlayerGame();
 	}
 
-	submitLocalMove(instance) {
+	submitLocalMove() {
 		//the local player presses this button when he wants to submit his move.
-		instance.debugCommandTextBox.value = instance.quoridorManager.submitLocalMove();
-		instance.remote.sendGameStateToRemote(instance.debugCommandTextBox.value);
+		this.debugCommandTextBox.value = this.quoridorManager.submitLocalMove();
+		this.remote.sendGameStateToRemote(this.debugCommandTextBox.value);
 
 		//send out the request for periodically checking the database on the server for opponent move
-		instance.remote.startCheckDatabaseForRemoteMoveLoop();
+		this.remote.startCheckDatabaseForRemoteMoveLoop();
 		console.log("local move sent to server...");
 		//check locally if remote has moved.		
 	}
@@ -276,53 +276,52 @@ class Cafe {
 	
 	
 	displayUsers(){
-		//this.account.listOfLoggedInUsers();
+		//this.account.listOfUsers();
 		this.account.listOfUsersToElement();
 	}
 	
-	debugNewCommand(instance) {
-		instance.remote.setLocalPlayerId( instance.account.getLoggedInUserId());
-		var joinGameId = instance.remoteGameIdTextBox.value;
-		instance.remote.gameId = joinGameId;
-		instance.remote.startCheckDatabaseForRemoteMoveLoop();
+	debugNewCommand() {
+		this.remote.setLocalPlayerId( this.account.getLoggedInUserId());
+		var joinGameId = this.remoteGameIdTextBox.value;
+		this.remote.gameId = joinGameId;
+		this.remote.startCheckDatabaseForRemoteMoveLoop();
 
-		//instance.quoridorManager.submitRemoteMove(instance.debugCommandTextBox.value);
+		//this.quoridorManager.submitRemoteMove(this.debugCommandTextBox.value);
 		
-		//instance.stopPollingForRemoteMove();
-		//instance.remote.debugImitateRemoteMoved(instance.debugCommandTextBox.value);
-		//instance.remote.stopCheckDatabaseForRemoteMoveLoop();
+		//this.stopPollingForRemoteMove();
+		//this.remote.debugImitateRemoteMoved(this.debugCommandTextBox.value);
+		//this.remote.stopCheckDatabaseForRemoteMoveLoop();
 
 	}
 
-	
-
-	localGameStart(instance) {
+	localGameStart() {
 		console.log("start local game");
-		instance.startLocalGameButton.style.visibility = 'hidden';
-		instance.stopLocalGameButton.style.visibility = 'visible';
-		instance.restartLocalGameButton.style.visibility = 'visible';
-		instance.startRemoteGameButton.style.visibility = 'visible';
-		instance.startRemoteGameButton.style.visibility = 'hidden';
-		instance.joinRemoteGameButton.style.visibility = 'hidden';
+		this.startLocalGameButton.style.visibility = 'hidden';
+		this.stopLocalGameButton.style.visibility = 'visible';
+		this.restartLocalGameButton.style.visibility = 'visible';
+		this.startRemoteGameButton.style.visibility = 'visible';
+		this.startRemoteGameButton.style.visibility = 'hidden';
+		this.joinRemoteGameButton.style.visibility = 'hidden';
 
-		instance.remoteGameControlsDiv.style.display = 'none';
-		//instance.stopRemoteGameButton.style.visibility = 'visible';
-		instance.quoridorManager = new Manager();
-		instance.quoridorManager.startNewLocalGame();
+		this.remoteGameControlsDiv.style.display = 'none';
+		//this.stopRemoteGameButton.style.visibility = 'visible';
+		this.quoridorManager = new Manager();
+		this.quoridorManager.startNewLocalGame();
 	}
-	localGameStop(instance) {
-		instance.remoteGameControlsDiv.style.display = 'block';
+	
+	localGameStop() {
+		this.remoteGameControlsDiv.style.display = 'block';
 		console.log("stop local game");
-		instance.startLocalGameButton.style.visibility = 'visible';
-		instance.stopLocalGameButton.style.visibility = 'hidden';
-		instance.restartLocalGameButton.style.visibility = 'hidden';
-		instance.startRemoteGameButton.style.visibility = 'visible';
-		instance.joinRemoteGameButton.style.visibility = 'visible';
-		instance.quoridorManager.stopAndDeleteLocalGame();
+		this.startLocalGameButton.style.visibility = 'visible';
+		this.stopLocalGameButton.style.visibility = 'hidden';
+		this.restartLocalGameButton.style.visibility = 'hidden';
+		this.startRemoteGameButton.style.visibility = 'visible';
+		this.joinRemoteGameButton.style.visibility = 'visible';
+		this.quoridorManager.stopAndDeleteLocalGame();
 	}
-	localGameRestart(instance) {
+	localGameRestart() {
 		console.log("restart local game");
-		instance.quoridorManager.restartLocalGame();
+		this.quoridorManager.restartLocalGame();
 	}
 	
 
@@ -330,11 +329,11 @@ class Cafe {
 	setupButtonField() {
 		//cafe controls (start stop game etc.)
 		this.localGameControlsDiv = document.getElementById("localGameControls");
-		this.startLocalGameButton = addButtonToExecuteGeneralFunction(this.localGameControlsDiv, "Start local game", "localGameStart", "localGameStart", this.localGameStart, this);
+		this.startLocalGameButton = addButtonToExecuteGeneralFunction(this.localGameControlsDiv, "Start local game", "localGameStart", "localGameStart", this.localGameStart.bind(this), this);
 		this.startLocalGameButton.style.visibility = 'visible';
-		this.stopLocalGameButton = addButtonToExecuteGeneralFunction(this.localGameControlsDiv, "Stop local game", "localGameStop", "localGameStart", this.localGameStop, this);
+		this.stopLocalGameButton = addButtonToExecuteGeneralFunction(this.localGameControlsDiv, "Stop local game", "localGameStop", "localGameStart", this.localGameStop.bind(this), this);
 		this.stopLocalGameButton.style.visibility = 'hidden';
-		this.restartLocalGameButton = addButtonToExecuteGeneralFunction(this.localGameControlsDiv, "Restart local game", "localGameRestart", "localGameStart", this.localGameRestart, this);
+		this.restartLocalGameButton = addButtonToExecuteGeneralFunction(this.localGameControlsDiv, "Restart local game", "localGameRestart", "localGameStart", this.localGameRestart.bind(this), this);
 		this.restartLocalGameButton.style.visibility = 'hidden';
 		
 
@@ -342,27 +341,27 @@ class Cafe {
 
 		this.remoteGameControlsDiv = document.getElementById("remoteGameControls");
 		
-		this.stopRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Stop remote game", "remoteGameStop", "remoteGameStop", this.remoteGameStop, this);
+		this.stopRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Stop remote game", "remoteGameStop", "remoteGameStop", this.remoteGameStop.bind(this), this);
 		this.stopRemoteGameButton.style.visibility = 'hidden';
-		this.submitLocalMoveButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "SubmitLocalMove", "submitMoveDebug", "submitMoveDebug", this.submitLocalMove, this);
+		this.submitLocalMoveButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "SubmitLocalMove", "submitMoveDebug", "submitMoveDebug", this.submitLocalMove.bind(this), this);
 		this.submitLocalMoveButton.style.visibility = 'hidden';
 		
 		
 		addBr(this.remoteGameControlsDiv);
 		
-		this.startRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Start remote game", "remoteGameStart", "remoteGameStart", this.remoteGameStart, this);
+		this.startRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Start remote game", "remoteGameStart", "remoteGameStart", this.remoteGameStart.bind(this), this);
 		this.startRemoteGameButton.style.visibility = 'visible';
 		this.player1StartsCheckbox = addCheckBox(this.remoteGameControlsDiv, "PLAYER1 starts", "PLAYER1 starts", true, "I (who initiates the game) make the first move.");
 		addBr(this.remoteGameControlsDiv);
 		
-		this.listFreeSpotGamesButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of available games.", "getActiveGamesList", "getActiveGamesList", this.listGamesWithFreeSpot, this);
+		this.listFreeSpotGamesButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of available games.", "getActiveGamesList", "getActiveGamesList", this.listGamesWithFreeSpot.bind(this), this);
 		this.listFreeSpotGamesButton.style.visibility = 'visible';
 		
-		this.listPlayerIdGamesButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of games where I play.", "getGamesListWithPlayerId", "getGamesListWithPlayerId", this.listGamesWithPlayerId, this);
+		this.listPlayerIdGamesButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Toggle list of games where I play.", "getGamesListWithPlayerId", "getGamesListWithPlayerId", this.listGamesWithPlayerId.bind(this), this);
 		this.listPlayerIdGamesButton.style.visibility = 'visible';
 		
 		
-		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Join Selected Game", "joinGame", "joinGame", this.joinRemoteGame, this);
+		this.joinRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Join Selected Game", "joinGame", "joinGame", this.joinRemoteGame.bind(this), this);
 		this.joinRemoteGameButton.style.visibility = 'visible';
 
 		
@@ -370,7 +369,7 @@ class Cafe {
 		//debug field
 		addBr(this.remoteGameControlsDiv);
 		var debugControlsDiv = document.getElementById("debugControls");
-		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "debug poll...", "sendDebug", "sendDebug", this.debugNewCommand, this);
+		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "debug poll...", "sendDebug", "sendDebug", this.debugNewCommand.bind(this), this);
 		
 		this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
 		
@@ -522,14 +521,14 @@ class Account {
 	}
 
 
-	//LIST OF LOGGED IN USERS
-	listOfLoggedInUsers() {
+	//GET LIST OF USERS
+	listOfUsers() {
 		var url = "quoridorloggedinusers.php";
-		this.loadDoc(url, this.listOfLoggedInUsersCallBack);
+		this.loadDoc(url, this.listOfUsersCallBack);
 		//console.log("all logged in players listed up");
 	}
 
-	listOfLoggedInUsersCallBack(instance, xlmhttp) {
+	listOfUsersCallBack(instance, xlmhttp) {
 		var responseJSON = xlmhttp.responseText;
 		var remoteDataArray =  JSON.parse(responseJSON);
 
@@ -561,7 +560,7 @@ class Account {
 
 			outputString += " " + this.allRegisteredUsersIdToName[id] + ": " + id + ","; 
 		}
-		document.getElementById(LOGGEDINUSERS_DIV_LIST).innerHTML = outputString;
+		document.getElementById(USERS_DIV_LIST).innerHTML = outputString;
 	}
 
 	//LOG IN
