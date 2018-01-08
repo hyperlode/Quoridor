@@ -5,7 +5,6 @@
 	* You need to include su.inc.php to make SimpleUsers Work
 	* After that, create an instance of SimpleUsers and your'e all set!
 	*/
-	echo "ofiejfe";
 	session_start();
 	require_once(realpath(__DIR__ . '/..')."/SimpleUsers/su.inc.php");
 
@@ -35,7 +34,7 @@
 			{
 					//header("Location: users.php");
 					// $error = "user: ".$_GET["username"]."registered successfully.";
-					$error = "Registered successfully!";
+					$error = "Registered successfully! (please log in)";
 					echo $error;
 					exit;
 			}

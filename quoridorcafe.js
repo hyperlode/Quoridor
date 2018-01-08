@@ -428,7 +428,8 @@ class Account {
 		xmlhttp.onreadystatechange = function () {
 			if (this.readyState == 4 && this.status == 200) {
 				if (cFunction != null) {
-					test(that, this);
+					//test(that, this);
+					cFunction(this); //this is xmlhttp 
 				}
 			}
 		};
@@ -440,49 +441,53 @@ class Account {
 		//create html elements (
 		var elementToAttachTo = document.getElementById(ACCOUNT_DIV);
 		//addBr(elementToAttachTo);
-		this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "logout", "logoutbutton", "logoutbutton", this.userLogout, this);
+		this.logoutButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "logout", "logoutbutton", "logoutbutton", this.userLogout.bind(this), this);
 		this.usernameTextBox = addTextBox(elementToAttachTo, "username", "usernameTextBox", "usernameTextBox", 20);
 		this.pwdTextBox = addTextBox(elementToAttachTo, "password", "password", "pwdTextBox", 20);
 		this.pwdTextBox.type = "password";
 		
 		
 		
-		this.loginButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "login", "loginbutton", "loginbutton", this.userLogin, this);
-		this.registerButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "register", "registerbutton", "registerbutton", this.userRegister, this);
+		this.loginButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "login", "loginbutton", "loginbutton", this.userLogin.bind(this), this);
+		this.registerButton = addButtonToExecuteGeneralFunction(elementToAttachTo, "register", "registerbutton", "registerbutton", this.userRegister.bind(this), this);
 		this.loginName = "";
 		this.password = "";
-		this.loginStatus(this);
+		this.loginStatus();
 	}
-	loginFieldElementsVisibility(instance, loginVisibleElseLogout) {
+	loginFieldElementsVisibility( loginVisibleElseLogout) {
 		if (loginVisibleElseLogout) {
-			instance.loginButton.style.visibility = 'hidden';
-			instance.pwdTextBox.style.visibility = 'hidden';
-			instance.usernameTextBox.style.visibility = 'hidden';
-			instance.registerButton.style.visibility = 'hidden';
-			instance.logoutButton.style.visibility = 'visible';
+			this.loginButton.style.visibility = 'hidden';
+			this.pwdTextBox.style.visibility = 'hidden';
+			this.usernameTextBox.style.visibility = 'hidden';
+			this.registerButton.style.visibility = 'hidden';
+			this.logoutButton.style.visibility = 'visible';
 		}
 		else {
-			instance.loginButton.style.visibility = 'visible';
-			instance.registerButton.style.visibility = 'visible';
-			instance.pwdTextBox.style.visibility = 'visible';
-			instance.usernameTextBox.style.visibility = 'visible';
-			instance.logoutButton.style.visibility = 'hidden';
+			this.loginButton.style.visibility = 'visible';
+			this.registerButton.style.visibility = 'visible';
+			this.pwdTextBox.style.visibility = 'visible';
+			this.usernameTextBox.style.visibility = 'visible';
+			this.logoutButton.style.visibility = 'hidden';
 		}
 	}
 	loginAreaStatusUpdateText(text) {
 		document.getElementById(ACCOUNT_DIV_STATUS).innerHTML = "<p>" + text + "</p>";
 	}
-
+	
+	
+	//-------------------------------------------------------------------------------------------------------------
 	//ACTIONS 
-
+	//-------------------------------------------------------------------------------------------------------------
+	
 
 	//STATUS
 	//gets id and username of logged in user.
-	loginStatus(instance) {
+	loginStatus() {
 		var url = "quoridorGetLoggedInStatus.php";
-		instance.loadDoc(url, instance.loginStatusCallBack);
+		this.loadDoc(url, this.loginStatusCallBack.bind(this));
 	}
-	loginStatusCallBack(instance, xmlhttp) {
+	
+	loginStatusCallBack( xmlhttp) {
 		//console.log(xmlhttp.responseText);
 		var loggedIn = true;
 		if (xmlhttp.responseText == "false") {
@@ -490,126 +495,118 @@ class Account {
 		}
 
 		//set visibility
-		instance.loginFieldElementsVisibility(instance, loggedIn);
+		this.loginFieldElementsVisibility( loggedIn);
 		if (!loggedIn) {
 			// console.log("user not logged in ");
-			instance.loginAreaStatusUpdateText("Please log in.");
+			this.loginAreaStatusUpdateText("Please log in.");
 		}
 		else {
 			// console.log("user logged in ");
-			//instance.loginAreaStatusUpdateText(xmlhttp.responseText + " logged in.");
+			//this.loginAreaStatusUpdateText(xmlhttp.responseText + " logged in.");
 
 			var response = xmlhttp.responseText.split(",");
-			instance.loggedInUserId = response[0];
-			instance.loggedInUserName = response[1];
-			instance.loginAreaStatusUpdateText("user: " + instance.loggedInUserName + " with id: " + instance.loggedInUserId  + " logged in.");
+			this.loggedInUserId = response[0];
+			this.loggedInUserName = response[1];
+			this.loginAreaStatusUpdateText("user: " + this.loggedInUserName + " with id: " + this.loggedInUserId  + " logged in.");
 		}
-		instance.loggedIn = loggedIn;
-	
+		this.loggedIn = loggedIn;
 	}
 
 	//LOG OUT
-	userLogout(instance) {
+	userLogout() {
 		var url = "quoridorlogout.php";
-		instance.loadDoc(url, instance.userLogoutCallBack);
+		this.loadDoc(url, this.userLogoutCallBack.bind(this));
 	}
-	userLogoutCallBack(instance, xlmhttp) {
-		instance.loginFieldElementsVisibility(instance, false);
-		instance.loginAreaStatusUpdateText(xlmhttp.responseText);
+	userLogoutCallBack( xlmhttp) {
+		this.loginFieldElementsVisibility( false);
+		this.loginAreaStatusUpdateText(xlmhttp.responseText);
 	}
-
 
 	//GET LIST OF USERS
 	listOfUsers() {
 		var url = "quoridorloggedinusers.php";
-		this.loadDoc(url, this.listOfUsersCallBack);
+		this.loadDoc(url, this.listOfUsersCallBack.bind(this));
 		//console.log("all logged in players listed up");
 	}
 
-	listOfUsersCallBack(instance, xlmhttp) {
+	listOfUsersCallBack( xlmhttp) {
+		//console.log(xlmhttp.responseText);
 		var responseJSON = xlmhttp.responseText;
 		var remoteDataArray =  JSON.parse(responseJSON);
 
-		instance.allRegisteredUsersIdToName = [];
-		instance.allRegisteredUsersNameToId = [];
-		instance.allUserIds = [];
-		console.log(remoteDataArray);
+		this.allRegisteredUsersIdToName = [];
+		this.allRegisteredUsersNameToId = [];
+		this.allUserIds = [];
+		//console.log(remoteDataArray);
 		//var responseArray = response.split(",");
 		
 		//for (var i = 0; i < responseArray.length; i+=2) {
 		for (var i = 0; i < remoteDataArray.length; i+=1) {
-
-	//		outputString += " " + remoteDataArray[i]["username"] + ": " + remoteDataArray[i]["userId"] + ","; 
-			//outputString += responseArray[i] + " - id: " + responseArray[i+1] + ", ";
-			instance.allUserIds.push(remoteDataArray[i]["userId"]);
-			instance.allRegisteredUsersIdToName[remoteDataArray[i]["userId"]]= remoteDataArray[i]["uUsername"] ;
-			instance.allRegisteredUsersNameToId[remoteDataArray[i]["username"]]= remoteDataArray[i]["userId"] ;
-		}
-		
+			this.allUserIds.push(remoteDataArray[i]["userId"]);
+			this.allRegisteredUsersIdToName[remoteDataArray[i]["userId"]]= remoteDataArray[i]["uUsername"] ;
+			this.allRegisteredUsersNameToId[remoteDataArray[i]["username"]]= remoteDataArray[i]["userId"] ;
+		}	
 	}
-	
 	
 	//return listOfUsers as string
 	listOfUsersToElement(){
 		var outputString = "Name:Id of registered users: ";
-		
 		for (var i = 0; i < this.allUserIds.length; i+=1) {
 			var id = this.allUserIds[i];
-
 			outputString += " " + this.allRegisteredUsersIdToName[id] + ": " + id + ","; 
 		}
 		document.getElementById(USERS_DIV_LIST).innerHTML = outputString;
 	}
 
 	//LOG IN
-	userLogin(instance) {
+	userLogin() {
 
-		var userName = instance.usernameTextBox.value;
+		var userName = this.usernameTextBox.value;
 		if (userName == "username"){
 			alert("Please enter a valid username and password.");
 			return false;
 		}
-		var url = "quoridorlogin.php?username=" + userName + "&password=" + instance.pwdTextBox.value + "";
-		instance.loadDoc(url, instance.userLoginCallBack);
+		var url = "quoridorlogin.php?username=" + userName + "&password=" + this.pwdTextBox.value + "";
+		this.loadDoc(url, this.userLoginCallBack.bind(this));
 	}
-	userLoginCallBack(instance, xlmhttp) {
+	userLoginCallBack( xlmhttp) {
 		//returns error, or userId.
 
 		if (xlmhttp.responseText == "Wrong username-password combination.") {
-			instance.loggedIn = false;
+			this.loggedIn = false;
 			console.log("Wrong username-password combination.");
 		
 		}else{
 			
 			//var userId = xlmhttp.responseText;
 			
-			//instance.loggedInUserId = userId;
-			//instance.loginFieldElementsVisibility(instance, loggedIn);
-			instance.loginStatus(instance); //sets all login info up.
+			//this.loggedInUserId = userId;
+			//this.loginFieldElementsVisibility(this, loggedIn);
+			this.loginStatus(); //sets all login info up.
 		}
-		//instance.loginAreaStatusUpdateText(xlmhttp.responseText);
-		//console.log(instance.loggedInUserId);
-		//instance.loggedIn = loggedIn;
+		//this.loginAreaStatusUpdateText(xlmhttp.responseText);
+		//console.log(this.loggedInUserId);
+		//this.loggedIn = loggedIn;
 	}
 
 	//REGISTRATION 
-	userRegister(instance) {
-		var userName = instance.usernameTextBox.value;
+	userRegister() {
+		var userName = this.usernameTextBox.value;
 		if (userName == "username"){
 			alert("Please enter a valid username and password.");
 			return false;
 		}
-		var url = "quoridornewuser.php?username=" + userName + "&password=" + instance.pwdTextBox.value + "";
+		var url = "quoridornewuser.php?username=" + userName + "&password=" + this.pwdTextBox.value + "";
 		// console.log("user login button clicked");
-		instance.loadDoc(url, instance.userRegisterCallBack);
+		this.loadDoc(url, this.userRegisterCallBack.bind(this));
 	}
-	userRegisterCallBack(instance, xlmhttp) {
+	userRegisterCallBack( xlmhttp) {
 		var loggedIn = false;
 		if (xlmhttp.responseText == "Registered successfully!") {
 			loggedIn = true;
 		}
-		instance.loginFieldElementsVisibility(instance, loggedIn);
-		instance.loginAreaStatusUpdateText(xlmhttp.responseText);
+		this.loginFieldElementsVisibility( loggedIn);
+		this.loginAreaStatusUpdateText(xlmhttp.responseText);
 	}
 }
 
@@ -882,7 +879,7 @@ class RemoteContact {
 		console.log("gamestate Sent");
 	}
 
-	submitResponse(instance,result){
+	submitResponse(result){
 		//feedback result from submitting the move to the database.
 		//document.getElementById("debugServerFeedback").innerHTML = result;
 	}
@@ -976,7 +973,6 @@ class RemoteContact {
 				}
 
 				// display quoridor board
-				//this.startLocalBoardCallBackfunction(this.storedInstance2,this.startingPlayer, this.localPlayerFirstMove, player1GoesUpwards, initialGameState);
 				this.startLocalBoardCallBackfunction(this.startingPlayer, this.localPlayerFirstMove, player1GoesUpwards, initialGameState);
 								
 				this.currentLocalGameStateString = initialGameState;
@@ -1046,10 +1042,8 @@ class RemoteContact {
 		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
 		var xmlhttp = new XMLHttpRequest();
 		var returnText = "";
-		var instance = this;
 		xmlhttp.onreadystatechange = function() {
 			if (this.readyState == 4 && this.status == 200) {
-				//console.log(instance);
 				functionToCallWhenDone( this.responseText);
 			}
 		};
@@ -1060,8 +1054,6 @@ class RemoteContact {
 
 
 	processResponse(remoteDataArray){
-
-
 
 		//telegram with data;
 		//gameId
