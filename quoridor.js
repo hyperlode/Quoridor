@@ -422,7 +422,7 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	
 	//execute extra move. + check remote move valid
 	var moveExecuted = this.playTurnByVerboseNotation(remoteMove);
-	// var moveExecuted = this.localGameMakeMove(remoteMove);	
+	this.beep();	
 	
 	if (!moveExecuted){
 		console.log("remote move not executed, is the move syntax correct?: " + remoteMove );

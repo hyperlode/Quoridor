@@ -26,13 +26,26 @@
 		//sqlCreateRecordForGameId($conn , $gameId, $gameState  );
 		echo sqlUpdateRecordToGameState($conn , $gameId, $gameState);
 		return  ob_get_contents();
-	}elseif ($action == "poll"){
+	
+	}elseif ($action == "setGameStatus"){
 		
+		echo "set game Status<br>";
+		ob_end_clean();
+		ob_start();
+		$gameId = $_GET["gameId"];
+		$gameStatus = $_GET["gameStatus"];
+		//sqlDeleteGameIdRecord($conn, $gameId);
+		//sqlCreateRecordForGameId($conn , $gameId, $gameState  );
+		echo sqlUpdateRecordGameStatus($conn , $gameId, $gameStatus);
+		return  ob_get_contents();
+	
+		
+	}elseif ($action == "poll"){
 		
 		printf("poll game id");
 		$gameId = $_GET["gameId"];
 		
-		$resultArray = sqlGetGameState($conn, $gameId);
+		$resultArray = sqlGetGameData($conn, $gameId);
 		$result = json_encode($resultArray);
 		ob_end_clean();
 		ob_start();
@@ -42,8 +55,7 @@
 		return  ob_get_contents();
 	
 	}elseif ($action == "createGame"){
-		//
-	
+		
 		$player1Id = $_GET["player1"];
 		$player2Id = $_GET["player2"];
 		$player1FirstMove = intval($_GET["player1FirstMove"]); //should be 1 or 0 
@@ -51,7 +63,7 @@
 
 		$gameId = $result;
 			
-		$resultArray = sqlGetGameState($conn, $gameId);
+		$resultArray = sqlGetGameData($conn, $gameId);
 		$result = json_encode($resultArray);
 
 		ob_end_clean();
@@ -59,7 +71,33 @@
 		echo $result;
 		//echo $result;
 		return  ob_get_contents();
+		
+	}elseif ($action == "joinGame"){
+		
+		echo "joingame php test";
+		$gameId = $_GET["gameId"];
+		$playerId = $_GET["playerId"];
+		$playerNumber = $_GET["playerNumber"]; // 1 for player 1, 2 for player 2
 
+		if ($playerNumber == "1"){
+			$resultArray = joinActiveGameAsPlayer1($conn,$gameId,$playerId);
+			echo "player 1";
+		}elseif($playerNumber == "2"){
+			$resultArray = joinActiveGameAsPlayer2($conn,$gameId,$playerId);
+			echo "player 2";
+		}else{
+			echo "wrong playernumber ";
+		}
+		
+		$resultArray = sqlGetGameData($conn, $gameId);
+
+		$result = json_encode($resultArray);
+	
+		ob_end_clean();
+		ob_start();
+	
+		echo $result;
+		return  ob_get_contents();
 	}elseif ($action == "listOfGames"){
 		
 		$gameStatusFilter = $_GET["gameStatusFilter"];
@@ -78,35 +116,6 @@
 		$result = json_encode($result);
 		echo $result;
 		return  ob_get_contents();
-
-	}elseif ($action == "joinGame"){
-		echo "joingame php test";
-		$gameId = $_GET["gameId"];
-		$playerId = $_GET["playerId"];
-		$playerNumber = $_GET["playerNumber"]; // 1 for player 1, 2 for player 2
-
-	
-	
-		if ($playerNumber == "1"){
-			$resultArray = joinActiveGameAsPlayer1($conn,$gameId,$playerId);
-			echo "player 1";
-		}elseif($playerNumber == "2"){
-			$resultArray = joinActiveGameAsPlayer2($conn,$gameId,$playerId);
-			echo "player 2";
-		}else{
-			echo "wrong playernumber ";
-		}
-		
-		$resultArray = sqlGetGameState($conn, $gameId);
-
-		$result = json_encode($resultArray);
-	
-		ob_end_clean();
-		ob_start();
-	
-		echo $result;
-		return  ob_get_contents();
-
 	}else{
 		//printf("unknown action (or none provided) : ". $action ."<br>");
 		ob_end_clean();
@@ -114,15 +123,6 @@
 		echo "unknown action";
 		return  ob_get_contents();
 	}
-
-	// ob_end_clean();
-
-
-
-
-
-	//SQL command
-	//set gamestate of game with game id.
 	
 	function connectToDataBase() {
 		// $servername = "50.62.176.142"; //found in "remote Mysql" page of godaddy dashboard.
@@ -158,10 +158,8 @@
 		}
 	}
 
-
-
 	function joinActiveGameAsPlayer2($conn,$gameId,$playerId){
-		$sql = "UPDATE activeGames SET playerId2 = '".$playerId."', gameStatus = '2' WHERE gameId = ".$gameId;
+		$sql = "UPDATE activeGames SET playerId2 = '".$playerId."'WHERE gameId = ".$gameId;
 		if ($conn->query($sql) === TRUE) {	
 			return true;
 		} else {
@@ -171,7 +169,7 @@
 	}
 
 	function joinActiveGameAsPlayer1($conn,$gameId,$playerId){
-		$sql = "UPDATE activeGames SET playerId1 = '".$playerId."', gameStatus = '2' WHERE gameId = ".$gameId;
+		$sql = "UPDATE activeGames SET playerId1 = '".$playerId."' WHERE gameId = ".$gameId;
 		if ($conn->query($sql) === TRUE) {	
 			return true;
 		} else {
@@ -201,7 +199,6 @@
 	}
 */
 
-
 	function getListOfGames($conn, $gameStatusFilter, $playerIdFilter){
 		//$sql = "SELECT * FROM activeGames WHERE gameStatus = ".$gameStatusFilter." AND (playerId1 = ".$playerIdFilter." OR playerId2 = ".$playerIdFilter.")"  ;
 		$sql = "SELECT * FROM activeGames WHERE (playerId1 = ".$playerIdFilter." OR playerId2 = ".$playerIdFilter.")"  ;
@@ -221,38 +218,18 @@
 
 	function getListOfActiveGames($conn, $gameStatusFilter) {
 		$sql = "SELECT * FROM activeGames WHERE gameStatus = ".$gameStatusFilter;
-		//$sql = "SELECT gameState FROM activeGames WHERE gameId = 666";
-		//$returnString = "";
 		if ($result = $conn->query($sql) ) {	
-			
-			// while ($row = $result->fetch_assoc()) {
-			// 	//echo "%s", $row["gameState"];
-			// 	// $test = "%s",$row["gameState"]; //ERROR!!!!
-			// 	//$test = $row["gameId"]; 
-			// 	$returnString .=$row["gameId"] . ",";
-				
-			// }
-			// $result->close();
 			$rows = array();
-
 			while ($row = $result->fetch_assoc()) {
 				$rows[] = $row; 
-				
 			}
 			$result->close();
-
-			
-
-			//print json_encode($rows);
 			return $rows;
-			
-			
 		} else {
 			echo "Error return value: " . $sql . "<br>" . $conn->error;
 		}	
 		return $returnString;
 	}
-
 
 	function sqlCreateNewGame($conn,  $player1Id, $player2Id, $player1FirstMove){
 		$sql = "INSERT INTO `activeGames`( `playerId1`, `playerId2`,`gameStatus`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
@@ -267,8 +244,15 @@
 		}
 	}
 
-
-
+	function sqlUpdateRecordGameStatus($conn, $gameId, $gameStatus){
+		$sql = "UPDATE activeGames SET gameStatus = '".$gameStatus."'	WHERE gameId = ".$gameId;
+		if ($conn->query($sql) === TRUE) {	
+			return true;
+		} else {
+			return "Error: " . $sql . "<br>" . $conn->error;
+		}
+	}
+	
 	function sqlUpdateRecordToGameState($conn, $gameId, $gameState){
 		$sql = "UPDATE activeGames SET gameState = '".$gameState."'	WHERE gameId = ".$gameId;
 		if ($conn->query($sql) === TRUE) {	
@@ -279,9 +263,7 @@
 		}
 	}
 	
-	function sqlCreateRecordForGameId($conn, $gameId, $gameState){
-		
-		
+	function sqlCreateRecordForGameId($conn, $gameId, $gameState){		
 		$sql = "INSERT INTO `activeGames`(`gameId`, `playerId1`, `playerId2`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
 		VALUES (". $gameId.",1,2,'".$gameState."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',1)";  //works!
 		
@@ -293,8 +275,6 @@
 			echo "Error: " . $sql . "<br>" . $conn->error;
 		}
 	}
-
-
 
 	// $returnString = "";
 	// if ($result = $conn->query($sql) ) {	
@@ -312,8 +292,7 @@
 	// 	echo "Error return value: " . $sql . "<br>" . $conn->error;
 	// }	
 
-
-	function sqlGetGameState ($conn, $gameId){
+	function sqlGetGameData ($conn, $gameId){
 		//http://php.net/manual/en/class.mysqli-result.php
 		//$sql = "SELECT gameState FROM activeGames WHERE gameId =".$gameId;
 		$sql = "SELECT * FROM activeGames WHERE gameId =".$gameId;
@@ -338,7 +317,6 @@
 			echo "Error return value: " . $sql . "<br>" . $conn->error;
 		}	
 		return $response;
-		
 	}
 
 	function sqlOutputAllRowsIfValueInColumn(){
