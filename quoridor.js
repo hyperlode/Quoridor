@@ -92,6 +92,8 @@ var FINISHED=2;
 var MULTIPLAYER_LOCAL_PLAYING = 4;
 var MULTIPLAYER_REMOTE_PLAYING = 5;
 var REPLAY = 3;
+var FINISHED_BY_GIVING_UP = 6;
+var FINISHED_BY_GIVING_UP_LOCAL_PLAYER = 7;
 
 var FINISH_CELLS_LOOKUP_TABLE = [[0,1,2,3,4,5,6,7,8],[72,73,74,75,76,77,78,79,80]]; //valid finish cellIDs for player 1 and player 2
 
@@ -434,9 +436,10 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	this.moveCounterAtGameLoad = this.moveCounter;
 
 	
-	if (this.gameStatus == FINISHED){
+	if (this.gameStatus == FINISHED_BY_GIVING_UP){
 		alert("the game is finished. Most probably because opponent gave up! New game should be started!");
-		
+	}else if (this.gameStatus == FINISHED){
+		alert ("game is finished");
 	}else{
 		//change the player to local
 		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
@@ -451,6 +454,16 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 Game.prototype.localGameMakeMove=function(moveVerboseNotation){
 	this.beep();
 	return this.playTurnByVerboseNotation(moveVerboseNotation);
+}
+
+
+Game.prototype.resignGame = function (){
+	//this is considered a move.
+	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING || this.gameStatus == PLAYING){
+		this.playTurnByVerboseNotation("X");
+	}else{
+		alert("Not possible to stop the game now. Is it your turn to play? Is the game playing?");
+	}
 }
 
 
@@ -472,7 +485,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	}else if (this.gameStatus == REPLAY){
 		console.log("replay mode. automatic.");
 		
-	}else if (this.gameStatus == FINISHED){
+	}else if (this.gameStatus == FINISHED || this.gameStatus == FINISHED_BY_GIVING_UP || this.gameStatus == FINISHED_BY_GIVING_UP_LOCAL_PLAYER){
 		alert("FINISHED! no more moves possible.");
 		return false;
 	}else if (this.gameStatus != PLAYING){
@@ -496,7 +509,13 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	var undoWallValid= false; //check if the move can be undone.
 	if (moveData[0] == GAVEUP_MOVE){
 		console.log ("player %s gave up... (not implemented yet...) (%s)", PLAYER_NAMES[this.playerAtMove], verboseNotation);
-		this.gameStatus = FINISHED;
+		if (this.gameStatus == PLAYING){
+			this.gameStatus = FINISHED_BY_GIVING_UP;
+		}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
+			this.gameStatus = FINISHED_BY_GIVING_UP_LOCAL_PLAYER;
+		}else{
+			console.log("ASSERT ERROR: unknown state when giving up! status:" + this.gameStatus);
+		}
 		validMove = true;
 	}else if (moveData[0] == PAWN_MOVE){
 		var success = this.movePawnByVerboseNotation(this.playerAtMove,verboseNotation);
@@ -532,17 +551,23 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		return false;
 	}
 	
-	//check if there is a winner
+	//check if there is a winner by moving (not by giving up)
 	if (this.board.isThereAWinner()[0]){
-		console.log("The winner of the game is player %d",this.board.isThereAWinner()[1]+1);
+		console.log("The winner of the game is player " + PLAYER_NAMES[this.board.isThereAWinner()[1]]);
 		this.gameStatus = FINISHED;
-	}
-
-	//check game state.
-	if (this.gameStatus == FINISHED){
+		
+	}else if (this.gameStatus == FINISHED_BY_GIVING_UP){
 		//game end (could be because a player gave up).
 		//alert( "Player {} lost the game".format(PLAYER_NAMES[this.playerAtMove]));
 		alert( "Player " +PLAYER_NAMES[this.playerAtMove] + " lost the game");
+		
+	}else if (this.gameStatus == FINISHED_BY_GIVING_UP_LOCAL_PLAYER){
+		alert( "Player " +PLAYER_NAMES[this.playerAtMove] + " will lose the game when submitted.");
+		this.setPlayerBlinkingProperties(this.playerAtMove, PLAYER_PAWN_BLINK_NOT_SUBMITTED_HALF_PERIOD_MILLIS, BOARD_CELL_PAWNCIRCLE_COLOR_NOT_SUBMITTED_BLINK);	
+
+		this.movedLocallyButNotYetSubmitted = true;
+		this.playerAtMove =  (this.playerAtMove-1)*-1; //sets 0 to 1 and 1 to 0	
+		this.moveCounter++;
 		
  	}else if (this.gameStatus == PLAYING){
 		//prepare for next move.
@@ -583,10 +608,6 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	return true;
 }
 
-
-Game.prototype.resignGame = function (){
-	this.playTurnByVerboseNotation("X");
-}
 
 
 Game.prototype.wallToVerboseNotation = function(cellId, directionIsNorthToSouth){
@@ -679,6 +700,10 @@ Game.prototype.outputGameStats= function(){
 	
 	if (this.gameStatus == SETUP){
 		htmlString += 'Blue Player starts the game.'
+	} else if (this.gameStatus == FINISHED_BY_GIVING_UP){
+		htmlString += ''+ PLAYER_NAMES[this.playerAtMove] + ' player lost!';	
+		} else if (this.gameStatus == FINISHED_BY_GIVING_UP_LOCAL_PLAYER){
+		htmlString += 'If submitted, '+ PLAYER_NAMES[this.playerAtMove] + ' will lose the game (press undo to cancel)!';
 	} else if (this.gameStatus == FINISHED){
 		htmlString += ''+ PLAYER_NAMES[this.playerAtMove] + ' player won!';
 	}else if (this.gameStatus == PLAYING || this.gameStatus == MULTIPLAYER_LOCAL_PLAYING  || this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
@@ -1163,7 +1188,7 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 		console.log("not allowed to go back further than game load in multiplayer,");
 		alert("not allowed to go back further than game load in multiplayer");
 		return;
-	} else if (this.gameStatus == FINISHED){
+	} else if (this.gameStatus == FINISHED || this.gameStatus == FINISHED_BY_GIVING_UP || this.gameStatus == FINISHED_BY_GIVING_UP_LOCAL_PLAYER){
 		this.gameStatus = PLAYING;
 	}
 

@@ -249,8 +249,8 @@ class Cafe {
 		document.getElementById(this.localPlayerMovesUpCheckbox.id+"_label").style.visibility = 'visible';
 		this.submitLocalMoveButton.style.visibility = 'hidden';
 
-
-
+		
+		this.remote.stopCheckDatabaseForRemoteMoveLoop();
 		this.quoridorManager.stopMultiPlayerGame();
 	}
 
