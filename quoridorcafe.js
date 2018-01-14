@@ -582,7 +582,7 @@ class Account {
 		if (xlmhttp.responseText == "Wrong username-password combination.") {
 			this.loggedIn = false;
 			console.log("Wrong username-password combination.");
-		
+			this.loginAreaStatusUpdateText("Wrong username-password combination. Please try again.");
 		}else{
 			
 			//var userId = xlmhttp.responseText;
@@ -884,7 +884,8 @@ class RemoteContact {
 			htmlString += "unknown game status list: <br>"
 		}
 
-		for (var i=0;i<remoteDataArray.length;i+=1){
+		//for (var i=0;i<remoteDataArray.length;i+=1){
+		for (var i=remoteDataArray.length-1;i>=0 ;i-=1){
 			console.log(remoteDataArray[i]);
 			console.log(remoteDataArray[i]["playerId1"]);
 			// htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
