@@ -257,6 +257,11 @@ class Cafe {
 	submitLocalMove() {
 		//the local player presses this button when he wants to submit his move.
 		this.debugCommandTextBox.value = this.quoridorManager.submitLocalMove();
+		
+		//this.quoridorManager.getGameStatus();
+		
+		//REMOTE_GAME_STATUS_FINISHED
+		
 		this.remote.sendGameStateToRemote(this.debugCommandTextBox.value);
 
 		//send out the request for periodically checking the database on the server for opponent move

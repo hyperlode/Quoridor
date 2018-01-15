@@ -387,14 +387,13 @@ Game.prototype.multiPlayerStartGame = function(startingPlayerIsLocal, startGameS
 }
 
 Game.prototype.multiPlayerSubmitLocalMove = function(){
-	if (this.gameStatus != MULTIPLAYER_LOCAL_PLAYING && this.gameStatus != FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL) {
+	if (this.gameStatus != MULTIPLAYER_LOCAL_PLAYING && this.gameStatus != FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL && this.gameStatus != FINISHED) {
 		console.log("game status: " + this.gameStatus);
 		alert("submit only when it is your turn.");
 		return this.moveHistoryToString();
 	}
 	//change game status.
 
-	// if (this.gameStatus == FINISHED_BY_GIVING_UP || this.gameStatus == FINISHED ||this.gameStatus == FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL || this.gameStatus == FINISHED_BY_GIVING_UP_MULTIPLAYER_REMOTE ){
 	if (this.gameStatus == FINISHED_BY_GIVING_UP || this.gameStatus == FINISHED ||this.gameStatus == FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL ){
 		alert ("game finished: gamestatus: " + this.gameStatus);
 		
@@ -701,22 +700,6 @@ Game.prototype.undoLastWall= function(player){
 	//var lastWall = playerWalls.pop();
 	//
 	//console.log(lastWall);
-}
-Game.prototype.undoLastMove =function(){
-	if (this.recordingOfGameInProgress.length <= 0){
-		console.log ("Nothing to undo yet...");
-		return false;
-	}
-	var lastMoveVerbose = this.recordingOfGameInProgress[this.recordingOfGameInProgress.length - 1];
-	var lastMovedPlayer = this.recordingOfGameInProgress.length %2 == 0;
-	var lastMoveData = this.interpreteVerboseNotation(lastMoveVerbose);
-	if (lastMoveData[0] == ILLEGAL_MOVE){
-		console.log("ASSERT ERROR : ILLEGAL MOVE");
-	}
-	console.log("player " + BOARD_PAWN_2_COLOR + "moved last?:"+ lastMovedPlayer);
-	console.log("total number of moves before undo:"+ (this.recordingOfGameInProgress.length));
-	console.log("lastMoveData: "+ lastMoveData);
-	// debugger;
 }
 
 Game.prototype.outputGameStats= function(){
@@ -1213,18 +1196,19 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 	
 		
 	if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
-		alert("remote player is busy playing. no fiddling around!");
+		alert("Remote player is busy playing. You cannot undo!");
 		return;
 	}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING && moveEndNumber < this.moveCounterAtGameLoad){
 		console.log("not allowed to go back further than game load in multiplayer,");
 		alert("not allowed to go back further than game load in multiplayer");
 		return;
-	} else if (this.gameStatus == FINISHED || this.gameStatus == FINISHED_BY_GIVING_UP || this.gameStatus == FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL){
+	} else if (this.gameStatus == FINISHED ){
 		this.gameStatus = PLAYING;
+	} else if ( this.gameStatus == FINISHED_BY_GIVING_UP ){ ){
+		this.gameStatus = PLAYING;
+	} else if (this.gameStatus == FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL ){
+		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;
 	}
-
-	
-
 	
 	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
 	
