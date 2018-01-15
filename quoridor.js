@@ -466,6 +466,9 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	return true;
 }
 
+Game.prototype.getGameStatus = function(){
+	return this.gameStatus;
+}
 
 //-----------------------------------------PLAYING A MOVE------------------------
 
@@ -1204,7 +1207,7 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 		return;
 	} else if (this.gameStatus == FINISHED ){
 		this.gameStatus = PLAYING;
-	} else if ( this.gameStatus == FINISHED_BY_GIVING_UP ){ ){
+	} else if ( this.gameStatus == FINISHED_BY_GIVING_UP ){
 		this.gameStatus = PLAYING;
 	} else if (this.gameStatus == FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL ){
 		this.gameStatus = MULTIPLAYER_LOCAL_PLAYING;

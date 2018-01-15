@@ -258,11 +258,16 @@ class Cafe {
 		//the local player presses this button when he wants to submit his move.
 		this.debugCommandTextBox.value = this.quoridorManager.submitLocalMove();
 		
-		//this.quoridorManager.getGameStatus();
+		var status = this.quoridorManager.getMultiPlayerLocalGameStatus();
+		var setGameStatusToArchive = false;
+		if (status == FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL){
+			console.log("will archive the game")
+			setGameStatusToArchive = true;
+			
+		}
 		
 		//REMOTE_GAME_STATUS_FINISHED
-		
-		this.remote.sendGameStateToRemote(this.debugCommandTextBox.value);
+		this.remote.sendGameStateToRemote(this.debugCommandTextBox.value, setGameStatusToArchive);
 
 		//send out the request for periodically checking the database on the server for opponent move
 		this.remote.startCheckDatabaseForRemoteMoveLoop();
@@ -945,7 +950,8 @@ class RemoteContact {
 	
 	//---------------post local move
 
-	sendGameStateToRemote(gameStateString) {
+	sendGameStateToRemote(gameStateString, setGameStatusToArchive) {
+		this.setGameStatusToArchive = setGameStatusToArchive;
 		this.currentLocalGameStateString = gameStateString;
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?gameState="+ this.currentLocalGameStateString+"&action="+"submit"+"&gameId="+this.gameId;
 		this.callPhpWithAjax(url, this.submitResponse.bind(this));	
@@ -955,6 +961,10 @@ class RemoteContact {
 		//feedback result from submitting the move to the database.
 		//document.getElementById("debugServerFeedback").innerHTML = result;
 		console.log(result);
+		if (this.setGameStatusToArchive == true){
+			this.setGameStatus( REMOTE_GAME_STATUS_FINISHED);
+			
+		}
 	}
 
 
@@ -1092,7 +1102,10 @@ class RemoteContact {
 		}else if (remoteStatus == GAME_REGISTER_LOCAL_PLAYER){
 			console.log("register local player");
 		}else if (remoteStatus == GAME_STATUS_FINISHED){
-			console.log("game finished.");
+			console.log("game finished no more polling.");
+			this.stopCheckDatabaseForRemoteMoveLoop();
+			console.log("local player turn. so no more checking for remote.");
+			return true;
 		}else if (remoteStatus == GAME_STATUS_INITIALIZING){
 			
 			//give command to startup the boards 

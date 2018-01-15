@@ -45,7 +45,9 @@ class Manager {
 		var success =  this.multiPlayerGame.multiPlayerRemoteMove(text);
 		return success;
 	}
-	
+	getMultiPlayerLocalGameStatus(){
+		return this.multiPlayerGame.getGameStatus();
+	}
 	getMultiPlayerLocalGameState(){
 		return this.multiPlayerGame.moveHistoryToString();
 	}
@@ -72,7 +74,7 @@ class Manager {
 	stopAndDeleteLocalGame() {
 		this.localGame.deleteGame();
 	}
-		
+	
 	
 }
 	
