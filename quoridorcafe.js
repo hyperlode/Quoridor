@@ -8,8 +8,8 @@ var LISTEDGAMES_DIV_LIST = "listedGames";
 var AVAILABLE_GAMES_ON_SERVERS_DIV = "availableGamesOnServer";
 var CAFE_STATUS_DIV = "cafeStatus";
 
-var GAME_CHECK_SERVER_INTERVAL = 3000;
-var REFRESH_UPDATE_RATE = 3000; 
+var GAME_CHECK_SERVER_INTERVAL = 2000;
+var REFRESH_UPDATE_RATE = 2000; 
 var NO_PLAYER_DUMMY_ID = 666;
 var NO_GAME_ID_YET = 667;
 var NO_LOGGED_IN_USER_DUMMY_ID= 668;
@@ -261,16 +261,20 @@ class Cafe {
 		var status = this.quoridorManager.getMultiPlayerLocalGameStatus();
 		var setGameStatusToArchive = false;
 		if (status == FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL){
-			console.log("will archive the game")
+			console.log("resigned, will archive the game")
 			setGameStatusToArchive = true;
-			
+		}else if (status == FINISHED){
+			console.log("game ended, will archive the game")
+			setGameStatusToArchive = true;
 		}
 		
 		//REMOTE_GAME_STATUS_FINISHED
 		this.remote.sendGameStateToRemote(this.debugCommandTextBox.value, setGameStatusToArchive);
 
-		//send out the request for periodically checking the database on the server for opponent move
-		this.remote.startCheckDatabaseForRemoteMoveLoop();
+		//send out the request for periodically checking the database on the server for opponent move (wait a while until database is probably updated).
+		
+		window.setTimeout(function (){this.remote.startCheckDatabaseForRemoteMoveLoop();}.bind(this),REFRESH_UPDATE_RATE); 
+	
 		console.log("local move sent to server...");
 		//check locally if remote has moved.		
 	}
@@ -961,6 +965,9 @@ class RemoteContact {
 		//feedback result from submitting the move to the database.
 		//document.getElementById("debugServerFeedback").innerHTML = result;
 		console.log(result);
+		
+		
+		
 		if (this.setGameStatusToArchive == true){
 			this.setGameStatus( REMOTE_GAME_STATUS_FINISHED);
 			
@@ -1102,6 +1109,20 @@ class RemoteContact {
 		}else if (remoteStatus == GAME_REGISTER_LOCAL_PLAYER){
 			console.log("register local player");
 		}else if (remoteStatus == GAME_STATUS_FINISHED){
+			if (this.gameStatus){
+
+				//check for remote move.
+				var opponentMovedOneMove = this.compareGameStates(remoteDataArray)
+				//console.log("compare states status, did opponent made move? : " + opponentMovedOneMove);
+				if (opponentMovedOneMove){
+					// returnStatus
+					console.log("opponent moved");
+					this.stopCheckDatabaseForRemoteMoveLoop();
+					this.remoteMovedCallBackfunction( remoteDataArray["gameState"]);
+				}
+				return true;
+			}			
+			this.gameStatus = GAME_STATUS_FINISHED;
 			console.log("game finished no more polling.");
 			this.stopCheckDatabaseForRemoteMoveLoop();
 			console.log("local player turn. so no more checking for remote.");
@@ -1344,7 +1365,9 @@ class RemoteContact {
 		}
 
 		if (remote.length< local.length){
-			console.log ("not yet updated");
+			
+			console.log ("not yet updated, resending game state.");
+			this.sendGameStateToRemote(this.currentLocalGameStateString, this.setGameStatusToArchive);
 			
 		}else if(remote.length == local.length){
 			console.log("waiting for opponent to make a move");
