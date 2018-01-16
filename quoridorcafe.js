@@ -69,32 +69,38 @@ class Cafe {
 	constructor() {
 		//users login and credentials stuff
 		this.account = new Account();
+		
+		
 		this.account.listOfUsers();
 		
 		console.log(logonText);
 		this.remote = new RemoteContact();
-
-
 		this.remote.setAccountInstance(this.account);
 		
+		this.account.setLoggedInCallback(this.showPageAfterLogin.bind(this));
+		
+	}
+
+	
+	showPageAfterLogin(){
 		//create html elements
 		this.setupButtonField();
+		
 		//this.continuePollingForRemoteMove = false;
 		this.remote.setRemoteMovedCallback(this.doRemoteMove.bind(this));
 		this.remote.setStartLocalBoardCallback( this.startAndDisplayMultiPlayerGameQuoridor.bind(this));
 		this.remote.setUpdateStatusFieldCallback(this.updateStatusField);
 		
-		
 		this.showingGamesList = false;
 		var listElement = document.getElementById(AVAILABLE_GAMES_ON_SERVERS_DIV);
 		listElement.style.display = 'none';
-		
 		
 		this.updateStatusField("Welcome to the quoridor cafe.");
 		
 		
 	}
-
+	
+	
 	remoteGameStart() {
 		console.log("start remote game");
 		
@@ -125,6 +131,7 @@ class Cafe {
 	
 	}
 
+	
 	joinRemoteGame(){
 
 		if (this.account.getLoggedInUserId() == NO_LOGGED_IN_USER_DUMMY_ID){
@@ -423,9 +430,14 @@ class Account {
 		this.loggedInUserName = "noname";
 		this.allRegisteredUsersNameToId = [];
 		this.allRegisteredUsersIdToName = [];
-
+		this.loggedInCallback;
+		
 	}
 
+	setLoggedInCallback(callbackFunction){
+		this.loggedInCallback = callbackFunction;
+	}
+	
 	getLoggedInUserId(){
 		return this.loggedInUserId;
 	}
@@ -529,8 +541,7 @@ class Account {
 		if (!loggedIn) {
 			// console.log("user not logged in ");
 			this.loginAreaStatusUpdateText("Please log in.");
-		}
-		else {
+		}else {
 			// console.log("user logged in ");
 			//this.loginAreaStatusUpdateText(xmlhttp.responseText + " logged in.");
 
@@ -538,6 +549,9 @@ class Account {
 			this.loggedInUserId = response[0];
 			this.loggedInUserName = response[1];
 			this.loginAreaStatusUpdateText("user: " + this.loggedInUserName + " with id: " + this.loggedInUserId  + " logged in.");
+			
+			//callback show all the rest of the page.
+			this.loggedInCallback();
 		}
 		this.loggedIn = loggedIn;
 	}
