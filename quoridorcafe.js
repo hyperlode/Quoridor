@@ -36,6 +36,15 @@ var REMOTE_GAME_STATUS_ALL = 4; //dont care about status
 
 document.addEventListener("DOMContentLoaded", function() {
 
+
+	// if the url begins with this string
+	if (window.location.href.indexOf('www.') !== -1) {
+		// reload page without www (www.lode.ameije.com doesn't seem to work on iphone)
+		console.log("reload page.");
+		window.location.href = 'http://lode.ameije.com/QuoridorMultiPlayer/quoridorcafe.html';
+		
+	}
+
 	cafe = new Cafe();
 	
 	
