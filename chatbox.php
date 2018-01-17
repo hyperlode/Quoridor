@@ -5,7 +5,6 @@
 	//output buffer, will store in output buffer, this needs to be returned manually.
 	ob_start();
 	
-
 	$conn = connectToDataBase();
 	//select database
 	//$db = mysql_select_db(databasename, $con);
@@ -14,20 +13,41 @@
 	//SQL command
 	//delete record with same gameId	
 	$action = $_GET["action"]; //action is "submit" or "poll"
+	
 
 
-	if ($action == "submit" ){
-		echo "submitting move<br>";
-		ob_end_clean();
-		ob_start();
-		$gameId = $_GET["gameId"];
-		$gameState = $_GET["gameState"];
+	if ($action == "postMessage" ){
+		
+		echo "post message<br>";
+		
+		$message= $_GET["message"];
+		$userId= $_GET["userId"];
 		//sqlDeleteGameIdRecord($conn, $gameId);
 		//sqlCreateRecordForGameId($conn , $gameId, $gameState  );
-		echo sqlUpdateRecordToGameState($conn , $gameId, $gameState);
+		// echo sqlUpdateRecordToGameState($conn , $gameId, $gameState);
+		ob_end_clean();
+		ob_start();
+	
+		echo sqlSaveMessage($conn, $userId, $message);
 		return  ob_get_contents();
 	
-	}elseif ($action == "setGameStatus"){
+	}elseif ($action == "getMessages" )
+		echo("messages starting from provided ID");
+		$messageId = $_GET["messageId"];
+		
+		$resultArray = sqlgetAllMessagesStartingFromId($conn, $messageId);
+		$result = json_encode($resultArray);
+		ob_end_clean();
+		ob_start();
+		
+		//$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
+		$result = json_encode($result);
+		
+		echo $result;
+		return  ob_get_contents();
+	
+	/*
+	elseif ($action == "setGameStatus"){
 		
 		echo "set game Status<br>";
 		ob_end_clean();
@@ -123,7 +143,7 @@
 		echo "unknown action";
 		return  ob_get_contents();
 	}
-	
+	*/
 	function connectToDataBase() {
 		// $servername = "50.62.176.142"; //found in "remote Mysql" page of godaddy dashboard.
 		// $username = "superlode";
@@ -133,7 +153,6 @@
 		// // Create connection
 		// $connn = new mysqli($servername, $username, $password,$databasename);
 		
-		// $connn = new mysqli($GLOBALS["mysql_hostname"], $GLOBALS["mysql_username"], $GLOBALS["mysql_password"], $GLOBALS["mysql_database"]);
 		$connn = new mysqli($GLOBALS["mysql_hostname"], $GLOBALS["mysql_username"], $GLOBALS["mysql_password"], $databasename);
 		if( $connn->mysqli->connect_error ){
 			throw new Exception("MySQL connection could not be established, are  credentials set correctly in the file on the server? This file is not in the source control: ".$this->mysqli->connect_error);
@@ -148,10 +167,48 @@
 
 		return $connn;
 	}
-
-
+	
+	function sqlSaveMessage($conn,  $userId, $message){
+		// $sql = "INSERT INTO `chatBox`( `userId`,`message`) 
+		// VALUES (".$userId.",`".$message."`);";  //,'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove ."
+		// $sql = "INSERT INTO `chatBox` 
+		// VALUES (".$userId." AS `userId`,'".$message."' AS `message`);";  //,'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove ."
+		// $sql = "INSERT INTO `chatBox`(`userId`) 
+		// VALUES (".$userId.");";  //,'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove ."
+		$sql = "INSERT INTO `chatBox`(`userId`,`message`,`submitTime` ) 
+		VALUES (".$userId.",'".$message."','".date("Y-m-d H:i:s")."');";  //,'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove ."
+			
+		if ($conn->query($sql) === TRUE) {	
+			////https://www.w3schools.com/php/php_mysql_insert_lastid.asp		
+			$last_id = $conn->insert_id; //returns last created primary key
+			return $last_id;
+		} else {
+			return "Error: " . $sql . "<br>" . $conn->error;
+		}
+	}
+	
+	function sqlgetAllMessagesStartingFromId($conn, $messageId){
+		
+		$sql = "SELECT * FROM chatBox WHERE messageId > ".$messageId;
+		if ($result = $conn->query($sql) ) {	
+			$rows = array();
+			while ($row = $result->fetch_assoc()) {
+				$rows[] = $row; 
+			}
+			$result->close();
+			return $rows;
+		} else {
+			echo "Error return value: " . $sql . "<br>" . $conn->error;
+		}	
+		return $returnString;
+	}
+	
+	
+	
+	
+/*
 	function sqlDeleteGameIdRecord($conn, $gameId){
-		$sql = "DELETE FROM activeGames WHERE gameId =".$gameId;  //works!
+		$sql = "DELETE FROM chatBox WHERE gameId =".$gameId;  //works!
 		if ($conn->query($sql) === TRUE) {	
 			echo "delete record where gameId is". $gameId;
 		} else {
@@ -179,26 +236,7 @@
 		}
 	}
 	
-/*
-	function returnUnexistingGameId($conn){
 
-		$sql = "SELECT EXISTS(SELECT 1 FROM activeGames WHERE gameId = 10 )";
-		$returnString = "";
-		if ($result = $conn->query($sql) ) {	
-			
-			while ($row = $result->fetch_assoc()) {
-			
-				$returnString .=$row["gameId"] . ",";
-				
-			}
-			$result->close();
-			
-		} else {
-			echo "Error return value: " . $sql . "<br>" . $conn->error;
-		}	
-		return $returnString;
-	}
-*/
 
 	function getListOfGames($conn, $gameStatusFilter, $playerIdFilter){
 		//$sql = "SELECT * FROM activeGames WHERE gameStatus = ".$gameStatusFilter." AND (playerId1 = ".$playerIdFilter." OR playerId2 = ".$playerIdFilter.")"  ;
@@ -232,18 +270,7 @@
 		return $returnString;
 	}
 
-	function sqlCreateNewGame($conn,  $player1Id, $player2Id, $player1FirstMove){
-		$sql = "INSERT INTO `activeGames`( `playerId1`, `playerId2`,`gameStatus`,`gameState`,`gameStarted`,`gameLastActivityPlayer1`,`gameLastActivityPlayer2`,`player1DoesFirstMove`) 
-		VALUES (".$player1Id.",".$player2Id.",'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove .");";  //works!
-			
-		if ($conn->query($sql) === TRUE) {	
-			////https://www.w3schools.com/php/php_mysql_insert_lastid.asp		
-			$last_id = $conn->insert_id; //returns last created primary key
-			return $last_id;
-		} else {
-			return "Error: " . $sql . "<br>" . $conn->error;
-		}
-	}
+
 
 	function sqlUpdateRecordGameStatus($conn, $gameId, $gameStatus){
 		$sql = "UPDATE activeGames SET gameStatus = '".$gameStatus."'	WHERE gameId = ".$gameId;
@@ -320,25 +347,26 @@
 		return $response;
 	}
 
-	function sqlOutputAllRowsIfValueInColumn(){
-		//SQL command
-		//check if record with gameid already exists.
-		/*
-		//http://php.net/manual/en/class.mysqli-result.php
-		$sql = "SELECT * FROM activeGames WHERE gameId = 10";
-		if ($result = $conn->query($sql) ) {	
-			//http://php.net/manual/en/mysqli.query.php
-			echo "executed ok. response: ".$result->num_rows ." <br>";
-			//while ($row = $result->fetch_row()) {
-			//	printf ("%s (%s)<br>", $row[0], $row[1]);
-			//}
-			while ($row = $result->fetch_assoc()) {
-				printf ("%s - (%s)<br>", $row["gameState"], $row["gameLastActivityPlayer1"]);
-			}
-			$result->close();
-		} else {
-			echo "Error return value: " . $sql . "<br>" . $conn->error;
-		}
-		*/
-	}
+	// function sqlOutputAllRowsIfValueInColumn(){
+		// //SQL command
+		// //check if record with gameid already exists.
+	
+		// //http://php.net/manual/en/class.mysqli-result.php
+		// $sql = "SELECT * FROM activeGames WHERE gameId = 10";
+		// if ($result = $conn->query($sql) ) {	
+			// //http://php.net/manual/en/mysqli.query.php
+			// echo "executed ok. response: ".$result->num_rows ." <br>";
+			// //while ($row = $result->fetch_row()) {
+			// //	printf ("%s (%s)<br>", $row[0], $row[1]);
+			// //}
+			// while ($row = $result->fetch_assoc()) {
+				// printf ("%s - (%s)<br>", $row["gameState"], $row["gameLastActivityPlayer1"]);
+			// }
+			// $result->close();
+		// } else {
+			// echo "Error return value: " . $sql . "<br>" . $conn->error;
+		// }
+		
+	// }
+	*/
 ?>

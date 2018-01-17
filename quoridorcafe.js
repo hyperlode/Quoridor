@@ -65,6 +65,90 @@ document.onkeydown = function(evt) {
 	
 };
 
+class Chatbox{
+	constructor(){
+		this.display();
+		this.userId = NO_LOGGED_IN_USER_DUMMY_ID;
+		this.getMessages();
+	}
+	
+	display(){
+		//will show, wheter logged in or not
+		var chatAreaControls= document.getElementById("chatArea");
+		this.sendTextButton = addButtonToExecuteGeneralFunction(chatAreaControls, "Submit ", "submitText", "submitText", this.submitText.bind(this));
+		this.writeTextbox = addTextBox(chatAreaControls, "submit", "submitBox", "submitBox", 20);
+		addBr(chatAreaControls);
+		this.displayTextbox= addTextArea(chatAreaControls, "display", "displayBox", "dislayBox", 20);
+		
+	}
+	
+	getMessages(){
+		var messageId = 1;
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"getMessages"+"&messageId=" + messageId; 		
+		console.log(url);
+		this.callPhpWithAjax(url,this.getMessagesResponse.bind(this));
+	}
+	
+	getMessagesResponse(responseJSON){
+		
+		console.log(responseJSON);
+		var remoteDataArray =  JSON.parse(responseJSON);
+		//remoteDataArray = remoteDataArray[0];
+		//console.log(remoteDataArray.length);
+		//console.log(remoteDataArray);
+		
+		var outputString = remoteDataArray;
+		//var outputString = "";
+		// for (var i=remoteDataArray.length-1;i>=0 ;i-=1){
+			// console.log(remoteDataArray.length);
+			// console.log(remoteDataArray[i]);
+			// outputString = outputString + "userId: " + remoteDataArray[i]["userId"] + " (at " + remoteDataArray[i]["submitTime"] + ") : " +  remoteDataArray[i]["message"]+"\n";
+			// // console.log(remoteDataArray[i])[];
+			// // console.log(remoteDataArray[i]["playerId1"]);
+			// // // htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
+			// // htmlString += "<input type='radio' name='gameIdSelection' value='" + 
+				// // remoteDataArray[i]["gameId"] + "'> gameNumber: "+ remoteDataArray[i]["gameId"] +
+				// // ", "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId1"]) + 
+				// // " versus "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId2"]) + 
+				// // "<br>" ;
+		// }
+		
+		
+		this.displayTextbox.value = outputString;
+	}
+	
+	submitText(){
+		console.log("hoera man");
+		var message = this.writeTextbox.value;
+		
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"postMessage"+"&userId=" + this.userId + "&message=" + message; 		
+		console.log(url);
+		this.callPhpWithAjax(url,this.submitResponse.bind(this));
+	}
+	submitResponse(result){
+		 this.writeTextbox.value = "";
+		this.displayTextbox.value = result;
+		console.log(result);
+	}
+	
+	callPhpWithAjax(url,functionToCallWhenDone){
+		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
+		var xmlhttp = new XMLHttpRequest();
+		var returnText = "";
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				functionToCallWhenDone( this.responseText);
+			}
+		};
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+
+	}
+	
+	
+	
+}
+
 class Cafe {
 	constructor() {
 		//users login and credentials stuff
@@ -79,6 +163,7 @@ class Cafe {
 		
 		this.account.setLoggedInCallback(this.showPageAfterLogin.bind(this));
 		
+		this.chat = new Chatbox();
 	}
 
 	
@@ -856,6 +941,7 @@ class RemoteContact {
 			var firstMoveAsPlayer1DoesFirstMove = 0;		
 		}
 		var url = "http://lode.ameije.com/QuoridorMultiPlayer/quoridorPlayRemote.php?action="+"createGame"+"&player1=" + this.localPlayerId + "&player2=" + this.desiredRemotePlayerId + "&player1FirstMove=" + firstMoveAsPlayer1DoesFirstMove ;// No question mark needed
+		
 		console.log("create new game");
 		console.log(url);
 		this.callPhpWithAjax(url, this.newGameCreatedFeedback.bind(this));	

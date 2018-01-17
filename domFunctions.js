@@ -113,6 +113,19 @@ function addText(elementToAttachTo, text ,name, id ){
 	elementToAttachTo.appendChild(p);  
 	return p;
 }
+function addTextArea(elementToAttachTo, text ,name, id, lines ){
+
+
+	var input = document.createElement("textarea");
+	input.name = name;
+	input.id = id;
+	input.maxLength = "5000";
+	input.cols = "80";
+	input.rows = lines;
+
+	elementToAttachTo.appendChild(input);  
+	return input;
+}
 
 // function addTextWithClick(elementToAttachTo, text ,name, id, func, arg ){
     // var textElement = document.createElement("P");
