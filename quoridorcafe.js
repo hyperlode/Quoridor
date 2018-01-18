@@ -59,6 +59,7 @@ document.onkeydown = function(evt) {
 //	console.log(charStr + " " + event.keyCode);
 
 	if (event.keyCode === 13){
+		//enter pressed
 		//call button. 
 		document.getElementById("submitMoveDebug").click();
 	}
@@ -69,6 +70,7 @@ class Chatbox{
 	constructor(){
 		this.display();
 		this.userId = NO_LOGGED_IN_USER_DUMMY_ID;
+		this.userName = "Anonymus";
 		this.getMessages();
 	}
 	
@@ -77,58 +79,61 @@ class Chatbox{
 		var chatAreaControls= document.getElementById("chatArea");
 		this.sendTextButton = addButtonToExecuteGeneralFunction(chatAreaControls, "Submit ", "submitText", "submitText", this.submitText.bind(this));
 		this.writeTextbox = addTextBox(chatAreaControls, "submit", "submitBox", "submitBox", 20);
-		addBr(chatAreaControls);
-		this.displayTextbox= addTextArea(chatAreaControls, "display", "displayBox", "dislayBox", 20);
+		//addBr(chatAreaControls);
+		//this.displayTextbox= addTextArea(chatAreaControls, "display", "displayBox", "dislayBox", 10);
+		this.displayTextBox = addDiv(chatAreaControls, "chatDisplay" );
+		console.log(this.displayTextBox);
 		
+		
+	}
+	setUserData(id,name){
+		this.userId = id;
+		this.userName = name;
 	}
 	
 	getMessages(){
-		var messageId = 1;
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"getMessages"+"&messageId=" + messageId; 		
+		var messagesNumber = 5;
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"getMessages"+"&messagesNumber=" + messagesNumber; 		
 		console.log(url);
 		this.callPhpWithAjax(url,this.getMessagesResponse.bind(this));
 	}
 	
 	getMessagesResponse(responseJSON){
-		
 		console.log(responseJSON);
+		
 		var remoteDataArray =  JSON.parse(responseJSON);
 		//remoteDataArray = remoteDataArray[0];
-		//console.log(remoteDataArray.length);
-		//console.log(remoteDataArray);
-		
 		var outputString = remoteDataArray;
-		//var outputString = "";
-		// for (var i=remoteDataArray.length-1;i>=0 ;i-=1){
-			// console.log(remoteDataArray.length);
-			// console.log(remoteDataArray[i]);
-			// outputString = outputString + "userId: " + remoteDataArray[i]["userId"] + " (at " + remoteDataArray[i]["submitTime"] + ") : " +  remoteDataArray[i]["message"]+"\n";
-			// // console.log(remoteDataArray[i])[];
-			// // console.log(remoteDataArray[i]["playerId1"]);
-			// // // htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
-			// // htmlString += "<input type='radio' name='gameIdSelection' value='" + 
-				// // remoteDataArray[i]["gameId"] + "'> gameNumber: "+ remoteDataArray[i]["gameId"] +
-				// // ", "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId1"]) + 
-				// // " versus "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId2"]) + 
-				// // "<br>" ;
-		// }
+		var outputString = "yeee";
 		
+		for (var i=remoteDataArray.length-1;i>=0 ;i-=1){
+			outputString =  outputString + "(" + remoteDataArray[i]["submitTime"] + ")" + remoteDataArray[i]["userName"] + " : " +  remoteDataArray[i]["message"]+"<br>"  ;
+			//console.log(remoteDataArray[i]);
+			// console.log(remoteDataArray[i])[];
+			// console.log(remoteDataArray[i]["playerId1"]);
+			// // htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
+			// htmlString += "<input type='radio' name='gameIdSelection' value='" + 
+				// remoteDataArray[i]["gameId"] + "'> gameNumber: "+ remoteDataArray[i]["gameId"] +
+				// ", "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId1"]) + 
+				// " versus "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId2"]) + 
+				// "<br>" ;
+		}
 		
-		this.displayTextbox.value = outputString;
+		document.getElementById("chatDisplay").innerHTML = outputString;
 	}
 	
 	submitText(){
 		console.log("hoera man");
 		var message = this.writeTextbox.value;
 		
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"postMessage"+"&userId=" + this.userId + "&message=" + message; 		
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"postMessage"+"&userId=" + this.userId+"&userName=" + this.userName + "&message=" + message; 
+		
 		console.log(url);
 		this.callPhpWithAjax(url,this.submitResponse.bind(this));
 	}
 	submitResponse(result){
-		 this.writeTextbox.value = "";
-		this.displayTextbox.value = result;
-		console.log(result);
+		this.writeTextbox.value = "";
+		this.getMessages();
 	}
 	
 	callPhpWithAjax(url,functionToCallWhenDone){
@@ -153,21 +158,19 @@ class Cafe {
 	constructor() {
 		//users login and credentials stuff
 		this.account = new Account();
-		
-		
-		this.account.listOfUsers();
-		
 		console.log(logonText);
-		this.remote = new RemoteContact();
-		this.remote.setAccountInstance(this.account);
 		
 		this.account.setLoggedInCallback(this.showPageAfterLogin.bind(this));
-		
-		this.chat = new Chatbox();
 	}
 
 	
 	showPageAfterLogin(){
+		
+		this.account.listOfUsers();
+		;
+		this.remote = new RemoteContact();
+		this.remote.setAccountInstance(this.account);
+		
 		//create html elements
 		this.setupButtonField();
 		
@@ -182,6 +185,11 @@ class Cafe {
 		
 		this.updateStatusField("Welcome to the quoridor cafe.");
 		
+		//chat controls
+		this.chat = new Chatbox();
+		var id = this.account.getLoggedInUserId();
+		//this.chat.setUserData(id, this.account.getNameFromId(id));//this.account.getNameFromId(id): doesn't work, because the data for the name didn't come in yet. wait. a bit, or do it at post time.
+		this.chat.setUserData(id, this.account.getLoggedInUserName());
 		
 	}
 	
@@ -526,7 +534,11 @@ class Account {
 	getLoggedInUserId(){
 		return this.loggedInUserId;
 	}
-
+	
+	getLoggedInUserName(){
+		return this.loggedInUserName;
+	}
+	
 	getNameFromId(id){
 		//console.log(id);
 		//nametoid
@@ -536,6 +548,8 @@ class Account {
 			return "[notloggedinplayer]";
 
 		}
+		console.log("efijeijfijeifjiejf");
+		console.log(this.allRegisteredUsersIdToName);
 		return this.allRegisteredUsersIdToName[id];
 	}
 
@@ -662,7 +676,6 @@ class Account {
 		//console.log(xlmhttp.responseText);
 		var responseJSON = xlmhttp.responseText;
 		var remoteDataArray =  JSON.parse(responseJSON);
-
 		this.allRegisteredUsersIdToName = [];
 		this.allRegisteredUsersNameToId = [];
 		this.allUserIds = [];
@@ -674,7 +687,9 @@ class Account {
 			this.allUserIds.push(remoteDataArray[i]["userId"]);
 			this.allRegisteredUsersIdToName[remoteDataArray[i]["userId"]]= remoteDataArray[i]["uUsername"] ;
 			this.allRegisteredUsersNameToId[remoteDataArray[i]["username"]]= remoteDataArray[i]["userId"] ;
+			
 		}	
+		//console.log(this.allRegisteredUsersIdToName);
 	}
 	
 	//return listOfUsers as string

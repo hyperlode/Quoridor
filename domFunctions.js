@@ -119,7 +119,7 @@ function addTextArea(elementToAttachTo, text ,name, id, lines ){
 	var input = document.createElement("textarea");
 	input.name = name;
 	input.id = id;
-	input.maxLength = "5000";
+	//input.maxLength = "5000";
 	input.cols = "80";
 	input.rows = lines;
 

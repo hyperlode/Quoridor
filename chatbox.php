@@ -17,32 +17,32 @@
 
 
 	if ($action == "postMessage" ){
-		
 		echo "post message<br>";
 		
 		$message= $_GET["message"];
 		$userId= $_GET["userId"];
+		$userName= $_GET["userName"];
 		//sqlDeleteGameIdRecord($conn, $gameId);
 		//sqlCreateRecordForGameId($conn , $gameId, $gameState  );
 		// echo sqlUpdateRecordToGameState($conn , $gameId, $gameState);
 		ob_end_clean();
 		ob_start();
+		
 	
-		echo sqlSaveMessage($conn, $userId, $message);
+		echo sqlSaveMessage($conn, $userId,  $userName, $message);
 		return  ob_get_contents();
 	
 	}elseif ($action == "getMessages" )
-		echo("messages starting from provided ID");
-		$messageId = $_GET["messageId"];
 		
-		$resultArray = sqlgetAllMessagesStartingFromId($conn, $messageId);
+		echo("messages starting from provided ID");
+		$numberOfMessagesToBeDisplayed = intval($_GET["messagesNumber"]);
+		$resultArray = sqlgetAllMessagesStartingFromId($conn, $numberOfMessagesToBeDisplayed);
 		$result = json_encode($resultArray);
 		ob_end_clean();
 		ob_start();
 		
-		//$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
-		$result = json_encode($result);
 		
+		//$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
 		echo $result;
 		return  ob_get_contents();
 	
@@ -168,15 +168,15 @@
 		return $connn;
 	}
 	
-	function sqlSaveMessage($conn,  $userId, $message){
+	function sqlSaveMessage($conn,  $userId, $userName, $message){
 		// $sql = "INSERT INTO `chatBox`( `userId`,`message`) 
 		// VALUES (".$userId.",`".$message."`);";  //,'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove ."
 		// $sql = "INSERT INTO `chatBox` 
 		// VALUES (".$userId." AS `userId`,'".$message."' AS `message`);";  //,'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove ."
 		// $sql = "INSERT INTO `chatBox`(`userId`) 
 		// VALUES (".$userId.");";  //,'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove ."
-		$sql = "INSERT INTO `chatBox`(`userId`,`message`,`submitTime` ) 
-		VALUES (".$userId.",'".$message."','".date("Y-m-d H:i:s")."');";  //,'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove ."
+		$sql = "INSERT INTO `chatBox`(`userId`, `userName`, `message`,`submitTime` ) 
+		VALUES (".$userId.",'".$userName."','".$message."','".date("Y-m-d H:i:s")."');";  //,'1','notyetstarted','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."','".date("Y-m-d H:i:s")."',". $player1FirstMove ."
 			
 		if ($conn->query($sql) === TRUE) {	
 			////https://www.w3schools.com/php/php_mysql_insert_lastid.asp		
@@ -186,10 +186,54 @@
 			return "Error: " . $sql . "<br>" . $conn->error;
 		}
 	}
-	
-	function sqlgetAllMessagesStartingFromId($conn, $messageId){
+	function getHighestValueInColumn($conn, $columnName){
+		// $rowSQL = mysql_query( "SELECT MAX( "+ $columnName +" ) AS max FROM `chatBox`;" );
+		// $row = mysql_fetch_array( $rowSQL );
+		// $largestNumber = $row['max'];
+		// $largestNumber = 0;
+		// // $sql =  "SELECT MAX( "+ $columnName +" ) AS max FROM `chatBox`;" ;
+		$sql =  "SELECT MAX( ". $columnName ." ) AS max FROM `chatBox`;" ;
+		// echo $sql;
 		
-		$sql = "SELECT * FROM chatBox WHERE messageId > ".$messageId;
+		// $rowSQL = mysql_query( "SELECT MAX(". $columnName ." ) AS max FROM `tableName`;" ,$conn);
+		// $row = mysql_fetch_array( $rowSQL );
+		// $largestNumber = $row['max'];
+		// return $largestNumber;
+		
+		if ($result = $conn->query($sql) ) {	
+		
+			$rows = array();
+			while ($row = $result->fetch_assoc()) {
+				$rows[] = $row; 
+				
+			}
+			
+			$result->close();
+			return $rows;
+			// echo $result;
+			// $row = mysql_fetch_array( $result );
+			// $largestNumber = $row['max'];
+			// echo "oohoh";
+			// echo $largestNumber;
+		}else{
+			echo "boooo";
+			echo "Error return value: " . $sql . "<br>" . $conn->error;
+		}
+		return $largestNumber;
+	}
+	
+	function sqlgetAllMessagesStartingFromId($conn, $numberOfMessages){
+		
+		
+		//$last_id = getHighestValueInColumn($conn, "messageId");
+		//echo "fiejiejf";
+		//echo $last_id;
+		//echo"dlide";
+		
+		#set number of messages
+		$getMessagesStartingFromThisId = $last_id - $numberOfMessages;
+		//$getMessagesStartingFromThisId = 23- $numberOfMessages;
+		$sql = "SELECT * FROM chatBox WHERE messageId > ".$getMessagesStartingFromThisId;
 		if ($result = $conn->query($sql) ) {	
 			$rows = array();
 			while ($row = $result->fetch_assoc()) {
