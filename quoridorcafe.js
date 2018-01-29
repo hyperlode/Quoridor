@@ -66,94 +66,6 @@ document.onkeydown = function(evt) {
 	
 };
 
-class Chatbox{
-	constructor(){
-		this.display();
-		this.userId = NO_LOGGED_IN_USER_DUMMY_ID;
-		this.userName = "Anonymus";
-		this.getMessages();
-	}
-	
-	display(){
-		//will show, wheter logged in or not
-		var chatAreaControls= document.getElementById("chatArea");
-		this.sendTextButton = addButtonToExecuteGeneralFunction(chatAreaControls, "Submit ", "submitText", "submitText", this.submitText.bind(this));
-		this.writeTextbox = addTextBox(chatAreaControls, "submit", "submitBox", "submitBox", 20);
-		//addBr(chatAreaControls);
-		//this.displayTextbox= addTextArea(chatAreaControls, "display", "displayBox", "dislayBox", 10);
-		this.displayTextBox = addDiv(chatAreaControls, "chatDisplay" );
-		console.log(this.displayTextBox);
-		
-		
-	}
-	setUserData(id,name){
-		this.userId = id;
-		this.userName = name;
-	}
-	
-	getMessages(){
-		var messagesNumber = 5;
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"getMessages"+"&messagesNumber=" + messagesNumber; 		
-		console.log(url);
-		this.callPhpWithAjax(url,this.getMessagesResponse.bind(this));
-	}
-	
-	getMessagesResponse(responseJSON){
-		console.log(responseJSON);
-		
-		var remoteDataArray =  JSON.parse(responseJSON);
-		//remoteDataArray = remoteDataArray[0];
-		var outputString = remoteDataArray;
-		var outputString = "";
-		
-		for (var i=remoteDataArray.length-1;i>=0 ;i-=1){
-			//outputString =  outputString +  "id" + remoteDataArray[i]["messageId"] + "(" + remoteDataArray[i]["submitTime"] + ")" + remoteDataArray[i]["userName"] + " : " +  remoteDataArray[i]["message"]+"<br>"  ;
-			outputString =  outputString + "(" + remoteDataArray[i]["submitTime"] + ")" + remoteDataArray[i]["userName"] + " : " +  remoteDataArray[i]["message"]+"<br>"  ;
-			//console.log(remoteDataArray[i]);
-			// console.log(remoteDataArray[i])[];
-			// console.log(remoteDataArray[i]["playerId1"]);
-			// // htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
-			// htmlString += "<input type='radio' name='gameIdSelection' value='" + 
-				// remoteDataArray[i]["gameId"] + "'> gameNumber: "+ remoteDataArray[i]["gameId"] +
-				// ", "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId1"]) + 
-				// " versus "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId2"]) + 
-				// "<br>" ;
-		}
-		
-		document.getElementById("chatDisplay").innerHTML = outputString;
-	}
-	
-	submitText(){
-		console.log("hoera man");
-		var message = this.writeTextbox.value;
-		
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"postMessage"+"&userId=" + this.userId+"&userName=" + this.userName + "&message=" + message; 
-		
-		console.log(url);
-		this.callPhpWithAjax(url,this.submitResponse.bind(this));
-	}
-	submitResponse(result){
-		this.writeTextbox.value = "";
-		this.getMessages();
-	}
-	
-	callPhpWithAjax(url,functionToCallWhenDone){
-		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
-		var xmlhttp = new XMLHttpRequest();
-		var returnText = "";
-		xmlhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				functionToCallWhenDone( this.responseText);
-			}
-		};
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
-
-	}
-	
-	
-	
-}
 
 class Cafe {
 	constructor() {
@@ -189,12 +101,17 @@ class Cafe {
 		//chat controls
 		this.chat = new Chatbox();
 		var id = this.account.getLoggedInUserId();
-		//this.chat.setUserData(id, this.account.getNameFromId(id));//this.account.getNameFromId(id): doesn't work, because the data for the name didn't come in yet. wait. a bit, or do it at post time.
+		//this.chat.setUserData(id, this.account.getNameFromId(id));//this.account.getNameFromId(id): doesn'dt work, because the data for the name didn't come in yet. wait. a bit, or do it at post time.
 		this.chat.setUserData(id, this.account.getLoggedInUserName());
 		
+		//this.remote.setStatusMessageCallback(this.chat.submitText.bind(this)); //
+		this.chat.submitText("User "+ this.account.getLoggedInUserName() +" logged in.");
 	}
 	
-	
+	// actionAfterLogout(){
+		// this.chat.submitText("User "+ this.account.getLoggedInUserName() +" logged out.");
+	// }
+		
 	remoteGameStart() {
 		console.log("start remote game");
 		
@@ -512,7 +429,95 @@ class Cafe {
 	}
 }
 
+//------------------------------------------------------------------------------------------------------------
+//                                  CHAT
+//------------------------------------------------------------------------------------------------------------
 
+class Chatbox{
+	constructor(){
+		this.display();
+		this.userId = NO_LOGGED_IN_USER_DUMMY_ID;
+		this.userName = "Anonymus";
+		this.getMessages();
+	}
+	
+	display(){
+		var chatAreaControls= document.getElementById("chatArea");
+		this.sendTextButton = addButtonToExecuteGeneralFunction(chatAreaControls, "Submit ", "submitText", "submitText", this.submitTextField.bind(this));
+		this.writeTextbox = addTextBox(chatAreaControls, "submit", "submitBox", "submitBox", 20);
+		//addBr(chatAreaControls);
+		//this.displayTextbox= addTextArea(chatAreaControls, "display", "displayBox", "dislayBox", 10);
+		this.displayTextBox = addDiv(chatAreaControls, "chatDisplay" );
+		console.log(this.displayTextBox);
+	}
+	
+	setUserData(id,name){
+		this.userId = id;
+		this.userName = name;
+	}
+	
+	getMessages(){
+		var messagesNumber = 5;
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"getMessages"+"&messagesNumber=" + messagesNumber; 		
+		console.log(url);
+		this.callPhpWithAjax(url,this.getMessagesResponse.bind(this));
+	}
+	
+	getMessagesResponse(responseJSON){
+		console.log(responseJSON);
+		
+		var remoteDataArray =  JSON.parse(responseJSON);
+		//remoteDataArray = remoteDataArray[0];
+		var outputString = remoteDataArray;
+		var outputString = "";
+		
+		for (var i=remoteDataArray.length-1;i>=0 ;i-=1){
+			//outputString =  outputString +  "id" + remoteDataArray[i]["messageId"] + "(" + remoteDataArray[i]["submitTime"] + ")" + remoteDataArray[i]["userName"] + " : " +  remoteDataArray[i]["message"]+"<br>"  ;
+			outputString =  outputString + "(" + remoteDataArray[i]["submitTime"] + ")" + remoteDataArray[i]["userName"] + " : " +  remoteDataArray[i]["message"]+"<br>"  ;
+			//console.log(remoteDataArray[i]);
+			// console.log(remoteDataArray[i])[];
+			// console.log(remoteDataArray[i]["playerId1"]);
+			// // htmlString += "gameId: " + remoteDataArray[i]["gameId"] + ", player1: "+ remoteDataArray[i]["playerId1"] + ", player2: "+ remoteDataArray[i]["playerId2"] + "<br>" ;
+			// htmlString += "<input type='radio' name='gameIdSelection' value='" + 
+				// remoteDataArray[i]["gameId"] + "'> gameNumber: "+ remoteDataArray[i]["gameId"] +
+				// ", "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId1"]) + 
+				// " versus "+ this.getPlayerNameFromId(remoteDataArray[i]["playerId2"]) + 
+				// "<br>" ;
+		}
+		
+		document.getElementById("chatDisplay").innerHTML = outputString;
+	}
+	
+	submitTextField(){
+		this.submitText(this.writeTextbox.value);
+	}
+	
+	submitText(message){
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"postMessage"+"&userId=" + this.userId+"&userName=" + this.userName + "&message=" + message; 
+		this.callPhpWithAjax(url,this.submitResponse.bind(this));
+	}
+	submitResponse(result){
+		this.writeTextbox.value = "";
+		this.getMessages();
+	}
+	
+	callPhpWithAjax(url,functionToCallWhenDone){
+		//ajax is asynchronous, so give a function that should be called when a result is present (function must accept argument for the result text)
+		var xmlhttp = new XMLHttpRequest();
+		var returnText = "";
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				functionToCallWhenDone( this.responseText);
+			}
+		};
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+	}
+}
+
+//------------------------------------------------------------------------------------------------------------
+//                                  ACCOUNT
+//------------------------------------------------------------------------------------------------------------
 
 class Account {
 	constructor() {
@@ -527,7 +532,9 @@ class Account {
 		this.loggedInCallback;
 		
 	}
-
+	// setStatusMessageCallback(callbackFunction){
+		// this.submitStatus = callbackFunction ;
+	// }
 	setLoggedInCallback(callbackFunction){
 		this.loggedInCallback = callbackFunction;
 	}
@@ -755,9 +762,10 @@ class Account {
 	}
 }
 
+//------------------------------------------------------------------------------------------------------------
+//                                  REMOTE SERVER CONTACT
+//------------------------------------------------------------------------------------------------------------
 
-
-//------------------------------------------------------
 
 class RemoteContact {
 	constructor() {
@@ -785,7 +793,7 @@ class RemoteContact {
 		this.remoteGameData = {};
 		
 	}
-
+	
 	setAccountInstance(account){
 		this.accountInstance = account;
 	}

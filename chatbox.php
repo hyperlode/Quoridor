@@ -265,7 +265,7 @@
 		$getMessagesStartingFromThisId = $lastId - $numberOfMessages;
 		//$getMessagesStartingFromThisId = 23- $numberOfMessages;
 		echo ($getMessagesStartingFromThisId);
-		$sql = "SELECT * FROM chatBox WHERE `messageId` > ".$getMessagesStartingFromThisId. " ORDER BY `messageId` DESC ";
+		$sql = "SELECT * FROM chatBox WHERE `messageId` > ".$getMessagesStartingFromThisId. " ORDER BY `messageId` ASC ";
 		//echo $sql ; 
 		//$sql = "SELECT * FROM chatBox WHERE `messageId` > 20 ORDER BY `messageId` DESC ";
 		if ($result = $conn->query($sql) ) {	
