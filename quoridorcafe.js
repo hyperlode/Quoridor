@@ -104,9 +104,10 @@ class Chatbox{
 		var remoteDataArray =  JSON.parse(responseJSON);
 		//remoteDataArray = remoteDataArray[0];
 		var outputString = remoteDataArray;
-		var outputString = "yeee";
+		var outputString = "";
 		
 		for (var i=remoteDataArray.length-1;i>=0 ;i-=1){
+			//outputString =  outputString +  "id" + remoteDataArray[i]["messageId"] + "(" + remoteDataArray[i]["submitTime"] + ")" + remoteDataArray[i]["userName"] + " : " +  remoteDataArray[i]["message"]+"<br>"  ;
 			outputString =  outputString + "(" + remoteDataArray[i]["submitTime"] + ")" + remoteDataArray[i]["userName"] + " : " +  remoteDataArray[i]["message"]+"<br>"  ;
 			//console.log(remoteDataArray[i]);
 			// console.log(remoteDataArray[i])[];

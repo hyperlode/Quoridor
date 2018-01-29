@@ -1,5 +1,5 @@
 <?php
-	// $servername = "lode.ameije.com";
+	// $servername = "lode.ameije.com";  
 	include("./credentialsNotInGit.php"); //get passwords and login credentials.
 	
 	//output buffer, will store in output buffer, this needs to be returned manually.
@@ -33,13 +33,18 @@
 		return  ob_get_contents();
 	
 	}elseif ($action == "getMessages" )
-		
-		echo("messages starting from provided ID");
+		echo("messages starting from provided ID <br>");
 		$numberOfMessagesToBeDisplayed = intval($_GET["messagesNumber"]);
+		echo ($numberOfMessagesToBeDisplayed);
+		
+		
+		
 		$resultArray = sqlgetAllMessagesStartingFromId($conn, $numberOfMessagesToBeDisplayed);
 		$result = json_encode($resultArray);
+	
 		ob_end_clean();
 		ob_start();
+		
 		
 		
 		//$result = trim($result, "\x00..\x1F"); //get rid of whitespace.
@@ -192,7 +197,13 @@
 		// $largestNumber = $row['max'];
 		// $largestNumber = 0;
 		// // $sql =  "SELECT MAX( "+ $columnName +" ) AS max FROM `chatBox`;" ;
-		$sql =  "SELECT MAX( ". $columnName ." ) AS max FROM `chatBox`;" ;
+		// $sql =  "SELECT MAX( ". $columnName ." ) AS max FROM `chatBox`;" ;
+		// $sql =  "SELECT ". $columnName ." FROM `chatBox` ORDER BY ". $columnName ." DESC LIMIT 1;" ;
+		
+		//$sql =  "SELECT * FROM `chatBox` ORDER BY ". $columnName ." DESC LIMIT 1;" ;
+		$sql =  "SELECT * FROM `chatBox` ORDER BY `messageId` DESC LIMIT 1;" ;
+		
+		
 		// echo $sql;
 		
 		// $rowSQL = mysql_query( "SELECT MAX(". $columnName ." ) AS max FROM `tableName`;" ,$conn);
@@ -202,14 +213,18 @@
 		
 		if ($result = $conn->query($sql) ) {	
 		
-			$rows = array();
+			$response = array();
 			while ($row = $result->fetch_assoc()) {
-				$rows[] = $row; 
-				
+				$response = $row; 
+				//echo $result;
 			}
 			
+			//echo array_keys($response);
 			$result->close();
-			return $rows;
+			//echo $rows;
+			//return $rows[$columnName];
+			
+			//return 23;
 			// echo $result;
 			// $row = mysql_fetch_array( $result );
 			// $largestNumber = $row['max'];
@@ -219,21 +234,40 @@
 			echo "boooo";
 			echo "Error return value: " . $sql . "<br>" . $conn->error;
 		}
-		return $largestNumber;
+		//return $largestNumber;
+		
+		return $response;
+		
+		// if ($result = $conn->query($sql) ) {	
+			// echo "executed ok. response (for gameId ".$gameId.") ".$result->num_rows ." <br>";
+			// $response = array();
+			// while($row = $result->fetch_assoc()){
+				// $response = $row;
+			// } 
+
+		// } else {
+			// echo "Error return value: " . $sql . "<br>" . $conn->error;
+		// }	
+		// return $response;
+		
+		
 	}
 	
 	function sqlgetAllMessagesStartingFromId($conn, $numberOfMessages){
 		
 		
-		//$last_id = getHighestValueInColumn($conn, "messageId");
-		//echo "fiejiejf";
-		//echo $last_id;
-		//echo"dlide";
+		$columnName = "messageId";
+		$affectedRow = getHighestValueInColumn($conn, $columnName);
+		
+		$lastId =  $affectedRow[$columnName];
 		
 		#set number of messages
-		$getMessagesStartingFromThisId = $last_id - $numberOfMessages;
+		$getMessagesStartingFromThisId = $lastId - $numberOfMessages;
 		//$getMessagesStartingFromThisId = 23- $numberOfMessages;
-		$sql = "SELECT * FROM chatBox WHERE messageId > ".$getMessagesStartingFromThisId;
+		echo ($getMessagesStartingFromThisId);
+		$sql = "SELECT * FROM chatBox WHERE `messageId` > ".$getMessagesStartingFromThisId. " ORDER BY `messageId` DESC ";
+		//echo $sql ; 
+		//$sql = "SELECT * FROM chatBox WHERE `messageId` > 20 ORDER BY `messageId` DESC ";
 		if ($result = $conn->query($sql) ) {	
 			$rows = array();
 			while ($row = $result->fetch_assoc()) {

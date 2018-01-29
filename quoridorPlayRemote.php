@@ -110,9 +110,9 @@
 		}else{
 			$result = getListOfGames($conn,$gameStatusFilter,$playerIdFilter);
 		}
+		
 		ob_end_clean();
 		ob_start();
-		
 		$result = json_encode($result);
 		echo $result;
 		return  ob_get_contents();
