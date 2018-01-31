@@ -1,8 +1,29 @@
-
+var NUMBER_OF_MESSAGES_CHAT_DISPLAY = 10;
+var CHAT_TEXTBOX = "submitBox";
+var CHAT_SUBMIT_BUTTON = "submitText";
 //------------------------------------------------------------------------------------------------------------
 //                                  CHAT
 //------------------------------------------------------------------------------------------------------------
 REFRESH_CHAT_RATE_MILLIS = 3000;
+
+// document.onkeydown = function(evt) {
+    // evt = evt || window.event;
+    // var charCode = evt.keyCode || evt.which;
+	// var charStr = String.fromCharCode(charCode);
+// //	console.log(event.keyCode === 13);//enter button
+// //	console.log(charStr + " " + event.keyCode);
+
+	// if (event.keyCode === 13){
+		// //enter pressed
+		// //call button. 
+		// if (document.getElementById(CHAT_TEXTBOX).value != ""){
+			// document.getElementById(CHAT_TEXTBOX).click();	
+		// }
+	
+	// }
+	
+	
+// };
 
 class Chatbox{
 	constructor(chatDiv){
@@ -17,8 +38,8 @@ class Chatbox{
 	
 	display(){
 		
-		this.sendTextButton = addButtonToExecuteGeneralFunction(this.chatAreaControls, "Submit ", "submitText", "submitText", this.submitTextField.bind(this));
-		this.writeTextbox = addTextBox(this.chatAreaControls, "submit", "submitBox", "submitBox", 20);
+		this.sendTextButton = addButtonToExecuteGeneralFunction(this.chatAreaControls, "Submit ", CHAT_SUBMIT_BUTTON, CHAT_SUBMIT_BUTTON, this.submitTextField.bind(this));
+		this.writeTextbox = addTextBox(this.chatAreaControls, "submit", CHAT_TEXTBOX, CHAT_TEXTBOX, 20);
 		//addBr(this.chatAreaControls);
 		//this.displayTextbox= addTextArea(this.chatAreaControls, "display", "displayBox", "dislayBox", 10);
 		this.displayTextBox = addDiv(this.chatAreaControls, "chatDisplay" );
@@ -42,9 +63,8 @@ class Chatbox{
 	
 	getMessages(){
 		//don't call this directly! (for the refresh control).
-		var messagesNumber = 5;
-		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"getMessages"+"&messagesNumber=" + messagesNumber; 		
-		console.log(url);
+		var url = "http://lode.ameije.com/QuoridorMultiPlayer/chatbox.php?action="+"getMessages"+"&messagesNumber=" + NUMBER_OF_MESSAGES_CHAT_DISPLAY; 		
+		//console.log(url);
 		this.callPhpWithAjax(url,this.getMessagesResponse.bind(this));
 	}
 	

@@ -38,19 +38,14 @@ var REMOTE_GAME_STATUS_ALL = 4; //dont care about status
 
 document.addEventListener("DOMContentLoaded", function() {
 
-
 	// if the url begins with this string
 	if (window.location.href.indexOf('www.') !== -1) {
 		// reload page without www (www.lode.ameije.com doesn't seem to work on iphone)
 		console.log("reload page.");
 		window.location.href = 'http://lode.ameije.com/QuoridorMultiPlayer/quoridorcafe.html';
-		
 	}
 
 	cafe = new Cafe();
-	
-	
-	// getAllUsers();	
 });
 
 document.onkeydown = function(evt) {
@@ -63,8 +58,16 @@ document.onkeydown = function(evt) {
 	if (event.keyCode === 13){
 		//enter pressed
 		//call button. 
-		document.getElementById("submitMoveDebug").click();
-	}
+		//chat box posting
+		if (document.getElementById(CHAT_TEXTBOX).value != ""){
+			console.log("valueeu testx");
+			document.getElementById(CHAT_SUBMIT_BUTTON).click();	
+		}else{
+			console.log("valueeu SSSSx");
+			document.getElementById("submitMoveDebug").click();
+	
+		}
+	}	
 	
 };
 
