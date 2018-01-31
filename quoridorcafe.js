@@ -1,7 +1,9 @@
 var logonText = "Welcome in Quoridor Cafe The big wall.";
 
-
+var DIV_LOCAL_CONTROLS = "localGameControls";
 var ACCOUNT_DIV = "loginArea";
+var DIV_DEBUG_CONTROLS = "debugControls";
+var DIV_REMOTE_CONTROLS = "debugControls";
 var ACCOUNT_DIV_STATUS = "loginAreaStatus";
 var USERS_DIV_LIST = "loggedinusers";
 var LISTEDGAMES_DIV_LIST = "listedGames";
@@ -71,23 +73,26 @@ class Cafe {
 	constructor() {
 		//users login and credentials stuff
 		this.account = new Account();
-		console.log(logonText);
+		//console.log(logonText);
 		
 		this.account.setLoggedInCallback(this.showPageAfterLogin.bind(this));
+		this.account.setLogoutCallback(this.actionAfterLogout.bind(this));
 	}
 
 	
 	showPageAfterLogin(){
 		
 		this.account.listOfUsers();
-		;
+		
 		this.remote = new RemoteContact();
 		this.remote.setAccountInstance(this.account);
 		
 		//create html elements
+		this.localGameControlsDiv = document.getElementById(DIV_LOCAL_CONTROLS);
+		this.remoteGameControlsDiv = document.getElementById(DIV_REMOTE_CONTROLS);
+		this.debugControlsDiv = document.getElementById(DIV_DEBUG_CONTROLS);
 		this.setupButtonField();
 		
-		//this.continuePollingForRemoteMove = false;
 		this.remote.setRemoteMovedCallback(this.doRemoteMove.bind(this));
 		this.remote.setStartLocalBoardCallback( this.startAndDisplayMultiPlayerGameQuoridor.bind(this));
 		this.remote.setUpdateStatusFieldCallback(this.updateStatusField);
@@ -99,23 +104,25 @@ class Cafe {
 		this.updateStatusField("Welcome to the quoridor cafe.");
 		
 		//chat controls
-		this.chat = new Chatbox();
+		this.chatDiv = document.getElementById("chatArea");
+		this.chat = new Chatbox(this.chatDiv);
 		var id = this.account.getLoggedInUserId();
-		//this.chat.setUserData(id, this.account.getNameFromId(id));//this.account.getNameFromId(id): doesn'dt work, because the data for the name didn't come in yet. wait. a bit, or do it at post time.
 		this.chat.setUserData(id, this.account.getLoggedInUserName());
-		
-		//this.remote.setStatusMessageCallback(this.chat.submitText.bind(this)); //
 		this.chat.submitText("User "+ this.account.getLoggedInUserName() +" logged in.");
-		
-		//activate periodic refreshing.
-		this.chat.startRefreshLoop();
-		
-		
+		this.chat.startRefreshLoop(); //activate periodic refreshing.
+	
 	}
 	
-	// actionAfterLogout(){
-		// this.chat.submitText("User "+ this.account.getLoggedInUserName() +" logged out.");
-	// }
+	 actionAfterLogout(){
+		//this.chat.submitText("User "+ this.account.getLoggedInUserName() +" logged out.");
+		this.chatDiv.innerHTML = "";
+		this.localGameControlsDiv.innerHTML = "";
+		this.debugControlsDiv.innerHTML = "";
+		this.remoteGameControlsDiv.innerHTML = "";
+		this.clearStatusField();
+		this.chat.stopRefreshLoop();
+		
+	 }
 		
 	remoteGameStart() {
 		console.log("start remote game");
@@ -191,7 +198,6 @@ class Cafe {
 
 		this.localGameControlsDiv.style.display = 'none';
 		
-
 		this.stopRemoteGameButton.style.visibility = 'visible';
 		this.listFreeSpotGamesButton.style.visibility = 'hidden';
 		this.startRemoteGameButton.style.visibility = 'hidden';
@@ -206,8 +212,7 @@ class Cafe {
 		this.setGamesListVisibility(false);
 
 		this.localPlayerMovesUpCheckbox.style.visibility = 'hidden';
-		
-
+	
 	}
 	
 
@@ -231,12 +236,9 @@ class Cafe {
 		
 	}
 
-	
-
 	listGamesWithFreeSpot(){
 		//check all available games for joining...
 		this.remote.listOfGames(REMOTE_GAME_STATUS_INITIALIZING, NO_PLAYER_DUMMY_ID);
-		
 		this.setGamesListVisibility(!this.showingGamesList);
 			
 	}
@@ -265,10 +267,7 @@ class Cafe {
 	remoteGameStop() {
 		console.log("stop remote game");
 		this.localGameControlsDiv.style.display = 'block';
-		// this.startLocalGameButton.style.visibility = 'visible';
-		// this.stopLocalGameButton.style.visibility = 'hidden';
-		// this.restartLocalGameButton.style.visibility = 'hidden';
-
+	
 		this.stopRemoteGameButton.style.visibility = 'hidden';
 		this.listFreeSpotGamesButton.style.visibility = 'visible';
 		this.startRemoteGameButton.style.visibility = 'visible';
@@ -314,6 +313,7 @@ class Cafe {
 	clearStatusField(){
 		document.getElementById(CAFE_STATUS_DIV).innerHTML = "";
 	}
+	
 	updateStatusField(updateString){
 		document.getElementById(CAFE_STATUS_DIV).innerHTML = document.getElementById(CAFE_STATUS_DIV).innerHTML +"<br>"+ updateString;
 	}
@@ -368,6 +368,7 @@ class Cafe {
 		this.joinRemoteGameButton.style.visibility = 'visible';
 		this.quoridorManager.stopAndDeleteLocalGame();
 	}
+	
 	localGameRestart() {
 		console.log("restart local game");
 		this.quoridorManager.restartLocalGame();
@@ -377,7 +378,6 @@ class Cafe {
 
 	setupButtonField() {
 		//cafe controls (start stop game etc.)
-		this.localGameControlsDiv = document.getElementById("localGameControls");
 		this.startLocalGameButton = addButtonToExecuteGeneralFunction(this.localGameControlsDiv, "Start local game", "localGameStart", "localGameStart", this.localGameStart.bind(this), this);
 		this.startLocalGameButton.style.visibility = 'visible';
 		this.stopLocalGameButton = addButtonToExecuteGeneralFunction(this.localGameControlsDiv, "Stop local game", "localGameStop", "localGameStart", this.localGameStop.bind(this), this);
@@ -388,7 +388,6 @@ class Cafe {
 
 
 
-		this.remoteGameControlsDiv = document.getElementById("remoteGameControls");
 		
 		this.stopRemoteGameButton = addButtonToExecuteGeneralFunction(this.remoteGameControlsDiv, "Stop remote game", "remoteGameStop", "remoteGameStop", this.remoteGameStop.bind(this), this);
 		this.stopRemoteGameButton.style.visibility = 'hidden';
@@ -417,19 +416,19 @@ class Cafe {
 		
 		//debug field
 		addBr(this.remoteGameControlsDiv);
-		var debugControlsDiv = document.getElementById("debugControls");
-		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "debug poll...", "sendDebug", "sendDebug", this.debugNewCommand.bind(this), this);
+		
+		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(this.debugControlsDiv, "debug poll...", "sendDebug", "sendDebug", this.debugNewCommand.bind(this), this);
 		
 		this.debugSimulateRemoteCommandReceived.style.visibility = 'visible';
 		
-		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(debugControlsDiv, "See registered players", "listUsers", "listUsers", this.displayUsers.bind(this));
+		this.debugSimulateRemoteCommandReceived = addButtonToExecuteGeneralFunction(this.debugControlsDiv, "See registered players", "listUsers", "listUsers", this.displayUsers.bind(this));
 		
 		
-		this.debugCommandTextBox = addTextBox(debugControlsDiv, "debug", "debugCmdText", "debugCmdText", 20);
-		this.debugNoServerSetup = addCheckBox(debugControlsDiv, "debugNoServerUse", "debugNoServerUse", false, "debug without server");
-		this.localPlayerMovesUpCheckbox = addCheckBox(debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Display Local Player moves up on the board.");
-		this.remoteGameIdTextBox = addTextBox(debugControlsDiv, "gameId", "remoteGameIdTextBox", "remoteGameIdTextBox", 10);
-		this.debugSetGameStatusButton = addButtonToExecuteGeneralFunction(debugControlsDiv, "Set game status to archive", "setRemoteGameStatus", "setRemoteGameStatus", this.setRemoteGameStatus.bind(this),REMOTE_GAME_STATUS_FINISHED);
+		this.debugCommandTextBox = addTextBox(this.debugControlsDiv, "debug", "debugCmdText", "debugCmdText", 20);
+		this.debugNoServerSetup = addCheckBox(this.debugControlsDiv, "debugNoServerUse", "debugNoServerUse", false, "debug without server");
+		this.localPlayerMovesUpCheckbox = addCheckBox(this.debugControlsDiv, "localPlayerMovesUp", "localPlayerMovesUp", true, "Display Local Player moves up on the board.");
+		this.remoteGameIdTextBox = addTextBox(this.debugControlsDiv, "gameId", "remoteGameIdTextBox", "remoteGameIdTextBox", 10);
+		this.debugSetGameStatusButton = addButtonToExecuteGeneralFunction(this.debugControlsDiv, "Set game status to archive", "setRemoteGameStatus", "setRemoteGameStatus", this.setRemoteGameStatus.bind(this),REMOTE_GAME_STATUS_FINISHED);
 		addBr(this.remoteGameControlsDiv);
 	}
 }

@@ -5,7 +5,8 @@
 REFRESH_CHAT_RATE_MILLIS = 3000;
 
 class Chatbox{
-	constructor(){
+	constructor(chatDiv){
+		this.chatAreaControls= chatDiv;
 		this.display();
 		this.userId = NO_LOGGED_IN_USER_DUMMY_ID;
 		this.userName = "Anonymus";
@@ -15,12 +16,12 @@ class Chatbox{
 	}
 	
 	display(){
-		var chatAreaControls= document.getElementById("chatArea");
-		this.sendTextButton = addButtonToExecuteGeneralFunction(chatAreaControls, "Submit ", "submitText", "submitText", this.submitTextField.bind(this));
-		this.writeTextbox = addTextBox(chatAreaControls, "submit", "submitBox", "submitBox", 20);
-		//addBr(chatAreaControls);
-		//this.displayTextbox= addTextArea(chatAreaControls, "display", "displayBox", "dislayBox", 10);
-		this.displayTextBox = addDiv(chatAreaControls, "chatDisplay" );
+		
+		this.sendTextButton = addButtonToExecuteGeneralFunction(this.chatAreaControls, "Submit ", "submitText", "submitText", this.submitTextField.bind(this));
+		this.writeTextbox = addTextBox(this.chatAreaControls, "submit", "submitBox", "submitBox", 20);
+		//addBr(this.chatAreaControls);
+		//this.displayTextbox= addTextArea(this.chatAreaControls, "display", "displayBox", "dislayBox", 10);
+		this.displayTextBox = addDiv(this.chatAreaControls, "chatDisplay" );
 		console.log(this.displayTextBox);
 	}
 	

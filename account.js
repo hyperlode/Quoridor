@@ -14,6 +14,7 @@ class Account {
 		this.allRegisteredUsersNameToId = [];
 		this.allRegisteredUsersIdToName = [];
 		this.loggedInCallback;
+		this.logoutCallback;
 		
 	}
 	// setStatusMessageCallback(callbackFunction){
@@ -21,6 +22,9 @@ class Account {
 	// }
 	setLoggedInCallback(callbackFunction){
 		this.loggedInCallback = callbackFunction;
+	}
+	setLogoutCallback(callbackFunction){
+		this.logoutCallback = callbackFunction;
 	}
 	
 	getLoggedInUserId(){
@@ -155,6 +159,8 @@ class Account {
 	userLogoutCallBack( xlmhttp) {
 		this.loginFieldElementsVisibility( false);
 		this.loginAreaStatusUpdateText(xlmhttp.responseText);
+		//callback 
+		this.logoutCallback();
 	}
 
 	//GET LIST OF USERS
