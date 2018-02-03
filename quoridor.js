@@ -214,8 +214,28 @@ GameReplay.prototype.callback = function( verboseMove){
 
 
 function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen,startGameState){
+	//default settings.
 	startingPlayer = (typeof startingPlayer !== 'undefined') ?  startingPlayer : PLAYER1;
 	player1MovesToTopOfScreen = (typeof player1MovesToTopOfScreen !== 'undefined') ?  player1MovesToTopOfScreen : true;
+	
+	this.player1 = new Player();
+	this.player2 = new Player();
+	
+	this.player1.name = PLAYER_NAMES[0];
+	this.player2.name = PLAYER_NAMES[1];
+	this.player1.id = PLAYER1;
+	this.player2.id = PLAYER2;
+	
+	this.player1.isPlaying = (startingPlayer == player1.id);
+	this.player2.isPlaying =  (startingPlayer == player2.id);
+	
+	//isStarter
+	//this.players =[this.player1, this.player2];
+	//console.log(this.player1.name);
+	
+	
+	
+	
 	startGameState = (typeof startGameState !== 'undefined') ?  startGameState : false; //if wanted, a begin situation may be loaded as a gameStateString i.e. "n,s,n,a2,e4"
 	this.boardDiv = boardDiv;
 	this.statsDiv = statsDiv;
