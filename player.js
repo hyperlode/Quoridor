@@ -1,6 +1,6 @@
 var NUMBER_OF_PLAYERS = 2;
 
-function Players(players){
+function Players(players, startingPlayer){
 	//for two players.
 	if (players.length !=NUMBER_OF_PLAYERS){
 		console.log("ASSERT ERROR: number of players MUST be two");
@@ -8,8 +8,17 @@ function Players(players){
 	}
 	
 	this.players = players;	
+	this.startingPlayer = startingPlayer;
+	
+	this.setup();
 }
 
+Players.prototype.setup = function (){
+	//set begin situation.
+	this.startingPlayer.isPlaying = true;
+	this.getOtherPlayer(this.startingPlayer).isPlaying = false;
+	
+}
 
 Players.prototype.getOtherPlayer = function(player){
 	var i = 0;
@@ -23,6 +32,7 @@ Players.prototype.getOtherPlayer = function(player){
 	
 	return this.players[i];
 }
+
 
 Players.prototype.getActivePlayer = function(){
 	//check if there is only one active player
@@ -64,6 +74,16 @@ Players.prototype.getNonActivePlayer = function(){
 	}else{
 		return nonPlayingPlayer;
 	}	
+}
+
+Players.prototype.setActivePlayer = function(player){
+	if (this.getActivePlayer().id  = player.id){
+		//do nothing
+	}else{
+		this.toggleActivePlayer();
+	}
+		
+		
 }
 
 Players.prototype.toggleActivePlayer = function(){
