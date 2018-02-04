@@ -17,7 +17,7 @@ REFRESH_CHAT_RATE_MILLIS = 3000;
 		// //enter pressed
 		// //call button. 
 		// if (document.getElementById(CHAT_TEXTBOX).value != ""){
-			// document.getElementById(CHAT_TEXTBOX).click();	
+			// document.getElementById(CHAT_SUBMIT_BUTTON).click();	
 		// }
 	
 	// }

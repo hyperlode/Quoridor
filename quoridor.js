@@ -144,9 +144,6 @@ function initQuoridorDOM(){
 	var quoridorField = document.getElementById("board");
 	var statsDiv = document.getElementById("options");
 	
-	//addButtonToExecuteGeneralFunction(statsDiv,"Display Notation","displayNotation", "displayNotation", this.displayNotation,this);
-	//<button type="button" onclick="toggleNotation()" class="btn btn-primary">Display notation</button>
-	
 	var multiplayerDiv = document.getElementById("multiPlayerControls");
 	
 	
@@ -183,7 +180,7 @@ function initQuoridorDOM(){
 	*/
 }
 
-function test(instance){
+function test(){
 	alert("ijij");
 }
 
@@ -772,7 +769,7 @@ Game.prototype.outputGameStats= function(){
 		}else{
 			 addText(notationDiv, " ", i+"stat",i+"stat" );
 		}
-		var button = addButtonToExecuteGeneralFunction(notationDiv,this.recordingOfGameInProgress[i],"step"+i ,"step"+i , this.rewindGameTextClicked, [this, i+1]  );
+		var button = addButtonToExecuteGeneralFunction(notationDiv,this.recordingOfGameInProgress[i],"step"+i ,"step"+i , this.rewindGameTextClicked.bind(this),  i+1  );
 		button.style.width = BUTTON_STATS_MOVE_WIDTH_PIXELS;
 	}	
 }
@@ -970,6 +967,11 @@ Game.prototype.blinkOFFActivatedPlayerCallBack = function(player){
 	this.svgPawns[player].setAttribute("fill",this.playersBlinkingColour[player]);
 	window.setTimeout(function (){this.blinkONActivatedPlayerCallBack(player)}.bind(this),this.playersBlinkingSpeedMillis[player]); 
 }
+
+
+
+
+//-------MOUSE events
 
 Game.prototype.mouseClickCellAsPawnCircleElement = function (callerElement){
 	this.mouseCellAsPawnCircleElement(callerElement, true,true);
@@ -1190,19 +1192,18 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 
 Game.prototype.undoButtonClicked = function(){
 	//	console.log("undo button clicked.");
-	//	console.log(GameInstance);
 	// debugger;
 
 	this.undoNumberOfSteps(1);
 }
 
-Game.prototype.rewindGameTextClicked = function(GameInstance, moveEndNumber){
+Game.prototype.rewindGameTextClicked = function(moveEndNumber){
 	// console.log("rewind text clicked.");
 	var userHasConfirmed = confirm("warning: All game moves from the clicked step will be lost. Continue?");
 	// debugger;
 
 	if (userHasConfirmed){
-		GameInstance.rewindGameToPosition(moveEndNumber);
+		this.rewindGameToPosition(moveEndNumber);
 	}
 }
 
@@ -1321,53 +1322,45 @@ Game.prototype.buildUpOptions = function(domElement){
 	
 	//https://stackoverflow.com/questions/2190850/create-a-custom-callback-in-javascript
 	addButtonToExecuteGeneralFunction(domElement,"Undo","unooMove", "undoMove", this.undoButtonClicked.bind(this),this);
-	addButtonToExecuteGeneralFunction(domElement,"Display Notation","displayNotation", "displayNotation", this.toggleNotation,this);
+	addButtonToExecuteGeneralFunction(domElement,"Display Notation","displayNotation", "displayNotation", this.toggleNotation.bind(this),this);
 	addButtonToExecuteGeneralFunction(domElement,"Active Player Give Up!","resignGame", "resignGame", this.resignGame.bind(this),this);
-	addButtonToExecuteGeneralFunction(domElement,"Replay","replayGame", "replayGame", this.replay,this);
+	addButtonToExecuteGeneralFunction(domElement,"Replay","replayGame", "replayGame", this.replay.bind(this),this);
 	
-	//addButtonToExecuteGeneralFunction(domElement,"cutie pie","fefe", "wwww", this.testPhp,this);
+	//addButtonToExecuteGeneralFunction(domElement,"cutie pie","fefe", "wwww", this.testPhp.bind(this),this);
 	//addButtonToExecuteGeneralFunction(domElement,"replay","replayMoves", "replyMoves", this.replay,this);
 	
 }
 
 
-Game.prototype.replay = function (instance){
-	// Manager.prototype.replayGameString = function (gameString){
-	// this.startNewGame();
-	// this.replayGame = new GameReplay (this.localGame, gameString);
+Game.prototype.replay = function (){
+
+	this.gameStatusMemory = this.gameStatus
+	this.gameStatus = REPLAY;
+	this.replaySaveMoves  = this.recordingOfGameInProgress;
+	console.log(this.recordingOfGameInProgress);
+	this.replayCounter = 0;
 	
-// }
-	instance.gameStatusMemory = instance.gameStatus
-	instance.gameStatus = REPLAY;
-	
-	instance.replaySaveMoves  = instance.recordingOfGameInProgress;
-	
-	console.log(instance.recordingOfGameInProgress);
-	
-	instance.replayCounter = 0;
-	
-	
-	instance.replayLoop(instance);
+	this.replayLoop();
 }
 
-Game.prototype.stopReplay = function (instance){
+Game.prototype.stopReplay = function (){
 
 	rewindGameToPosition(this.recordingOfGameInProgress.length-1)
 	
 }
 
-Game.prototype.replayLoop = function (instance){
+Game.prototype.replayLoop = function (){
 	console.log(" steps to do?");
-	console.log(instance.replayCounter < instance.replaySaveMoves.length);
-	if (instance.replayCounter < instance.replaySaveMoves.length +1 ){
+	console.log(this.replayCounter < this.replaySaveMoves.length);
+	if (this.replayCounter < this.replaySaveMoves.length +1 ){
 		
 		//console.log("player moving: %d",moveCounter%2 );
 		// window.setTimeout(this.callback(moveCounter%2, this.recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 		
-		window.setTimeout(function (){instance.callbackReplay(instance.replayCounter )}.bind(instance),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
-		instance.replayCounter += 1;
-		console.log(instance.replayCounter);
-		console.log(instance.replaySaveMoves);
+		window.setTimeout(function (){this.callbackReplay(this.replayCounter )}.bind(this),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
+		this.replayCounter += 1;
+		console.log(this.replayCounter);
+		console.log(this.replaySaveMoves);
 	}
 }
 
@@ -1376,7 +1369,10 @@ Game.prototype.callbackReplay = function( endPositionStep ){
 	this.replayLoop(this);
 }
 
-Game.prototype.toggleNotation = function (instance){
+
+
+
+Game.prototype.toggleNotation = function (){
 	NOTATION_ENABLED_AT_STARTUP = !NOTATION_ENABLED_AT_STARTUP;
 	// this.outputGameStats();
 	var div = document.getElementById('notation');
@@ -1393,7 +1389,7 @@ Game.prototype.toggleNotation = function (instance){
 }
 
 
-Game.prototype.testPhp =  function(gameInstance)
+Game.prototype.testPhp =  function()
  {
       // var r=confirm("Do You Really want to Refund money! Press ok to Continue ");
       // if (r==true)

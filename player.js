@@ -99,13 +99,15 @@ Players.prototype.toggleActivePlayer = function(){
 	}
 }
 
+
+
+
 function Player(){
 	
 	this.name = "Anonymous";
 	this.id = undefined; //offical id, given as a constant PLAYER1 or PLAYER2
 	this.isPlaying = false;
 	this.movingDirection = undefined;
-	
 	
 }
 
