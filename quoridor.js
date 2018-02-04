@@ -226,9 +226,20 @@ function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen,star
 	this.player1.id = PLAYER1;
 	this.player2.id = PLAYER2;
 	
-	this.player1.isPlaying = (startingPlayer == player1.id);
-	this.player2.isPlaying =  (startingPlayer == player2.id);
+	this.player1.isPlaying = (startingPlayer == this.player1.id);
+	this.player2.isPlaying =  (startingPlayer == this.player2.id);
 	
+	this.players = new Players([this.player1, this.player2]);
+	
+	
+	
+	console.log(this.players.getActivePlayer().name);
+	console.log(this.players.getNonActivePlayer().name);
+	console.log(this.players.getOtherPlayer(this.player2).name);
+	
+	this.players.toggleActivePlayer();
+	console.log(this.players.getActivePlayer().name);
+	console.log(this.players.getNonActivePlayer().name);
 	//isStarter
 	//this.players =[this.player1, this.player2];
 	//console.log(this.player1.name);
