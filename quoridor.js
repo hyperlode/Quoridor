@@ -4,7 +4,7 @@
 
 //All Game Settings
 
-
+var CONSOLE_LOG_ENABLED = false;
 var SOUND_ENABLED_AT_STARTUP = false;
 var BOARD_ROTATION_DEGREES = 0; //0 is default
 
@@ -104,6 +104,10 @@ var PAWN_MOVE = 1;
 var GAVEUP_MOVE = 2;
 var ILLEGAL_MOVE = 3;
 
+if (!CONSOLE_LOG_ENABLED){
+	//https://stackoverflow.com/questions/1215392/how-to-quickly-and-conveniently-disable-all-console-log-statements-in-my-code
+	console.log = function() {};
+}
 
 /*
 //global functionality 
@@ -184,10 +188,15 @@ function initQuoridorDOM(){
 
 
 function Game(boardDiv, statsDiv, startingPlayerId, player1MovesToTopOfScreen,startGameState){
+	//console.assert("test"=="test", "won't ouplut anything");
+	//console.assert("test"!="test", "will output error to console.");
 	//default settings.
 	startingPlayerId = (typeof startingPlayerId !== 'undefined') ?  startingPlayerId : PLAYER1;
 	player1MovesToTopOfScreen = (typeof player1MovesToTopOfScreen !== 'undefined') ?  player1MovesToTopOfScreen : true;
 	startGameState = (typeof startGameState !== 'undefined') ?  startGameState : false; //if wanted, a begin situation may be loaded as a gameStateString i.e. "n,s,n,a2,e4"
+	
+	
+	//set up players
 	
 	this.player1 = new Player();
 	this.player2 = new Player();
@@ -207,6 +216,9 @@ function Game(boardDiv, statsDiv, startingPlayerId, player1MovesToTopOfScreen,st
 	
 	this.players = new Players([this.player1, this.player2],startingPlayer);
 	
+	
+	//set up game
+	
 	this.boardDiv = boardDiv;
 	this.statsDiv = statsDiv;
 	
@@ -225,7 +237,7 @@ function Game(boardDiv, statsDiv, startingPlayerId, player1MovesToTopOfScreen,st
 		this.boardRotation = 0;
 		
 	}else {
-		//assume player 2 moves to to of screen
+		//assume player 2 moves to top of screen
 		this.boardRotation = 180;
 	}
 	
@@ -295,8 +307,7 @@ Game.prototype.deleteGame = function (){
 }
 
 Game.prototype.moveHistoryToString= function(){
-	//var gameString = ""
-//	console.log(this.recordingOfGameInProgress.toString());
+
 	return this.recordingOfGameInProgress.toString();
 }
 
@@ -308,7 +319,6 @@ Game.prototype.rotateGameState= function(gameStateString){
 	for (var i = 0; i < gameStateArray.length; i+=1){
 		
 		var rotatedMove = this.getRotatedMove(gameStateArray[i]);
-		// console.log("normal move: " + gameStateArray[i] + " rotated counterpart: " + rotatedMove );
 		rotatedGameStateArray.push(rotatedMove);
 	}
 	//result to string
@@ -419,7 +429,7 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 		
 	var isGameStateRemoteCorrectHistory = utilities.arraysEqual(receivedGame, this.recordingOfGameInProgress); //history (except for last move) should be eqaul.
 	if (isGameStateRemoteCorrectHistory!= true){
-		console.log("wrong remote game state. awaiting correct move.");
+		console.info("wrong remote game state. awaiting correct move.");
 		return false;
 	}
 	
@@ -428,7 +438,7 @@ Game.prototype.multiPlayerRemoteMove = function(gameString){
 	this.beep();	
 	
 	if (!moveExecuted){
-		console.log("remote move not executed, is the move syntax correct?: " + remoteMove );
+		console.info("remote move not executed, is the move syntax correct?: " + remoteMove );
 		return false;
 	}
 
@@ -508,20 +518,20 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	}else if (this.gameStatus == PLAYING){
 		//pass
 	}else{
-		console.log("assert error game status: " + this.gameStatus);
+		console.assert(1==0, "assert error game status: " + this.gameStatus);
 	}
 	
 	moveData = this.interpreteVerboseNotation(verboseNotation);
 	
 	if (moveData[0] == ILLEGAL_MOVE){
-		console.log("ASSERT ERROR : ILLEGAL MOVE");
+		console.info("ASSERT ERROR : ILLEGAL MOVE");
 		return false;
 	}
 	
 	var validMove = false;
 	var undoWallValid= false; //check if the move can be undone.
 	if (moveData[0] == GAVEUP_MOVE){
-		console.log ("player %s gave up...(%s)", PLAYER_NAMES[this.players.getActivePlayer().id], verboseNotation);
+		console.info ("player %s gave up...(%s)", PLAYER_NAMES[this.players.getActivePlayer().id], verboseNotation);
 		if (this.gameStatus == PLAYING){
 			this.gameStatus = FINISHED_BY_GIVING_UP;
 		}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
@@ -539,20 +549,20 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 			console.log("ASSERT ERROR pawn move failed... player: " + this.players.getActivePlayer().name + "  notation: "+ verboseNotation );
 			return false;
 		}
-		console.log("player %s moved pawn (%s)", PLAYER_NAMES[this.players.getActivePlayer().id], verboseNotation);
+		console.info("player %s moved pawn (%s)", PLAYER_NAMES[this.players.getActivePlayer().id], verboseNotation);
 		validMove= true;
 	}else if (moveData[0] == WALL_MOVE){
 		this.placeWallByVerboseNotation(this.players.getActivePlayer().id,verboseNotation);
-		console.log("player %s placed wall (%s)  (playerid: %s)", PLAYER_NAMES[this.players.getActivePlayer().id], verboseNotation, this.players.getActivePlayer().id);
+		console.info("player %s placed wall (%s)  (playerid: %s)", PLAYER_NAMES[this.players.getActivePlayer().id], verboseNotation, this.players.getActivePlayer().id);
 		validMove = true;
 		undoWallValid  = true;
 	}else {
-		console.log("wrong notation? invalid move? --> please correct this move: %s", verboseNotation);
+		console.info("wrong notation? invalid move? --> please correct this move: %s", verboseNotation);
 		validMove = false;
 	}
 	
 	if (!validMove){
-		console.log("invalid move. ");
+		console.info("invalid move. ");
 		return false;
 	}
 	
@@ -562,14 +572,14 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		if (undoWallValid){
 			this.undoLastWall(this.players.getActivePlayer().id);
 		}else{
-			console.log("ASSERT ERROR: we have an illegal board situation (it was not about placing a wall). This is not yet implemented. Not undone, board corrupted.");
+			console.assert(1!=0, "ASSERT ERROR: we have an illegal board situation (it was not about placing a wall). This is not yet implemented. Not undone, board corrupted.");
 		}
 		return false;
 	}
 	
 	//check if there is a winner by moving (not by giving up)
 	if (this.board.isThereAWinner()[0]){
-		console.log("The winner of the game is player " + PLAYER_NAMES[this.board.isThereAWinner()[1]]);
+		console.info("The winner of the game is player " + PLAYER_NAMES[this.board.isThereAWinner()[1]]);
 		this.gameStatus = FINISHED;
 		
 	}else if (this.gameStatus == FINISHED_BY_GIVING_UP){
@@ -620,8 +630,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	this.outputGameStats();
 	this.outputBoard();
 	
-	console.log("game move history: " + this.moveHistoryToString());
-	//console.log( "rotated history string: " + this.rotateGameState(this.moveHistoryToString() ) );
+	console.info("game move history: " + this.moveHistoryToString());
 	return true;
 }
 
@@ -642,7 +651,7 @@ Game.prototype.wallToVerboseNotation = function(cellId, directionIsNorthToSouth)
 
 Game.prototype.pawnDirectionToVerboseNotation = function(direction){
 	if (direction<0 ||direction >12){
-		console.log("ASSERT ERROR: direction oustide limits...");
+		console.assert(1==0, "ASSERT ERROR: direction oustide limits...");
 		return false;
 	}
 	return DIRECTIONS_VERBOSE[direction];
@@ -668,7 +677,7 @@ Game.prototype.interpreteVerboseNotation = function (verboseNotation){
 	if (moveTranslated != false){
 		return [WALL_MOVE,moveTranslated[0],moveTranslated[1]];
 	}
-	console.log("ASSERT ERROR no valid notation found");
+	console.assert(1==0, "ASSERT ERROR no valid notation found");
 	return [ILLEGAL_MOVE,false,false];
 }
 
@@ -687,13 +696,7 @@ Game.prototype.undoLastWall= function(player){
 	this.outputBoard();
 	//5.update game administration.
 	//do nothing for administration. we check first for legal move and do administration when all is good!
-	//var walls = this.board.getWalls(); //[player]
-	//console.log(player);
-	//console.log(walls);
-	//var playerWalls = walls[player];
-	//var lastWall = playerWalls.pop();
-	//
-	//console.log(lastWall);
+
 }
 
 Game.prototype.outputGameStats= function(){
@@ -745,9 +748,9 @@ Game.prototype.placeWallByVerboseNotation = function(player, wallPosNotation){
 
 Game.prototype.movePawnByVerboseNotation = function(player, verboseCoordinate ){
 	var direction = this.pawnVerboseNotationToDirection(verboseCoordinate);
-	if (direction == ILLEGAL_DIRECTION){
-		console.log("ASSERT ERROR non valid verbose coordinate.");
-	}
+	
+	console.assert(direction != ILLEGAL_DIRECTION, "ASSERT ERROR non valid verbose coordinate.");
+	
 	
 	var isValidMove = this.board.movePawn(player, direction,true); //simulate first
 		
@@ -848,7 +851,7 @@ Game.prototype.outputPawn = function(player){
 				+((pawnCoords[1]+0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_X_OFFSET_SCALED)
 				+' '+ ((pawnCoords[0] + 0.5) * BOARD_SQUARE_SPACING*BOARD_SCALE + BOARD_Y_OFFSET_SCALED )+ ")" );
 	}else{
-		console.log ("ASSERT ERROR pawn not circle nor polygon.");
+		console.assert (1==0,"ASSERT ERROR pawn not circle nor polygon.");
 	}
 }
 
@@ -901,15 +904,11 @@ Game.prototype.setAllPlayersToNonBlink = function(){
 
 Game.prototype.setPlayerBlinkingProperties= function(blinkingPlayer, blinkingSpeedMillis, blinkingColour){
 	this.playersBlinkingSpeedMillis[blinkingPlayer] = (typeof blinkingSpeedMillis !== 'undefined') ?  blinkingSpeedMillis : PLAYER_PAWN_BLINK_HALF_PERIOD_MILLIS;
-	//console.log("set blink player colour i listbefore: " + this.playersBlinkingColour[blinkingPlayer]);
 	this.playersBlinkingColour[blinkingPlayer] = (typeof blinkingColour !== 'undefined') ?  blinkingColour : BOARD_CELL_PAWNCIRCLE_COLOR_BLINK;
-	//console.log("set blink player colour i list: " + this.playersBlinkingColour[blinkingPlayer]);
 }
 
 Game.prototype.blinkONActivatedPlayerCallBack = function(player){
 	//sets normal colour to pawn
-	//console.log("set blink player: " + player);
-//	console.log("set blink player colour: " + this.playersBlinkingColour[player]);
 	if (typeof this.svgPawns[player] == 'undefined') {
 		//if game closed, and blinking timer still running, deal with it.
 		return false;
@@ -1153,9 +1152,6 @@ Game.prototype.mouseWallEvent = function (callerElement,isHoveringInElseOut,plac
 }
 
 Game.prototype.undoButtonClicked = function(){
-	//	console.log("undo button clicked.");
-	// debugger;
-
 	this.undoNumberOfSteps(1);
 }
 
@@ -1181,7 +1177,7 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 		alert("Remote player is busy playing. You cannot undo!");
 		return;
 	}else if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING && moveEndNumber < this.moveCounterAtGameLoad){
-		console.log("not allowed to go back further than game load in multiplayer,");
+		console.info("not allowed to go back further than game load in multiplayer,");
 		alert("not allowed to go back further than game load in multiplayer");
 		return;
 	} else if (this.gameStatus == FINISHED ){
@@ -1195,7 +1191,7 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 	var saveGame = JSON.parse(JSON.stringify(this.recordingOfGameInProgress));
 	
 	if (this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
-		console.log("Remote player playing. No undo possible.");
+		console.info("Remote player playing. No undo possible.");
 		// var tmp = this.moveCounterAtGameLoad;
 		// this.eraseBoard();
 		// this.moveCounterAtGameLoad = tmp;
@@ -1221,7 +1217,6 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 		var saveGameForReplay = JSON.parse(JSON.stringify(this.replaySaveMoves));
 		var tmp = this.moveCounterAtGameLoad;
 		this.eraseBoard();
-		console.log(this.players.getActivePlayer().name + "starts game in replay.");
 		
 		this.moveCounterAtGameLoad = tmp;
 		this.gameStatus = REPLAY;
@@ -1242,8 +1237,6 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 
 Game.prototype.undoNumberOfSteps= function(numberOfSteps){	
 	//redo the moves like in the previous game.
-	//console.log(this.recordingOfGameInProgress.length - numberOfSteps);
-	//var saveGame = this.recordingOfGameInProgress;
 	this.rewindGameToPosition(this.recordingOfGameInProgress.length - numberOfSteps);
 }
 
@@ -1302,7 +1295,7 @@ Game.prototype.replay = function (){
 	this.gameStatusMemory = this.gameStatus
 	this.gameStatus = REPLAY;
 	this.replaySaveMoves  = this.recordingOfGameInProgress;
-	console.log("the complete game: " + this.recordingOfGameInProgress);
+	console.info("the complete game: " + this.recordingOfGameInProgress);
 	this.replayCounter = 0;
 	
 	this.replayLoop();
@@ -1326,7 +1319,7 @@ Game.prototype.replayLoop = function (){
 }
 
 Game.prototype.callbackReplay = function( endPositionStep ){
-	console.log("rewind to: " + endPositionStep);
+	console.info("rewind to: " + endPositionStep);
 	
 	this.rewindGameToPosition(endPositionStep);
 	this.replayLoop();
@@ -1350,51 +1343,6 @@ Game.prototype.toggleNotation = function (){
 		div.setAttributeNode(att); 
 	}
 }
-
-
-Game.prototype.testPhp =  function()
- {
-      // var r=confirm("Do You Really want to Refund money! Press ok to Continue ");
-      // if (r==true)
-        // {
-        // // window.location="yourphppage.php";
-        // window.location="http://lode.ameije.com/sandbox.php";
-        // return true;
-        // }
-           // else
-        // {
-        // alert("You pressed Cancel!");
-        // }
-		 
-		 
-		 // //http://www.webdeveloper.com/forum/showthread.php?252811-run-php-script-in-background-with-js
-		// var str = "something=dog";
-		//var url = "http://lode.ameije.com/sandbox.php?q=666";// No question mark needed
-		
-		// xmlReq=new XMLHttpRequest();
-		
-		// xmlReq.open("POST",url,true);
-		// xmlReq.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		// xmlReq.setRequestHeader("Content-length", str.length);
-		// xmlReq.setRequestHeader("Connection", "close");
-		// xmlReq.send(str);
-		// console.log(xmlReq);
-		// console.log("done");
-
-	// var url = "http://lode.ameije.com/sandbox.php?q=666&action=test";// No question mark needed
-	var url = "http://lode.ameije.com/sandbox.php?q=666&action=read";// No question mark needed
-	var xmlhttp = new XMLHttpRequest();
-	xmlhttp.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) {
-			document.getElementById("testAJAX").innerHTML = this.responseText;
-			console.log("eifjeijijfohohohlalalalaal");
-		}
-	};
-	
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
-		
- }
 
 Game.prototype.buildUpBoard = function(boardDiv, svgRotation){
 	//wall lines:
@@ -1592,7 +1540,7 @@ Game.prototype.buildUpBoard = function(boardDiv, svgRotation){
 				"Verdana",
 				
 				""+ -svgRotation + " " + (xcoord + textSize/4)  +" "+  (ycoord - textSize/4 ) +"" ); 
-				//console.log(String.fromCharCode(i+97));
+				
 		}
 	}
 }
