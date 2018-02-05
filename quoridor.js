@@ -4,6 +4,7 @@
 
 //All Game Settings
 
+
 var SOUND_ENABLED_AT_STARTUP = false;
 var BOARD_ROTATION_DEGREES = 0; //0 is default
 
@@ -154,8 +155,7 @@ function initQuoridorDOM(){
 	//aGame.outputWalls();
 	/*
 	var movesHistory = ["n","s","n","s","n","s","3d","3g","e3","s","c4","sw","nw","nn","nn","w","n","s","n"];
-	var replay = new GameReplay(aGame, movesHistory);
-	replay.replay();
+
 	/**/
 	// 20171022 bug: 
 	// quoridor.js:339 d8,e8,7f,7c,n,7a,7h,e6,d6,d4,e4,d2,e2,1c,1e	
@@ -179,31 +179,6 @@ function initQuoridorDOM(){
 	aGame.playTurnByVerboseNotation("4h");
 	*/
 }
-
-function test(){
-	alert("ijij");
-}
-
-function GameReplay (game, recordedMoves){
-	this.replayGame = game;
-	this.recordedGame = recordedMoves;
-	console.log(this.replayGame);
-}
-
-GameReplay.prototype.replay = function (){
-
-	if (this.replayGame.moveCounter < this.recordedGame.length){
-		//console.log("player moving: %d",moveCounter%2 );
-		// window.setTimeout(this.callback(moveCounter%2, this.recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
-		window.setTimeout(function (){this.callback( this.recordedGame[this.replayGame.moveCounter])}.bind(this),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
-	}
-}
-
-GameReplay.prototype.callback = function( verboseMove){
-	this.replayGame.playTurnByVerboseNotation( verboseMove);
-	this.replay();
-}
-
 
 //==============================GAME===========================================
 
