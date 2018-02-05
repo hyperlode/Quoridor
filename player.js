@@ -14,6 +14,8 @@ function Players(players, startingPlayer){
 }
 
 Players.prototype.setup = function (){
+	console.log("starting player: " + this.startingPlayer.name );
+	
 	//set begin situation.
 	this.startingPlayer.isPlaying = true;
 	this.getOtherPlayer(this.startingPlayer).isPlaying = false;

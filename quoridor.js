@@ -185,10 +185,8 @@ function test(){
 }
 
 function GameReplay (game, recordedMoves){
-	//this.replayGame = new Game(); //init board
 	this.replayGame = game;
 	this.recordedGame = recordedMoves;
-	//this.moveCounter = 0;
 	console.log(this.replayGame);
 }
 
@@ -210,10 +208,11 @@ GameReplay.prototype.callback = function( verboseMove){
 //==============================GAME===========================================
 
 
-function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen,startGameState){
+function Game(boardDiv, statsDiv, startingPlayerId, player1MovesToTopOfScreen,startGameState){
 	//default settings.
-	startingPlayer = (typeof startingPlayer !== 'undefined') ?  startingPlayer : PLAYER1;
+	startingPlayerId = (typeof startingPlayerId !== 'undefined') ?  startingPlayerId : PLAYER1;
 	player1MovesToTopOfScreen = (typeof player1MovesToTopOfScreen !== 'undefined') ?  player1MovesToTopOfScreen : true;
+	startGameState = (typeof startGameState !== 'undefined') ?  startGameState : false; //if wanted, a begin situation may be loaded as a gameStateString i.e. "n,s,n,a2,e4"
 	
 	this.player1 = new Player();
 	this.player2 = new Player();
@@ -224,29 +223,15 @@ function Game(boardDiv, statsDiv, startingPlayer, player1MovesToTopOfScreen,star
 	this.player2.id = PLAYER2;
 	
 	var startingPlayer;
-	if(startingPlayer == this.player1.id){
+	if(startingPlayerId == this.player1.id){
 		startingPlayer = this.player1;
+		
 	}else{
-		startinPlayer = this.player2;
+		startingPlayer = this.player2;
 	}
+	
 	this.players = new Players([this.player1, this.player2],startingPlayer);
 	
-	
-	console.log(this.players.getActivePlayer().name);
-	console.log(this.players.getNonActivePlayer().name);
-	console.log(this.players.getOtherPlayer(this.player2).name);
-	
-	this.players.toggleActivePlayer();
-	console.log(this.players.getActivePlayer().name);
-	console.log(this.players.getNonActivePlayer().name);
-	//isStarter
-	//this.players =[this.player1, this.player2];
-	//console.log(this.player1.name);
-	
-	
-	
-	
-	startGameState = (typeof startGameState !== 'undefined') ?  startGameState : false; //if wanted, a begin situation may be loaded as a gameStateString i.e. "n,s,n,a2,e4"
 	this.boardDiv = boardDiv;
 	this.statsDiv = statsDiv;
 	
@@ -534,6 +519,7 @@ Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 		//	return false;
 		//}
 	}else if (this.gameStatus == REPLAY){
+		// debugger;
 		console.log("replay mode. automatic.");
 		
 	}else if (this.gameStatus == FINISHED || this.gameStatus == FINISHED_BY_GIVING_UP || this.gameStatus == FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL || this.gameStatus == FINISHED_BY_GIVING_UP_MULTIPLAYER_REMOTE){
@@ -769,7 +755,8 @@ Game.prototype.outputGameStats= function(){
 		}else{
 			 addText(notationDiv, " ", i+"stat",i+"stat" );
 		}
-		var button = addButtonToExecuteGeneralFunction(notationDiv,this.recordingOfGameInProgress[i],"step"+i ,"step"+i , this.rewindGameTextClicked.bind(this),  i+1  );
+		var button = addButtonToExecuteGeneralFunction(notationDiv,this.recordingOfGameInProgress[i],"step"+i ,"step"+i , this.rewindGameTextClicked.bind(this),  
+		i+1  );
 		button.style.width = BUTTON_STATS_MOVE_WIDTH_PIXELS;
 	}	
 }
@@ -1198,7 +1185,8 @@ Game.prototype.undoButtonClicked = function(){
 }
 
 Game.prototype.rewindGameTextClicked = function(moveEndNumber){
-	// console.log("rewind text clicked.");
+	console.log("rewind text clicked, move end number: "+moveEndNumber);
+	
 	var userHasConfirmed = confirm("warning: All game moves from the clicked step will be lost. Continue?");
 	// debugger;
 
@@ -1258,6 +1246,7 @@ Game.prototype.rewindGameToPosition = function(moveEndNumber){
 		var saveGameForReplay = JSON.parse(JSON.stringify(this.replaySaveMoves));
 		var tmp = this.moveCounterAtGameLoad;
 		this.eraseBoard();
+		console.log(this.players.getActivePlayer().name + "starts game in replay.");
 		
 		this.moveCounterAtGameLoad = tmp;
 		this.gameStatus = REPLAY;
@@ -1300,6 +1289,7 @@ Game.prototype.eraseBoard = function(){
 		
 	//administration
 	this.players.setup();
+	
 	this.recordingOfGameInProgress = [];
 	this.moveCounter = 0;
 
@@ -1337,7 +1327,7 @@ Game.prototype.replay = function (){
 	this.gameStatusMemory = this.gameStatus
 	this.gameStatus = REPLAY;
 	this.replaySaveMoves  = this.recordingOfGameInProgress;
-	console.log(this.recordingOfGameInProgress);
+	console.log("the complete game: " + this.recordingOfGameInProgress);
 	this.replayCounter = 0;
 	
 	this.replayLoop();
@@ -1353,10 +1343,6 @@ Game.prototype.replayLoop = function (){
 	console.log(" steps to do?");
 	console.log(this.replayCounter < this.replaySaveMoves.length);
 	if (this.replayCounter < this.replaySaveMoves.length +1 ){
-		
-		//console.log("player moving: %d",moveCounter%2 );
-		// window.setTimeout(this.callback(moveCounter%2, this.recordedGame[moveCounter]),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
-		
 		window.setTimeout(function (){this.callbackReplay(this.replayCounter )}.bind(this),GAME_REPLAY_TIME_BETWEEN_MOVES_MILLIS); 
 		this.replayCounter += 1;
 		console.log(this.replayCounter);
@@ -1365,8 +1351,10 @@ Game.prototype.replayLoop = function (){
 }
 
 Game.prototype.callbackReplay = function( endPositionStep ){
+	console.log("rewind to: " + endPositionStep);
+	
 	this.rewindGameToPosition(endPositionStep);
-	this.replayLoop(this);
+	this.replayLoop();
 }
 
 
