@@ -4,7 +4,7 @@
 
 //All Game Settings
 
-var CONSOLE_LOG_ENABLED = false;
+var CONSOLE_LOG_ENABLED = true;
 var SOUND_ENABLED_AT_STARTUP = false;
 var BOARD_ROTATION_DEGREES = 0; //0 is default
 
@@ -487,10 +487,34 @@ Game.prototype.resignGame = function (){
 	}
 }
 
+//n,s,n,s,n,s,3e,6d,6g,3b,d3,c5,f4,e6,4c,a4,f6,8f,g7,8d,b4,c8,6b,7b,n,X
+Game.prototype.playTurnByTextboxInput = function(){
+	
+	var inputString = this.textInput.value;
+	var inputMoves = inputString.split(","); //if there is only one move played, a one element array is returned.
+
+	for (var i=0;i<inputMoves.length;i++){
+		if (! this.playTurnByVerboseNotation(inputMoves[i])){
+			//illegal move, interrupt action.
+			break;
+		}
+	}
+	
+	if(i<inputMoves.length){
+		console.log("unfnished");
+		var unExecutedMoves = inputMoves.slice(i-1, inputMoves.length-1);
+		var unExecutedMovesString = unExecutedMoves.join(",");
+		this.textInput.value = unExecutedMovesString;
+		this.textInput.focus();
+	}else{
+		this.textInput.value = "";
+		this.textInput.focus();
+	}	
+}
 
 Game.prototype.playTurnByVerboseNotation = function( verboseNotation){
 	// console.log(this.gameStatus);
-	// console.log("verbose Move:" + verboseNotation);	
+	console.log("verbose Move:" + verboseNotation);	
 	if (this.gameStatus == MULTIPLAYER_LOCAL_PLAYING){
 		console.log("multiplayer move. local");
 		if ( this.moveCounter > this.moveCounterAtGameLoad){
@@ -677,7 +701,8 @@ Game.prototype.interpreteVerboseNotation = function (verboseNotation){
 	if (moveTranslated != false){
 		return [WALL_MOVE,moveTranslated[0],moveTranslated[1]];
 	}
-	console.assert(1==0, "ASSERT ERROR no valid notation found");
+	// console.assert(1==0, "ASSERT ERROR no valid notation found");
+	alert("Invalid input.");
 	return [ILLEGAL_MOVE,false,false];
 }
 
@@ -705,19 +730,26 @@ Game.prototype.outputGameStats= function(){
 	if (this.gameStatus == SETUP){
 		htmlString += 'Blue Player starts the game.'
 	} else if (this.gameStatus == FINISHED_BY_GIVING_UP){
-		htmlString += ''+ this.players.getActivePlayer().name + ' player lost!';	
+		htmlString += 'Game history:';
+		htmlString += '<br>' + this.moveHistoryToString();
+		htmlString += '<br>' + this.players.getActivePlayer().name + ' player lost!';	
 		} else if (this.gameStatus == FINISHED_BY_GIVING_UP_MULTIPLAYER_LOCAL){
 		htmlString += 'If submitted, '+ this.players.getActivePlayer().name + ' will lose the game (press undo to cancel)!';
 	} else if (this.gameStatus == FINISHED){
-		htmlString += ''+ this.players.getActivePlayer().name + ' player won!';
+		htmlString += 'Game history:';
+		htmlString += '<br>' + this.moveHistoryToString();
+		htmlString += '<br>' + this.players.getActivePlayer().name + ' player won!';
 	}else if (this.gameStatus == PLAYING || this.gameStatus == MULTIPLAYER_LOCAL_PLAYING  || this.gameStatus == MULTIPLAYER_REMOTE_PLAYING ){
 		var redMovesToFinish = this.board.shortestPathPerPlayer[1].length-1;
 		var blueMovesToFinish = this.board.shortestPathPerPlayer[0].length-1;
-		htmlString += 'Estimated number of moves to finish:';
+		htmlString += 'Game history:';
+		htmlString += '<br>' + this.moveHistoryToString();
+		htmlString += '<br>Estimated number of moves to finish:';
 		htmlString += '<br>'+ blueMovesToFinish + ' for blue player.';
 		htmlString += '<br>'+ redMovesToFinish + ' for red player.';
 		
 		htmlString += '<br><br>'+ this.players.getActivePlayer().name + ' player playing.';
+		
 	}
 	
 	//notation field
@@ -1283,6 +1315,10 @@ Game.prototype.buildUpOptions = function(domElement){
 	addButtonToExecuteGeneralFunction(domElement,"Display Notation","displayNotation", "displayNotation", this.toggleNotation.bind(this),this);
 	addButtonToExecuteGeneralFunction(domElement,"Active Player Give Up!","resignGame", "resignGame", this.resignGame.bind(this),this);
 	addButtonToExecuteGeneralFunction(domElement,"Replay","replayGame", "replayGame", this.replay.bind(this),this);
+	
+	this.textInput = addTextBox(domElement,"","userInput","userInput", 5);
+	this.textInput.focus();
+	addButtonToExecuteGeneralFunction(domElement,"Play Move","submitTextMove", "submitTextMove", this.playTurnByTextboxInput.bind(this),this);
 	
 	//addButtonToExecuteGeneralFunction(domElement,"cutie pie","fefe", "wwww", this.testPhp.bind(this),this);
 	//addButtonToExecuteGeneralFunction(domElement,"replay","replayMoves", "replyMoves", this.replay,this);
